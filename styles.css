@@ -1017,7 +1017,6 @@ audio {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
 }
-
 /* Hide SVG header background images in mobile view (max-width: 373px) */
 @media (max-width: 373px) {
   header::before,
