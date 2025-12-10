@@ -175,7 +175,7 @@ function initializeCharacterGrid() {
         
         characterCard.innerHTML = `
             <div class="character-img">
-                <img src="images/${character.image}" alt="${character.name}"
+                <img src="${character.image}" alt="${character.name}"
                     onerror="this.style.display='none'; this.parentElement.textContent='${character.name}';" />
             </div>
             <div class="character-name">${character.name}</div>
@@ -234,7 +234,7 @@ function showCharacterModal(name, description, image) {
     // Set modal content
     modalName.textContent = name;
     modalDescription.textContent = description;
-    modalImage.src = `images/${image}`;
+    modalImage.src = image;
     modalImage.alt = name;
     
     // Show modal
