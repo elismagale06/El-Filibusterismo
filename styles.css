@@ -1010,6 +1010,10 @@ audio {
         font-size: 1.1em;
         line-height: 1.6;
     }
+    header::before,
+  header::after {
+    background-image: none !important;
+  }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
