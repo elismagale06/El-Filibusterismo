@@ -161,8 +161,7 @@
       <div class="modal-content">
         <h3>Kumpirmasyon</h3>
         <p id="resetModalText">
-          Sigurado ka bang gusto mong gawin muli ang Gawain 1? Ang iyong
-          kasalukuyang iskor ay mabubura at magsisimula ka mula sa simula.
+          <!-- Text will be set by JavaScript -->
         </p>
         <div class="modal-buttons">
           <button class="modal-btn cancel" onclick="closeResetModal()">
@@ -297,14 +296,15 @@
         const isCompleted = localStorage.getItem(
           `activity${activityNumber}_completed`
         );
-
-        // Check if activity is completed OR has a score saved
         const savedScore = localStorage.getItem(
           `activity${activityNumber}_score`
         );
+        const isInProgress = localStorage.getItem(
+          `activity${activityNumber}_in_progress`
+        ) === "true";
 
-        // Show modal only if the activity has been completed (has a score saved)
-        if (isCompleted === "true" || savedScore !== null) {
+        // Show modal if activity has been completed OR has a score saved OR is in progress
+        if (isCompleted === "true" || savedScore !== null || isInProgress) {
           // Show confirmation modal
           document.getElementById(
             "resetModalText"
@@ -324,7 +324,10 @@
         // Clear localStorage for the specific activity
         localStorage.removeItem(`activity${currentActivity}_score`);
         localStorage.removeItem(`activity${currentActivity}_completed`);
-
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        
         // Go to the activity
         window.location.href = `activity${currentActivity}.html`;
       }

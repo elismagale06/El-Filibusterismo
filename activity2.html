@@ -501,6 +501,25 @@
         margin: 15px 0;
       }
 
+      /* Disable audio seeking in desktop */
+      @media (min-width: 769px) {
+        audio {
+          pointer-events: none;
+        }
+        
+        audio::-webkit-media-controls-timeline,
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display {
+          display: none !important;
+        }
+        
+        audio {
+          -moz-user-select: none;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+      }
+
       @media (max-width: 768px) {
         .header h1 {
           font-size: 1.5em;
@@ -584,6 +603,7 @@
       <div class="modal-content">
         <h3>Resulta</h3>
         <div class="game-end-score" id="finalScoreDisplay"></div>
+        <div id="answersReview" style="margin: 20px 0; text-align: left; max-height: 300px; overflow-y: auto; padding: 10px; background: #f4ead5; border-radius: 8px; border: 1px solid #8b4513;"></div>
         <div class="modal-buttons">
           <button class="modal-btn" onclick="goToActivitiesWithScore()">
             Bumalik sa Mga Gawain
@@ -648,7 +668,7 @@
     </div>
 
     <script>
-      const questions = [
+      const originalQuestions = [
         {
           scrambled: "R P O B A T O B A",
           answer: "BAPOR TABO",
@@ -726,11 +746,23 @@
         },
       ];
 
+      let questions = [];
       let isStarted = false;
       let timerInterval = null;
       let timeRemaining = 900;
       let hasSubmitted = false;
       let currentGameScore = 0;
+      const currentActivity = 2;
+
+      // Shuffle function
+      function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      }
 
       // Countdown Animation Function
       function showCountdownAnimation(callback) {
@@ -779,6 +811,7 @@
 
       function createQuestions() {
         const container = document.getElementById("questionsContainer");
+        container.innerHTML = "";
 
         questions.forEach((q, index) => {
           const card = document.createElement("div");
@@ -788,7 +821,7 @@
             <div class="scrambled-letters">${q.scrambled}</div>
             <div class="hint">${q.hint}</div>
             <div class="input-container">
-                <input type="text" id="answer${index}" placeholder="Pindutin ang 'Magsimula' para magsimula..." disabled>
+                <input type="text" id="answer${index}" placeholder="Pindutin ang 'Magsimula' para magsimula..." disabled data-correct="${q.answer}">
             </div>
             <div class="feedback" id="feedback${index}"></div>
           `;
@@ -797,6 +830,14 @@
       }
 
       function startGame() {
+        // Clear any in-progress data
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        
+        // Shuffle questions each time game starts
+        questions = shuffleArray(originalQuestions);
+        
         isStarted = true;
         hasSubmitted = false;
         timeRemaining = 900;
@@ -811,6 +852,9 @@
           startButton.style.backgroundColor = "#ccc";
           startButton.style.cursor = "not-allowed";
         }
+
+        // Create questions with shuffled order
+        createQuestions();
 
         const inputs = document.querySelectorAll(
           '#questionsContainer input[type="text"]'
@@ -835,6 +879,9 @@
         updateTimer();
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(updateTimer, 1000);
+        
+        // Mark as in progress
+        localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
       }
 
       function updateTimer() {
@@ -854,6 +901,11 @@
 
         const percentageRemaining = (timeRemaining / 900) * 100;
         progressFill.style.width = percentageRemaining + "%";
+        
+        // Save temp score
+        if (isStarted && !hasSubmitted) {
+          localStorage.setItem(`activity${currentActivity}_temp_score`, currentGameScore);
+        }
       }
 
       function updateStats() {
@@ -867,6 +919,7 @@
           }
         });
         document.getElementById("foundCount").textContent = `${answered}/15`;
+        currentGameScore = answered;
       }
 
       function showSubmitConfirmation() {
@@ -880,11 +933,46 @@
         checkAllAnswers();
       }
 
+      function showAnswersReview() {
+        const reviewContainer = document.getElementById("answersReview");
+        reviewContainer.innerHTML = "<h4 style='text-align: center; margin-bottom: 10px; color: #5c2e0f;'>Mga Sagot:</h4>";
+        
+        questions.forEach((q, index) => {
+          const input = document.getElementById(`answer${index}`);
+          const feedback = document.getElementById(`feedback${index}`);
+          const userAnswer = normalizeAnswer(input.value);
+          const correctAnswer = normalizeAnswer(q.answer);
+          const isCorrect = userAnswer === correctAnswer;
+          
+          const answerDiv = document.createElement("div");
+          answerDiv.style.padding = "10px";
+          answerDiv.style.marginBottom = "8px";
+          answerDiv.style.border = "1px solid #ddd";
+          answerDiv.style.borderRadius = "4px";
+          answerDiv.style.backgroundColor = isCorrect ? "#d4edda" : "#f8d7da";
+          answerDiv.style.fontSize = "0.9em";
+          
+          answerDiv.innerHTML = `
+            <strong>Tanong ${index + 1}:</strong> ${q.scrambled}<br>
+            <span style="color: ${isCorrect ? '#155724' : '#721c24'}">
+              <strong>Iyong sagot:</strong> ${userAnswer || 'Walang sagot'}<br>
+              <strong>Tamang sagot:</strong> ${correctAnswer}
+            </span>
+          `;
+          
+          reviewContainer.appendChild(answerDiv);
+        });
+      }
+
       function checkAllAnswers() {
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
         }
+
+        // Clear in-progress flags
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
 
         let correct = 0;
         let total = questions.length;
@@ -916,6 +1004,9 @@
         localStorage.setItem("activity2_score", correct);
         localStorage.setItem("activity2_completed", "true");
 
+        // Show answers review
+        showAnswersReview();
+        
         // Show game end modal
         document.getElementById(
           "finalScoreDisplay"
@@ -928,7 +1019,11 @@
       }
 
       function showBackToActivitiesModal() {
-        if (isStarted && !hasSubmitted) {
+        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        
+        if (isStarted && !hasSubmitted || isInProgress) {
+          document.getElementById("backToActivitiesText").textContent = 
+            "Mayroon kang kasalukuyang laro na in progress. Sigurado ka bang gusto mong bumalik sa Mga Gawain? Ang iyong kasalukuyang iskor ay mabubura.";
           showModal("backToActivitiesModal");
         } else {
           window.location.href = "activities.html";
@@ -936,22 +1031,13 @@
       }
 
       function confirmBackToActivities() {
+        // Clear in-progress data
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        
         closeModal("backToActivitiesModal");
         window.location.href = "activities.html";
-      }
-
-      // Add reset function to enable button when needed
-      function resetGame() {
-        isStarted = false;
-        const startButton = document.querySelector(
-          'button[onclick="startWithCountdown()"]'
-        );
-        if (startButton) {
-          startButton.disabled = false;
-          startButton.textContent = "Magsimula";
-          startButton.style.backgroundColor = "";
-          startButton.style.cursor = "";
-        }
       }
 
       function showModal(modalId) {
@@ -963,6 +1049,8 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        // Initialize with shuffled questions
+        questions = shuffleArray(originalQuestions);
         createQuestions();
 
         const inputs = document.querySelectorAll(
@@ -971,6 +1059,15 @@
         inputs.forEach((input) => {
           input.addEventListener("input", updateStats);
         });
+        
+        // Check for saved in-progress game
+        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        const tempScore = localStorage.getItem(`activity${currentActivity}_temp_score`);
+        
+        if (isInProgress && tempScore) {
+          document.getElementById("foundCount").textContent = `${tempScore}/15`;
+          currentGameScore = parseInt(tempScore);
+        }
       });
     </script>
   </body>

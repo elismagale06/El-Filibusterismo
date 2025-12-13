@@ -392,6 +392,25 @@
         color: #5c2e0f;
         margin: 15px 0;
       }
+
+      /* Disable audio seeking in desktop */
+      @media (min-width: 769px) {
+        audio {
+          pointer-events: none;
+        }
+        
+        audio::-webkit-media-controls-timeline,
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display {
+          display: none !important;
+        }
+        
+        audio {
+          -moz-user-select: none;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+      }
     </style>
   </head>
 
@@ -446,6 +465,7 @@
       <div class="modal-content">
         <h3>Resulta</h3>
         <div class="game-end-score" id="finalScoreDisplay"></div>
+        <div id="answersReview" style="margin: 20px 0; text-align: left; max-height: 300px; overflow-y: auto; padding: 10px; background: #f4ead5; border-radius: 8px; border: 1px solid #8b4513;"></div>
         <div class="modal-buttons">
           <button class="modal-btn" onclick="goToActivitiesWithScore()">
             Bumalik sa Mga Gawain
@@ -537,7 +557,7 @@
     </div>
 
     <script>
-      const questions = [
+      const originalQuestions = [
         { question: "1. KASAWIAN ...", correct: "PAGHIHIGANTI" },
         { question: "2. NAGHIHIGPIT ...", correct: "NANGINGIBABAW" },
         { question: "3. MAGKAMIT ...", correct: "MAKATAMASAN" },
@@ -555,12 +575,24 @@
         { question: "15. MAG-AALAHAS ...", correct: "KAYAMANAN" },
       ];
 
+      let questions = [];
       let userAnswers = {};
       let timerInterval = null;
       let timeRemaining = 900;
       let isStarted = false;
       let hasSubmitted = false;
       let currentGameScore = 0;
+      const currentActivity = 3;
+
+      // Shuffle function
+      function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      }
 
       // Countdown Animation Function
       function showCountdownAnimation(callback) {
@@ -604,7 +636,11 @@
       }
 
       // INITIAL SETUP
-      document.addEventListener("DOMContentLoaded", initQuiz);
+      document.addEventListener("DOMContentLoaded", function() {
+        // Initialize with shuffled questions
+        questions = shuffleArray(originalQuestions);
+        initQuiz();
+      });
 
       function initQuiz() {
         const container = document.getElementById("questionsContainer");
@@ -615,7 +651,7 @@
           div.className = "question";
           div.innerHTML = `
             <div class="question-text">${q.question}</div>
-            <input id="answer-${index}" class="answer-input" disabled placeholder='Pindutin ang "Magsimula" para magsimula...'>
+            <input id="answer-${index}" class="answer-input" disabled placeholder='Pindutin ang "Magsimula" para magsimula...' data-correct="${q.correct}">
             <div id="feedback-${index}" class="answer-feedback"></div>
           `;
           container.appendChild(div);
@@ -623,6 +659,14 @@
       }
 
       function startGame() {
+        // Clear any in-progress data
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        
+        // Shuffle questions each time game starts
+        questions = shuffleArray(originalQuestions);
+        
         if (isStarted) return;
         isStarted = true;
         hasSubmitted = false;
@@ -640,6 +684,9 @@
           startButton.style.backgroundColor = "#ccc";
           startButton.style.cursor = "not-allowed";
         }
+
+        // Reinitialize quiz with shuffled questions
+        initQuiz();
 
         document.getElementById("submitBtn").disabled = false;
 
@@ -659,6 +706,9 @@
         });
 
         startTimer();
+        
+        // Mark as in progress
+        localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
       }
 
       function startTimer() {
@@ -682,11 +732,47 @@
 
         bar.textContent = text;
         bar.style.width = `${(timeRemaining / 900) * 100}%`;
+        
+        // Save temp score
+        if (isStarted && !hasSubmitted) {
+          localStorage.setItem(`activity${currentActivity}_temp_score`, currentGameScore);
+        }
       }
 
       function updateStats() {
         const count = Object.keys(userAnswers).length;
         document.getElementById("foundCount").textContent = `${count}/15`;
+        currentGameScore = count;
+      }
+
+      function showAnswersReview() {
+        const reviewContainer = document.getElementById("answersReview");
+        reviewContainer.innerHTML = "<h4 style='text-align: center; margin-bottom: 10px; color: #5c2e0f;'>Mga Sagot:</h4>";
+        
+        questions.forEach((q, index) => {
+          const input = document.getElementById(`answer-${index}`);
+          const userAnswer = (userAnswers[index] || "").trim().toUpperCase();
+          const correctAnswer = q.correct;
+          const isCorrect = userAnswer === correctAnswer;
+          
+          const answerDiv = document.createElement("div");
+          answerDiv.style.padding = "10px";
+          answerDiv.style.marginBottom = "8px";
+          answerDiv.style.border = "1px solid #ddd";
+          answerDiv.style.borderRadius = "4px";
+          answerDiv.style.backgroundColor = isCorrect ? "#d4edda" : "#f8d7da";
+          answerDiv.style.fontSize = "0.9em";
+          
+          answerDiv.innerHTML = `
+            <strong>${q.question}</strong><br>
+            <span style="color: ${isCorrect ? '#155724' : '#721c24'}">
+              <strong>Iyong sagot:</strong> ${userAnswer || 'Walang sagot'}<br>
+              <strong>Tamang sagot:</strong> ${correctAnswer}
+            </span>
+          `;
+          
+          reviewContainer.appendChild(answerDiv);
+        });
       }
 
       function showSubmitConfirmation() {
@@ -702,6 +788,10 @@
 
       function submitQuiz() {
         clearInterval(timerInterval);
+        
+        // Clear in-progress flags
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
 
         let score = 0;
 
@@ -734,6 +824,9 @@
         localStorage.setItem("activity3_score", score);
         localStorage.setItem("activity3_completed", "true");
 
+        // Show answers review
+        showAnswersReview();
+        
         // Show game end modal
         const percent = ((score / 15) * 100).toFixed(1);
         document.getElementById(
@@ -747,7 +840,11 @@
       }
 
       function showBackToActivitiesModal() {
-        if (isStarted && !hasSubmitted) {
+        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        
+        if (isStarted && !hasSubmitted || isInProgress) {
+          document.getElementById("backToActivitiesText").textContent = 
+            "Mayroon kang kasalukuyang laro na in progress. Sigurado ka bang gusto mong bumalik sa Mga Gawain? Ang iyong kasalukuyang iskor ay mabubura.";
           showModal("backToActivitiesModal");
         } else {
           window.location.href = "activities.html";
@@ -755,22 +852,13 @@
       }
 
       function confirmBackToActivities() {
+        // Clear in-progress data
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        
         closeModal("backToActivitiesModal");
         window.location.href = "activities.html";
-      }
-
-      // Add reset function to enable button when needed
-      function resetGame() {
-        isStarted = false;
-        const startButton = document.querySelector(
-          'button[onclick="startWithCountdown()"]'
-        );
-        if (startButton) {
-          startButton.disabled = false;
-          startButton.textContent = "Magsimula";
-          startButton.style.backgroundColor = "";
-          startButton.style.cursor = "";
-        }
       }
 
       function showModal(modalId) {
@@ -785,6 +873,17 @@
       document
         .getElementById("submitBtn")
         .addEventListener("click", showSubmitConfirmation);
+        
+      // Check for saved in-progress game on load
+      document.addEventListener("DOMContentLoaded", function() {
+        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        const tempScore = localStorage.getItem(`activity${currentActivity}_temp_score`);
+        
+        if (isInProgress && tempScore) {
+          document.getElementById("foundCount").textContent = `${tempScore}/15`;
+          currentGameScore = parseInt(tempScore);
+        }
+      });
     </script>
   </body>
 </html>

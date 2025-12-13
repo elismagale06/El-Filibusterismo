@@ -1028,3 +1028,97 @@ audio {
     background-image: none !important;
   }
 }
+
+/* Disable audio seeking for desktop - SHOW progress bar but make it non-interactive */
+@media (min-width: 769px) {
+    audio {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    /* Show the progress bar but make it non-interactive */
+    audio::-webkit-media-controls-timeline {
+        display: flex !important;
+        pointer-events: none;
+        opacity: 0.7;
+        cursor: default;
+    }
+    
+    /* Show time displays but make them non-interactive */
+    audio::-webkit-media-controls-current-time-display,
+    audio::-webkit-media-controls-time-remaining-display {
+        display: flex !important;
+        pointer-events: none;
+        opacity: 0.7;
+        cursor: default;
+    }
+    
+    /* Hide seek buttons */
+    audio::-webkit-media-controls-seek-back-button,
+    audio::-webkit-media-controls-seek-forward-button {
+        display: none !important;
+    }
+    
+    /* Make the progress bar non-clickable */
+    audio::-webkit-slider-thumb {
+        pointer-events: none;
+    }
+    
+    audio::-webkit-slider-runnable-track {
+        pointer-events: none;
+    }
+    
+    /* For Firefox - show but disable */
+    audio::-moz-range-track {
+        pointer-events: none;
+        cursor: default;
+    }
+    
+    audio::-moz-range-thumb {
+        pointer-events: none;
+        cursor: default;
+    }
+    
+    /* For IE/Edge */
+    audio::-ms-track {
+        pointer-events: none;
+        cursor: default;
+    }
+    
+    audio::-ms-thumb {
+        pointer-events: none;
+        cursor: default;
+    }
+    
+    /* Add a semi-transparent overlay to block clicks but show progress */
+    .audio-controls {
+        position: relative;
+    }
+    
+    .audio-controls::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: transparent;
+    }
+    
+    /* Allow only play/pause, volume, and mute buttons */
+    audio::-webkit-media-controls-play-button,
+    audio::-webkit-media-controls-volume-slider,
+    audio::-webkit-media-controls-mute-button {
+        pointer-events: auto;
+        cursor: pointer;
+    }
+    
+    /* Disable pointer events on the timeline container */
+    audio::-webkit-media-controls-timeline-container {
+        pointer-events: none;
+    }
+}
