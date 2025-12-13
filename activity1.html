@@ -61,6 +61,14 @@
         margin-top: 10px;
       }
 
+      .instructions .highlight {
+        color: #8b4513;
+        font-weight: bold;
+        background-color: rgba(139, 69, 19, 0.1);
+        padding: 2px 4px;
+        border-radius: 3px;
+      }
+
       .game-container {
         display: flex;
         flex-direction: row;
@@ -168,6 +176,7 @@
         align-items: center;
         flex-shrink: 0;
         margin-top: 0;
+        position: relative;
       }
 
       .word-grid {
@@ -176,12 +185,14 @@
         gap: 8px;
         user-select: none;
         width: fit-content;
+        position: relative;
+        touch-action: none;
       }
 
       .grid-cell {
         width: 35px;
         height: 35px;
-        border: 1px solid #8b4513;
+        border: 2px solid #8b4513;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -190,6 +201,24 @@
         cursor: pointer;
         background-color: #f4ead5;
         transition: all 0.2s;
+        position: relative;
+        z-index: 2;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      /* Improved touch target for mobile */
+      .grid-cell::after {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        z-index: 1;
       }
 
       .grid-cell:hover {
@@ -199,6 +228,10 @@
       .grid-cell.selected {
         background-color: #d4a574;
         color: #fff;
+        transform: scale(1.05);
+        z-index: 3;
+        box-shadow: 0 0 0 2px #8b4513;
+        transition: transform 0.1s ease, background-color 0.1s ease;
       }
 
       .grid-cell.found {
@@ -210,6 +243,25 @@
       .grid-cell.hint {
         background-color: #ffd700;
         animation: pulse 1s ease-in-out;
+      }
+
+      /* Selection line visualization */
+      .selection-line {
+        position: absolute;
+        background-color: rgba(139, 69, 19, 0.3);
+        height: 4px;
+        transform-origin: 0 0;
+        z-index: 1;
+        pointer-events: none;
+        border-radius: 2px;
+      }
+
+      .selection-guide {
+        position: absolute;
+        background-color: rgba(139, 69, 19, 0.1);
+        z-index: 1;
+        pointer-events: none;
+        border-radius: 3px;
       }
 
       @keyframes cellFound {
@@ -408,6 +460,8 @@
         display: flex;
         justify-content: center;
         margin-bottom: 0;
+        flex-wrap: wrap;
+        gap: 10px;
       }
 
       .start-button-container {
@@ -587,6 +641,48 @@
         transform: translateY(-2px);
       }
 
+      /* Selection Mode Toggle */
+      .selection-mode-toggle {
+        background-color: #fff8e7;
+        border: 2px solid #8b4513;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+        text-align: center;
+      }
+
+      .selection-mode-info {
+        font-size: 0.85em;
+        margin-bottom: 10px;
+        color: #5c2e0f;
+      }
+
+      .mode-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .mode-btn {
+        padding: 8px 15px;
+        font-size: 0.9em;
+        background-color: #f4ead5;
+        color: #5c2e0f;
+        border: 1px solid #8b4513;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .mode-btn.active {
+        background-color: #8b4513;
+        color: #fff8e7;
+      }
+
+      .mode-btn:hover:not(.active) {
+        background-color: #e8d9ba;
+      }
+
       /* Countdown Animation Styles */
       .countdown-overlay {
         position: fixed;
@@ -753,6 +849,13 @@
           border: 1px solid #8b4513;
         }
 
+        .grid-cell::after {
+          top: -8px;
+          left: -8px;
+          right: -8px;
+          bottom: -8px;
+        }
+
         .grid-container {
           padding: 10px;
           margin-bottom: 15px;
@@ -872,6 +975,13 @@
           border-width: 1px;
           border: 1px solid #8b4513;
           padding: 0;
+        }
+
+        .grid-cell::after {
+          top: -6px;
+          left: -6px;
+          right: -6px;
+          bottom: -6px;
         }
 
         .grid-container {
@@ -1148,6 +1258,7 @@
           <strong>GAWAIN 1 - Panuto:</strong> Hanapin ang mga salita sa listahan
           na maaaring makita nang pahalang, patayo, o diagonal. Markahan ang
           buong salita mula simula hanggang katapusan kapag nahanap.
+          <br><span class="highlight">Tip:</span> Pindutin at i-drag ang unang titik hanggang sa huling titik ng salita.
         </div>
       </header>
 
@@ -1185,9 +1296,22 @@
 
           <div class="hint-container">
             <div class="hint-info">
-              Mga Hint: <span id="hintsRemaining">2</span>
+              Mga Hint: <span id="hintsRemaining">3</span>
             </div>
             <button onclick="useHint()" id="hintButton">Gumamit ng Hint</button>
+          </div>
+
+          <!-- Selection Mode Toggle -->
+          <div class="selection-mode-toggle">
+            <div class="selection-mode-info">Paraan ng Pagpili:</div>
+            <div class="mode-buttons">
+              <button class="mode-btn active" onclick="setSelectionMode('straight')" id="straightMode">
+                Diretso
+              </button>
+              <button class="mode-btn" onclick="setSelectionMode('free')" id="freeMode">
+                Libre
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1235,6 +1359,10 @@
       let gameStarted = false;
       let currentGameScore = 0;
       let isShowingSuccessMessage = false;
+      let selectionMode = 'straight'; // 'straight' or 'free'
+      let startCell = null;
+      let lastTouchTime = 0;
+      const TOUCH_DEBOUNCE = 50; // ms
 
       // Local storage keys
       const SCORE_KEY = "activity1_score";
@@ -1242,7 +1370,6 @@
       const LAST_SCORE_KEY = "activity1_last_score";
 
       // Countdown Animation Function
-      // Update the showCountdownAnimation function in activity1.html
       function showCountdownAnimation(callback) {
         const overlay = document.getElementById("countdownOverlay");
         overlay.style.display = "flex";
@@ -1394,133 +1521,261 @@
             cell.dataset.col = j;
 
             // Mouse events for desktop
-            cell.addEventListener("mousedown", startSelection);
-            cell.addEventListener("mouseenter", continueSelection);
-            cell.addEventListener("mouseup", endSelection);
-
+            cell.addEventListener("mousedown", handleMouseDown);
+            cell.addEventListener("mouseenter", handleMouseEnter);
+            
             // Touch events for mobile
-            cell.addEventListener("touchstart", handleTouchStart);
-            cell.addEventListener("touchmove", handleTouchMove);
-            cell.addEventListener("touchend", handleTouchEnd);
-
-            // Prevent default touch behaviors
-            cell.addEventListener(
-              "touchstart",
-              function (e) {
-                if (gameStarted) {
-                  e.preventDefault();
-                }
-              },
-              { passive: false }
-            );
+            cell.addEventListener("touchstart", handleTouchStart, { passive: false });
+            cell.addEventListener("touchmove", handleTouchMove, { passive: false });
+            
+            // Prevent text selection
+            cell.addEventListener("selectstart", (e) => e.preventDefault());
 
             gridEl.appendChild(cell);
           }
         }
+        
+        // Add mouseup/touchend to document for better handling
+        document.addEventListener("mouseup", handleMouseUp);
+        document.addEventListener("touchend", handleTouchEnd, { passive: false });
       }
 
-      // Touch event variables
-      let touchStartCell = null;
-      let touchIsSelecting = false;
-
-      function handleTouchStart(e) {
+      // ================== IMPROVED SELECTION LOGIC ==================
+      
+      function handleMouseDown(e) {
         if (timerInterval === null || !gameStarted) return;
+        
+        const cell = e.target;
+        if (!cell.classList.contains("grid-cell")) return;
+        
         e.preventDefault();
-
+        startSelection(cell);
+      }
+      
+      function handleMouseEnter(e) {
+        if (!isSelecting || !gameStarted || !startCell) return;
+        
+        const cell = e.target;
+        if (!cell.classList.contains("grid-cell")) return;
+        
+        e.preventDefault();
+        continueSelection(cell);
+      }
+      
+      function handleMouseUp() {
+        if (!isSelecting || !gameStarted) return;
+        
+        endSelection();
+      }
+      
+      function handleTouchStart(e) {
+        const now = Date.now();
+        if (now - lastTouchTime < TOUCH_DEBOUNCE) {
+          e.preventDefault();
+          return;
+        }
+        lastTouchTime = now;
+        
+        if (timerInterval === null || !gameStarted) {
+          e.preventDefault();
+          return;
+        }
+        
         const touch = e.touches[0];
         const cell = document.elementFromPoint(touch.clientX, touch.clientY);
-
+        
         if (cell && cell.classList.contains("grid-cell")) {
-          touchStartCell = cell;
-          touchIsSelecting = true;
-          selectedCells = [];
-
-          // Clear previous selections
-          document.querySelectorAll(".grid-cell.selected").forEach((c) => {
-            c.classList.remove("selected");
-          });
-
-          addToSelection(cell);
+          e.preventDefault();
+          startSelection(cell);
         }
       }
-
+      
       function handleTouchMove(e) {
-        if (!touchIsSelecting || !gameStarted) return;
-        e.preventDefault();
-
+        if (!isSelecting || !gameStarted || !startCell) {
+          e.preventDefault();
+          return;
+        }
+        
         const touch = e.touches[0];
         const cell = document.elementFromPoint(touch.clientX, touch.clientY);
-
+        
         if (cell && cell.classList.contains("grid-cell")) {
-          // Don't add the same cell multiple times
-          if (!selectedCells.some((c) => c.element === cell)) {
+          e.preventDefault();
+          continueSelection(cell);
+        }
+      }
+      
+      function handleTouchEnd(e) {
+        if (!isSelecting || !gameStarted) {
+          e.preventDefault();
+          return;
+        }
+        
+        e.preventDefault();
+        endSelection();
+      }
+      
+      function startSelection(cell) {
+        isSelecting = true;
+        startCell = cell;
+        selectedCells = [];
+        
+        // Clear previous selections
+        document.querySelectorAll(".grid-cell.selected").forEach((c) => {
+          c.classList.remove("selected");
+        });
+        
+        // Clear any existing selection guides
+        clearSelectionGuides();
+        
+        addToSelection(cell);
+      }
+      
+      function continueSelection(cell) {
+        if (!startCell) return;
+        
+        const startRow = parseInt(startCell.dataset.row);
+        const startCol = parseInt(startCell.dataset.col);
+        const currentRow = parseInt(cell.dataset.row);
+        const currentCol = parseInt(cell.dataset.col);
+        
+        // Clear current selection
+        document.querySelectorAll(".grid-cell.selected").forEach((c) => {
+          c.classList.remove("selected");
+        });
+        
+        // Clear selection guides
+        clearSelectionGuides();
+        
+        if (selectionMode === 'straight') {
+          // Straight line mode - only allow 8 directions
+          const dx = currentRow - startRow;
+          const dy = currentCol - startCol;
+          
+          // Determine direction (allow diagonal, horizontal, vertical only)
+          let dirX = 0, dirY = 0;
+          if (dx !== 0) dirX = dx > 0 ? 1 : -1;
+          if (dy !== 0) dirY = dy > 0 ? 1 : -1;
+          
+          // Calculate distance based on the larger movement
+          const maxDistance = Math.max(Math.abs(dx), Math.abs(dy));
+          
+          selectedCells = [];
+          for (let i = 0; i <= maxDistance; i++) {
+            const row = startRow + (dirX * i);
+            const col = startCol + (dirY * i);
+            
+            const pathCell = document.querySelector(
+              `[data-row="${row}"][data-col="${col}"]`
+            );
+            
+            if (pathCell) {
+              addToSelection(pathCell);
+            }
+          }
+          
+          // Add visual guide line
+          if (maxDistance > 0) {
+            addSelectionGuide(startRow, startCol, currentRow, currentCol);
+          }
+        } else {
+          // Free mode - allow any path (original behavior)
+          const row = parseInt(cell.dataset.row);
+          const col = parseInt(cell.dataset.col);
+          
+          // Check if cell is already in selection
+          if (!selectedCells.some(c => c.row === row && c.col === col)) {
             addToSelection(cell);
           }
         }
       }
-
-      function handleTouchEnd(e) {
-        if (!touchIsSelecting || !gameStarted) return;
-        e.preventDefault();
-
-        touchIsSelecting = false;
-        touchStartCell = null;
-
-        // Check the selected word
+      
+      function addSelectionGuide(startRow, startCol, endRow, endCol) {
+        const gridEl = document.getElementById("wordGrid");
+        const startCell = document.querySelector(
+          `[data-row="${startRow}"][data-col="${startCol}"]`
+        );
+        const endCell = document.querySelector(
+          `[data-row="${endRow}"][data-col="${endCol}"]`
+        );
+        
+        if (!startCell || !endCell) return;
+        
+        const startRect = startCell.getBoundingClientRect();
+        const endRect = endCell.getBoundingClientRect();
+        const gridRect = gridEl.getBoundingClientRect();
+        
+        const startX = startRect.left + startRect.width / 2 - gridRect.left;
+        const startY = startRect.top + startRect.height / 2 - gridRect.top;
+        const endX = endRect.left + endRect.width / 2 - gridRect.left;
+        const endY = endRect.top + endRect.height / 2 - gridRect.top;
+        
+        // Calculate distance and angle
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        
+        // Create guide line
+        const guideLine = document.createElement("div");
+        guideLine.className = "selection-line";
+        guideLine.style.width = distance + "px";
+        guideLine.style.height = "4px";
+        guideLine.style.left = startX + "px";
+        guideLine.style.top = startY + "px";
+        guideLine.style.transform = `rotate(${angle}deg)`;
+        
+        gridEl.appendChild(guideLine);
+      }
+      
+      function clearSelectionGuides() {
+        document.querySelectorAll(".selection-line, .selection-guide").forEach(el => {
+          el.remove();
+        });
+      }
+      
+      function endSelection() {
+        if (!isSelecting || !gameStarted || selectedCells.length === 0) {
+          isSelecting = false;
+          startCell = null;
+          clearSelectionGuides();
+          return;
+        }
+        
         const selectedWord = selectedCells
+          .sort((a, b) => {
+            // Sort by row first, then column
+            if (a.row !== b.row) return a.row - b.row;
+            return a.col - b.col;
+          })
           .map((c) => grid[c.row][c.col])
           .join("");
-
-        checkWord(selectedWord);
-
-        // Clear selection after a delay
+        
+        // Check word after a short delay to allow user to adjust
         setTimeout(() => {
-          selectedCells.forEach((c) => c.element.classList.remove("selected"));
-          selectedCells = [];
-        }, 300);
+          checkWord(selectedWord);
+          
+          // Clear selection after checking
+          setTimeout(() => {
+            selectedCells.forEach((c) => c.element.classList.remove("selected"));
+            selectedCells = [];
+            clearSelectionGuides();
+          }, 300);
+        }, 100);
+        
+        isSelecting = false;
+        startCell = null;
       }
-
-      // Add mobile-specific CSS to prevent text selection
-      const style = document.createElement("style");
-      style.textContent = `
-  .grid-cell {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  /* Improve touch target size on mobile */
-  @media (max-width: 768px) {
-    .grid-cell {
-      min-width: 28px;
-      min-height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: none;
-    }
-    
-    .word-grid {
-      touch-action: none;
-    }
-    
-    .grid-container {
-      -webkit-overflow-scrolling: touch;
-      overflow-scrolling: touch;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .grid-cell {
-      min-width: 22px;
-      min-height: 22px;
-    }
-  }
-`;
-      document.head.appendChild(style);
+      
+      function addToSelection(cell) {
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+        
+        if (!selectedCells.some((c) => c.row === row && c.col === col)) {
+          selectedCells.push({ row, col, element: cell });
+          cell.classList.add("selected");
+        }
+      }
 
       function renderWordList() {
         const listEl = document.getElementById("wordList");
@@ -1535,69 +1790,34 @@
         });
       }
 
-      function startSelection(e) {
-        if (timerInterval === null || !gameStarted) return;
-        isSelecting = true;
-        selectedCells = [];
-        document.querySelectorAll(".grid-cell.selected").forEach((cell) => {
-          cell.classList.remove("selected");
-        });
-        addToSelection(e.target);
-      }
-
-      function continueSelection(e) {
-        if (isSelecting && gameStarted) {
-          addToSelection(e.target);
-        }
-      }
-
-      function addToSelection(cell) {
-        const row = parseInt(cell.dataset.row);
-        const col = parseInt(cell.dataset.col);
-
-        if (!selectedCells.some((c) => c.row === row && c.col === col)) {
-          selectedCells.push({ row, col, element: cell });
-          cell.classList.add("selected");
-        }
-      }
-
-      function endSelection() {
-        if (!isSelecting || !gameStarted) return;
-        isSelecting = false;
-
-        const selectedWord = selectedCells
-          .map((c) => grid[c.row][c.col])
-          .join("");
-        checkWord(selectedWord);
-
-        setTimeout(() => {
-          selectedCells.forEach((c) => c.element.classList.remove("selected"));
-          selectedCells = [];
-        }, 300);
-      }
-
       function checkWord(selectedWord) {
+        // Check both forward and reverse
         const foundWord = placedWords.find((pw) => {
           const word = pw.word;
-          if (
-            word !== selectedWord &&
-            word !== selectedWord.split("").reverse().join("")
-          ) {
+          const reverseWord = word.split("").reverse().join("");
+          
+          if (word !== selectedWord && reverseWord !== selectedWord) {
             return false;
           }
 
           const positions = pw.positions;
           if (positions.length !== selectedCells.length) return false;
 
-          const match = positions.every(
+          // Check if positions match in forward direction
+          const forwardMatch = positions.every(
             (pos, i) =>
-              (pos[0] === selectedCells[i].row &&
-                pos[1] === selectedCells[i].col) ||
-              (pos[0] === selectedCells[selectedCells.length - 1 - i].row &&
-                pos[1] === selectedCells[selectedCells.length - 1 - i].col)
+              pos[0] === selectedCells[i].row &&
+              pos[1] === selectedCells[i].col
           );
 
-          return match;
+          // Check if positions match in reverse direction
+          const reverseMatch = positions.every(
+            (pos, i) =>
+              pos[0] === selectedCells[selectedCells.length - 1 - i].row &&
+              pos[1] === selectedCells[selectedCells.length - 1 - i].col
+          );
+
+          return forwardMatch || reverseMatch;
         });
 
         if (foundWord && !foundWords.has(foundWord.word)) {
@@ -1630,6 +1850,13 @@
           showSuccessMessage(foundWord.word);
 
           updateStats();
+          
+          // Check if game is complete
+          if (foundWords.size === words.length) {
+            setTimeout(() => {
+              endGame(true);
+            }, 1000);
+          }
         }
       }
 
@@ -1660,14 +1887,6 @@
             message.remove();
             overlay.remove();
             isShowingSuccessMessage = false;
-
-            // Check if this was the last word before showing game end modal
-            if (foundWords.size === words.length) {
-              // Small delay to ensure success message is gone
-              setTimeout(() => {
-                endGame(true);
-              }, 300);
-            }
           }, 300);
         }, 1500);
       }
@@ -1693,11 +1912,65 @@
         }
       }
 
+    function setSelectionMode(mode) {
+      selectionMode = mode;
+      
+      // Update UI
+      document.getElementById('straightMode').classList.toggle('active', mode === 'straight');
+      document.getElementById('freeMode').classList.toggle('active', mode === 'free');
+      
+      // Show temporary hint that won't replace the hint button
+      const hint = mode === 'straight' 
+        ? "Moda: Diretso - Pumipili lamang ng mga titik sa isang tuwid na linya" 
+        : "Moda: Libre - Maaaring pumili ng anumang mga titik";
+      
+      showTemporaryHint(hint);
+    }
+
+          // Replace the showTemporaryHint function with this improved version
+      function showTemporaryHint(message) {
+        const hintContainer = document.querySelector('.hint-container');
+        const originalContent = hintContainer.innerHTML;
+        
+        // Create a temporary message element
+        const tempHint = document.createElement('div');
+        tempHint.className = 'temporary-hint';
+        tempHint.textContent = message;
+        tempHint.style.cssText = `
+          font-size: 0.85em;
+          color: #5c2e0f;
+          background-color: rgba(212, 165, 116, 0.2);
+          padding: 8px;
+          border-radius: 4px;
+          margin-bottom: 10px;
+          border: 1px solid #d4a574;
+          text-align: center;
+          animation: fadeIn 0.3s ease;
+        `;
+        
+        // Insert the temporary hint at the beginning of the container
+        hintContainer.insertBefore(tempHint, hintContainer.firstChild);
+        
+        // Remove after 2 seconds
+        setTimeout(() => {
+          if (tempHint.parentNode === hintContainer) {
+            tempHint.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => {
+              if (tempHint.parentNode === hintContainer) {
+                hintContainer.removeChild(tempHint);
+              }
+            }, 300);
+          }
+        }, 2000);
+      }
+
+                  // Also update the useHint function to prevent conflicts
       function useHint() {
         if (
           hintsRemaining <= 0 ||
           timerInterval === null ||
-          foundWords.size === words.length
+          foundWords.size === words.length ||
+          !gameStarted
         ) {
           return;
         }
@@ -1717,18 +1990,46 @@
           `[data-row="${firstPos[0]}"][data-col="${firstPos[1]}"]`
         );
 
-        cell.classList.add("hint");
-        setTimeout(() => {
-          cell.classList.remove("hint");
-        }, 2000);
+        if (cell) {
+          cell.classList.add("hint");
+          setTimeout(() => {
+            cell.classList.remove("hint");
+          }, 2000);
 
-        hintsRemaining--;
-        document.getElementById("hintsRemaining").textContent = hintsRemaining;
+          hintsRemaining--;
+          document.getElementById("hintsRemaining").textContent = hintsRemaining;
 
-        if (hintsRemaining === 0) {
-          document.getElementById("hintButton").disabled = true;
+          // Disable button and change text when hints are used up
+          if (hintsRemaining === 0) {
+            const hintButton = document.getElementById("hintButton");
+            hintButton.disabled = true;
+            hintButton.textContent = "Ubos na mga Hint";
+          }
+          
+          // Show temporary message about the hint
+          showTemporaryHint(`Hint: Ang salitang "${randomWord}" ay nagsisimula sa titik na ito`);
         }
       }
+
+            // Add this CSS for the temporary hint animation
+      const tempHintStyle = document.createElement('style');
+      tempHintStyle.textContent = `
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .temporary-hint {
+          animation: fadeIn 0.3s ease;
+        }
+      `;
+      document.head.appendChild(tempHintStyle);
 
       function updateStats() {
         document.getElementById(
@@ -1811,12 +2112,21 @@
         gameStarted = true;
         foundWords.clear();
         selectedCells = [];
-        hintsRemaining = 2;
+        hintsRemaining = 3; // Changed from 2
         currentGameScore = 0;
         isShowingSuccessMessage = false;
+        startCell = null;
+        isSelecting = false;
 
         document.getElementById("hintsRemaining").textContent = hintsRemaining;
-        document.getElementById("hintButton").disabled = false;
+        
+        // Reset hint button to enabled state with original text
+        const hintButton = document.getElementById("hintButton");
+        hintButton.disabled = false;
+        hintButton.textContent = "Gumamit ng Hint";
+
+        // Reset selection mode to straight
+        setSelectionMode('straight');
 
         initGrid();
         renderGrid();
@@ -1859,7 +2169,6 @@
         window.location.href = "activities.html";
       }
 
-// Add this new function to handle retry
       function confirmRetry() {
         // Clear localStorage for the specific activity
         localStorage.removeItem(SCORE_KEY);
@@ -1877,8 +2186,11 @@
         window.location.href = "activities.html?score1=" + foundWords.size;
       }
 
-      document.addEventListener("mouseup", () => {
-        isSelecting = false;
+      // Prevent text selection during drag
+      document.addEventListener("selectstart", function(e) {
+        if (isSelecting) {
+          e.preventDefault();
+        }
       });
 
       window.onload = () => {
@@ -1948,4 +2260,3 @@
     </script>
   </body>
 </html>
-
