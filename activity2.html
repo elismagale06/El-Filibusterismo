@@ -667,7 +667,7 @@
       </div>
     </div>
 
-    <script>
+   <script>
       const originalQuestions = [
         {
           scrambled: "R P O B A T O B A",
@@ -754,7 +754,7 @@
       let currentGameScore = 0;
       const currentActivity = 2;
 
-      // Shuffle function
+      // Shuffle function - UPDATED to use Fisher-Yates algorithm
       function shuffleArray(array) {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -813,6 +813,9 @@
         const container = document.getElementById("questionsContainer");
         container.innerHTML = "";
 
+        // Shuffle questions each time createQuestions is called
+        questions = shuffleArray(originalQuestions);
+        
         questions.forEach((q, index) => {
           const card = document.createElement("div");
           card.className = "question-card";
@@ -834,9 +837,6 @@
         localStorage.removeItem(`activity${currentActivity}_in_progress`);
         localStorage.removeItem(`activity${currentActivity}_temp_score`);
         localStorage.removeItem(`activity${currentActivity}_last_score`);
-        
-        // Shuffle questions each time game starts
-        questions = shuffleArray(originalQuestions);
         
         isStarted = true;
         hasSubmitted = false;

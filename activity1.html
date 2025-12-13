@@ -1859,13 +1859,15 @@
         window.location.href = "activities.html";
       }
 
+// Add this new function to handle retry
       function confirmRetry() {
-        // Clear localStorage for this activity
+        // Clear localStorage for the specific activity
         localStorage.removeItem(SCORE_KEY);
         localStorage.removeItem(COMPLETED_KEY);
         localStorage.removeItem(LAST_SCORE_KEY);
-
-        // Reset and start new game
+        localStorage.removeItem("activity1_in_progress");
+        localStorage.removeItem("activity1_temp_score");
+        
         closeModal("retryModal");
         startGame();
       }
@@ -1880,39 +1882,69 @@
       });
 
       window.onload = () => {
-        initGrid();
-        renderGrid();
-        renderWordList();
+          initGrid();
+          renderGrid();
+          renderWordList();
 
-        // Check if there's a saved score to resume
-        const savedScore = localStorage.getItem(SCORE_KEY);
-        const isCompleted = localStorage.getItem(COMPLETED_KEY);
-        const lastScore = localStorage.getItem(LAST_SCORE_KEY);
+          // Check if there's a saved score to resume
+          const savedScore = localStorage.getItem(SCORE_KEY);
+          const isCompleted = localStorage.getItem(COMPLETED_KEY);
+          const lastScore = localStorage.getItem(LAST_SCORE_KEY);
+          const isInProgress = localStorage.getItem("activity1_in_progress") === "true";
 
-        // Show the most recent score
-        if (isCompleted === "true" && savedScore) {
-          document.getElementById(
-            "foundCount"
-          ).textContent = `${savedScore}/15`;
-          document.getElementById("startButton").textContent = "Gawin Muli";
-          document.getElementById("startButton").disabled = false;
-          document.getElementById("startButton").onclick = function () {
-            showModal("retryModal");
-          };
-        } else if (lastScore) {
-          // Show last known score from incomplete game
-          document.getElementById("foundCount").textContent = `${lastScore}/15`;
-          document.getElementById("startButton").textContent = "Magsimula";
-          document.getElementById("startButton").disabled = false;
-          document.getElementById("startButton").onclick = function () {
-            startWithCountdown();
-          };
-        } else {
-          document.getElementById("startButton").onclick = function () {
-            startWithCountdown();
-          };
-        }
-      };
+          // If coming back from activities page with modal confirmation, clear all data
+          const urlParams = new URLSearchParams(window.location.search);
+          const resetRequested = urlParams.get('reset') === 'true';
+          
+          if (resetRequested) {
+            // Clear all localStorage for this activity
+            localStorage.removeItem(SCORE_KEY);
+            localStorage.removeItem(COMPLETED_KEY);
+            localStorage.removeItem(LAST_SCORE_KEY);
+            localStorage.removeItem("activity1_in_progress");
+            localStorage.removeItem("activity1_temp_score");
+            
+            // Reset button to start
+            document.getElementById("startButton").textContent = "Magsimula";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              startWithCountdown();
+            };
+            
+            // Clear URL parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } 
+          // Show the most recent score
+          else if (isCompleted === "true" && savedScore) {
+            document.getElementById(
+              "foundCount"
+            ).textContent = `${savedScore}/15`;
+            document.getElementById("startButton").textContent = "Gawin Muli";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              showModal("retryModal");
+            };
+          } else if (lastScore && !isInProgress) {
+            // Show last known score from incomplete game
+            document.getElementById("foundCount").textContent = `${lastScore}/15`;
+            document.getElementById("startButton").textContent = "Magsimula";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              startWithCountdown();
+            };
+          } else if (isInProgress) {
+            // Game was in progress, show retry modal
+            document.getElementById("startButton").textContent = "Ipagpatuloy";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              showModal("retryModal");
+            };
+          } else {
+            document.getElementById("startButton").onclick = function () {
+              startWithCountdown();
+            };
+          }
+        };
     </script>
   </body>
 </html>
