@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="tl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Filibusterismo - Activity 3</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Garamond", "Georgia", serif;
+        background: #f4ead5;
+        padding: 20px;
+        background: linear-gradient(180deg, #0d0a08 0%, #1a1410 50%, #2c1810 100%);
+        color: #2c1810;
+        min-height: 100vh;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #8b4513;
+      }
+
+      h1 {
+        color: #5c2e0f;
+        font-size: 2em;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      .instructions {
+        background-color: #f4ead5;
+        padding: 15px;
+        border: 2px solid #8b4513;
+        border-radius: 5px;
+        margin-bottom: 25px;
+      }
+
+      .instructions p {
+        margin-bottom: 10px;
+        color: #5c2e0f;
+        font-weight: 500;
+      }
+
+      .word-box {
+        background-color: #fff8e7;
+        border: 2px solid #8b4513;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+      }
+
+      .word-box h3 {
+        color: #5c2e0f;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .words {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px;
+        font-size: 0.85em;
+      }
+
+      .words span {
+        background-color: #f4ead5;
+        padding: 8px;
+        border-radius: 3px;
+        text-align: center;
+        border: 1px solid #8b4513;
+      }
+
+      .controls-wrapper {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .controls button {
+        background-color: #8b4513;
+        color: #fff8e7;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1em;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        transition: 0.3s;
+      }
+      h2 {
+          color: #5c2e0f;
+          font-size: 1.1em;
+          margin: 0 0 20px 0;
+          text-align: center;
+          font-weight: 500;
+        }
+
+      .controls button:hover {
+        background-color: #5c2e0f;
+      }
+
+      .controls button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .stats-score-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 15px;
+        margin-bottom: 25px;
+      }
+
+      .stat-box,
+      .timer-box {
+        background-color: #fff8e7;
+        border: 2px solid #8b4513;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #5c2e0f;
+      }
+
+      .progress-bar-container {
+        width: 100%;
+        height: 30px;
+        background-color: #f4ead5;
+        border: 2px solid #8b4513;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        background-color: #8b4513;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        color: white;
+        justify-content: center;
+        align-items: center;
+        transition: width 1s linear;
+      }
+
+      .question {
+        background-color: #f4ead5;
+        border: 2px solid #8b4513;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .question-text {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #5c2e0f;
+      }
+
+      .answer-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #8b4513;
+        background-color: #fff8e7;
+        border-radius: 5px;
+      }
+
+      .answer-input.correct {
+        background-color: #90ee90;
+      }
+
+      .answer-input.incorrect {
+        background-color: #ffb6c6;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 15px;
+        background-color: #8b4513;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        font-size: 1.2em;
+      }
+
+      .result {
+        background-color: #f4ead5;
+        border: 2px solid #8b4513;
+        padding: 20px;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1003;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        border-radius: 10px;
+        padding: 30px;
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+        animation: fadeInScale 0.3s ease;
+      }
+
+      .modal h3 {
+        color: #5c2e0f;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+      }
+
+      .modal p {
+        margin-bottom: 25px;
+        font-size: 1.1em;
+        line-height: 1.5;
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .modal-btn {
+        padding: 12px 25px;
+        min-width: 120px;
+        background-color: #8b4513;
+        color: #fff8e7;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: "Georgia", serif;
+        transition: all 0.3s;
+      }
+
+      .modal-btn:hover {
+        background-color: #5c2e0f;
+        transform: translateY(-2px);
+      }
+
+      .modal-btn.cancel {
+        background-color: #6c757d;
+      }
+
+      .modal-btn.cancel:hover {
+        background-color: #5a6268;
+      }
+
+      /* Countdown Animation Styles */
+      .countdown-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        pointer-events: none;
+      }
+
+      .countdown-number {
+        font-size: 20vw;
+        font-weight: bold;
+        color: #fff8e7;
+        text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700, 0 0 60px #ffd700;
+        animation: countdownPop 1s ease-out forwards;
+        opacity: 0;
+        font-family: "Garamond", "Georgia", serif;
+      }
+
+      .countdown-start {
+        font-size: 10vw;
+        font-weight: bold;
+        color: #ffd700;
+        text-shadow: 0 0 20px #8b4513, 0 0 40px #8b4513;
+        animation: startPulse 2s ease-in-out infinite;
+        font-family: "Garamond", "Georgia", serif;
+        position: relative;
+      }
+
+      .countdown-start::after {
+        content: "!";
+        animation: exclamationPop 1s ease-in-out infinite;
+      }
+
+      @keyframes countdownPop {
+        0% {
+          opacity: 0;
+          transform: scale(0.1) rotate(-360deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2) rotate(10deg);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+      }
+
+      @keyframes startPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          text-shadow: 0 0 20px #8b4513, 0 0 40px #8b4513;
+        }
+        50% {
+          transform: scale(1.1);
+          text-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700, 0 0 80px #ffd700;
+        }
+      }
+
+      @keyframes exclamationPop {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.8;
+          transform: scale(1.3);
+        }
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Game End Modal */
+      .game-end-modal .modal-content {
+        background-color: #fff8e7;
+        border: 3px solid #28a745;
+      }
+
+      .game-end-modal h3 {
+        color: #28a745;
+      }
+
+      .game-end-score {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #5c2e0f;
+        margin: 15px 0;
+      }
+
+      /* Disable audio seeking in desktop */
+      @media (min-width: 769px) {
+        audio {
+          pointer-events: none;
+        }
+        
+        audio::-webkit-media-controls-timeline,
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display {
+          display: none !important;
+        }
+        
+        audio {
+          -moz-user-select: none;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Countdown Animation Overlay -->
+    <div class="countdown-overlay" id="countdownOverlay"></div>
+
+    <!-- Modal for going back to activities when game is in progress -->
+    <div class="modal" id="backToActivitiesModal">
+      <div class="modal-content">
+        <h3>Kumpirmasyon</h3>
+        <p id="backToActivitiesText">
+          Mayroon kang kasalukuyang laro na in progress. Sigurado ka bang gusto
+          mong bumalik sa Mga Gawain? Ang iyong kasalukuyang iskor ay mabubura.
+        </p>
+        <div class="modal-buttons">
+          <button
+            class="modal-btn cancel"
+            onclick="closeModal('backToActivitiesModal')"
+          >
+            Kanselahin
+          </button>
+          <button class="modal-btn" onclick="confirmBackToActivities()">
+            Oo, Bumalik
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for submit confirmation -->
+    <div class="modal" id="submitConfirmationModal">
+      <div class="modal-content">
+        <h3>Kumpirmasyon sa Pagsusumite</h3>
+        <p>
+          Sigurado ka bang gusto mong ipasa ang iyong mga sagot? Hindi mo na
+          maaaring baguhin ang mga sagot pagkatapos ipasa.
+        </p>
+        <div class="modal-buttons">
+          <button
+            class="modal-btn cancel"
+            onclick="closeModal('submitConfirmationModal')"
+          >
+            Kanselahin
+          </button>
+          <button class="modal-btn" onclick="confirmSubmit()">Oo, Ipasa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game End Modal -->
+    <div class="modal game-end-modal" id="gameEndModal">
+      <div class="modal-content">
+        <h3>Resulta</h3>
+        <div class="game-end-score" id="finalScoreDisplay"></div>
+        <div id="answersReview" style="margin: 20px 0; text-align: left; max-height: 300px; overflow-y: auto; padding: 10px; background: #f4ead5; border-radius: 8px; border: 1px solid #8b4513;"></div>
+        <div class="modal-buttons">
+          <button class="modal-btn" onclick="goToActivitiesWithScore()">
+            Bumalik sa Mga Gawain
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>El Filibusterismo - Pagsusulit</h1>
+        <h2>Kabanata 12-15</h2>
+        <div class="instructions">
+          <p>
+            <strong>Activity 3 - Panuto:</strong> Piliin ang pinakaangkop na
+            kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.
+          </p>
+        </div>
+      </header>
+
+      <div class="word-box">
+        <h3>Pagpipilian ng Sagot</h3>
+        <div class="words">
+          <span>Pagkakalito</span>
+          <span>Nakasulat na kasunduan</span>
+          <span>Palatandaan ng pag-alala sa isang tao.</span>
+          <span>Oblong</span>
+          <span>Partido</span>
+          <span>Kagalang-galang</span>
+          <span>Kampihan</span>
+          <span>Mismong sinabi</span>
+          <span>Balik-tanaw</span>
+          <span>Pang-aasar</span>
+          <span>Simple</span>
+          <span>Rebelde</span>
+          <span>Inirekomenda</span>
+          <span>Ikabubuti</span>
+          <span>Patutyang pagbibiro</span>
+        </div>
+      </div>
+
+      <div class="controls-wrapper">
+        <div class="controls">
+          <button onclick="startWithCountdown()">Magsimula</button>
+          <button
+            onclick="showBackToActivitiesModal()"
+            class="back-to-activities"
+          >
+            ← Bumalik sa Mga Gawain
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-score-container">
+        <div class="stat-box">
+          <div class="stat-label">Puntos</div>
+          <div class="stat-value" id="foundCount">0/15</div>
+        </div>
+
+        <div class="timer-box">
+          <div class="timer-label">Oras na Natitira</div>
+          <div class="progress-bar-container">
+            <div class="progress-fill" id="progressFill">15:00</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="questionsContainer"></div>
+
+      <button
+        class="submit-btn"
+        id="submitBtn"
+        onclick="showSubmitConfirmation()"
+        disabled
+      >
+        Ipasa ang Sagot
+      </button>
+
+      <div id="resultContainer" style="display: none"></div>
+    </div>
+
+    <script>
+      const originalQuestions = [
+        { question: "DIKTA -\nAng pagtuturo ng sagot ni Pelaez upang tulungan ang kanyang kaklase sa pagsagot sa katanungan ni Padre Millon.",
+          correct: "MISMONG SINABI" },
+        { question: "HUGIS-TALUHABA -\nAng hugis ng silid aralan sa pisika ng Unibersidad de Santo Tomas na pahabang may onting kurba.",
+          correct: "OBLONG" },
+        { question: "IMINUNGKAHI -\nAng pagbibigay o pagsasabi ng dalawang paraan para makakuha ang mga estudyante ng suporta.",
+          correct: "INIREKOMENDA" },
+        { question: "KAPAKANAN -\nAng sariling kaligtasan na iniingatan ni Ginoong Pasta kung kaya ay hindi nya tunulungan sila Isagani.",
+          correct: "IKABUBUTI" },
+        { question: "KASULATAN -\nAng isang artikulo na pinapapirmahan ng mga estudyante upang hadlangan ang balak na paaralan nina Macaraig.",
+          correct: "NAKASULAT NA KASUNDUAN" },
+        { question: "KUTYAIN -\nAng paninirang puri ni Padre Millon kay Placido dahil sa pagsagot nito sa kanya upang ipaglaban ang binata ang kanyang dangal.",
+          correct: "PANG-AASAR" },
+        { question: "MARANGAL -\nAng piniling paraan ni Isagani upang walang mapahamak sa kanilang paghingi ng pabor sa planong paaralan.",
+          correct: "KAGALANG-GALANG" },
+        { question: "MONUMENTO -\nAng ipatatayong proyekto sa pag-alala ni Juanito at mga estudyante sa dominikanong pari.",
+          correct: "PALATANDAAN NG PAG-ALALA SA ISANG TAO" },
+        { question: "NAGMUNI-MUNI -\nAng pag-alala sa nakaraan ni Ginoong Pasta sa kanyang kabataan dahil nauunawaan nya ang damdamin ni Isagani.",
+          correct: "BALIK-TANAW" },
+        { question: "PANIG -\nAng kanya kanyang kinakampihang grupo ni Isagani at Ginoong Pasta sa kanilang pag-uusap.",
+          correct: "PARTIDO" },
+        { question: "PABORAN -\nAng hinihinging pagtulong ng mga mag-aaral sa may kapangyarihan at maimpluwensya sa paaralan na kanilang nais.",
+          correct: "KAMPIHAN" },
+        { question: "PAYAK -\nAng itsura ng silid aralan na wala gaanong nilalaman  na pinasukan ni Placido sa Unibersidad de Santo Tomas.",
+          correct: "SIMPLE" },
+        { question: "PILIBUSTERO -\nAng katawagang binigkas ni Ginoong Pasta sa kabataang tumataliwas sa nais ng mga kastila.",
+          correct: "REBELDE" },
+        { question: "PINAGTATAKHAN -\nAng naging estado ng kaisipan ng mga kababayan ni Placido pagkatuklas na nagbabalak siyang huminto sa pag-aaral.",
+          correct: "PAGKAKALITO" },
+        { question: "PINAGTRIPAN -\nAng nakakasakit na biro ng mga estudyante sa nagtitindang intsik.",
+          correct: "PATUTYANG PAGBIBIRO" },
+      ];
+
+      let questions = [];
+      let userAnswers = {};
+      let timerInterval = null;
+      let timeRemaining = 900;
+      let isStarted = false;
+      let hasSubmitted = false;
+      let currentGameScore = 0;
+      const currentActivity = 3;
+
+      // Shuffle function
+      function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      }
+
+      // Countdown Animation Function
+      function showCountdownAnimation(callback) {
+        const overlay = document.getElementById("countdownOverlay");
+        overlay.style.display = "flex";
+        overlay.innerHTML = "";
+
+        let count = 3;
+
+        function showNumber(num) {
+          overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
+
+          if (num === 0) {
+            // Show "START!"
+            setTimeout(() => {
+              overlay.innerHTML = `<div class="countdown-start">MAGSIMULA</div>`;
+
+              // After "START" is shown, hide overlay and execute callback
+              setTimeout(() => {
+                overlay.style.display = "none";
+                overlay.innerHTML = "";
+                if (callback) callback();
+              }, 1000);
+            }, 1000);
+          } else {
+            // Show next number
+            setTimeout(() => {
+              showNumber(num - 1);
+            }, 1000);
+          }
+        }
+
+        // Start the countdown
+        showNumber(count);
+      }
+
+      function startWithCountdown() {
+        showCountdownAnimation(() => {
+          startGame();
+        });
+      }
+
+      // INITIAL SETUP
+      document.addEventListener("DOMContentLoaded", function() {
+        // Initialize with shuffled questions
+        questions = shuffleArray(originalQuestions);
+        initQuiz();
+      });
+
+      function initQuiz() {
+        const container = document.getElementById("questionsContainer");
+        container.innerHTML = "";
+
+        questions.forEach((q, index) => {
+          const div = document.createElement("div");
+          div.className = "question";
+          div.innerHTML = `
+            <div class="question-text">${q.question}</div>
+            <input id="answer-${index}" class="answer-input" disabled placeholder='Pindutin ang "Magsimula" para magsimula...' data-correct="${q.correct}">
+            <div id="feedback-${index}" class="answer-feedback"></div>
+          `;
+          container.appendChild(div);
+        });
+      }
+
+      function startGame() {
+        // Clear any in-progress data
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        
+        // Shuffle questions each time game starts
+        questions = shuffleArray(originalQuestions);
+        
+        if (isStarted) return;
+        isStarted = true;
+        hasSubmitted = false;
+
+        userAnswers = {};
+        timeRemaining = 900;
+
+        // Disable start button once game starts
+        const startButton = document.querySelector(
+          'button[onclick="startWithCountdown()"]'
+        );
+        if (startButton) {
+          startButton.disabled = true;
+          startButton.textContent = "Nagsimula na ang laro";
+          startButton.style.backgroundColor = "#ccc";
+          startButton.style.cursor = "not-allowed";
+        }
+
+        // Reinitialize quiz with shuffled questions
+        initQuiz();
+
+        document.getElementById("submitBtn").disabled = false;
+
+        questions.forEach((q, index) => {
+          const input = document.getElementById(`answer-${index}`);
+          const feedback = document.getElementById(`feedback-${index}`);
+
+          input.disabled = false;
+          input.value = "";
+          input.classList.remove("correct", "incorrect");
+          feedback.style.display = "none";
+
+          input.addEventListener("input", () => {
+            userAnswers[index] = input.value.trim().toUpperCase();
+            updateStats();
+          });
+        });
+
+        startTimer();
+        
+        // Mark as in progress
+        localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
+      }
+
+      function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          timeRemaining--;
+          updateTimer();
+
+          if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            showSubmitConfirmation();
+          }
+        }, 1000);
+      }
+
+      function updateTimer() {
+        const m = Math.floor(timeRemaining / 60);
+        const s = timeRemaining % 60;
+        const text = `${m}:${s < 10 ? "0" : ""}${s}`;
+        const bar = document.getElementById("progressFill");
+
+        bar.textContent = text;
+        bar.style.width = `${(timeRemaining / 900) * 100}%`;
+        
+        // Save temp score
+        if (isStarted && !hasSubmitted) {
+          localStorage.setItem(`activity${currentActivity}_temp_score`, currentGameScore);
+        }
+      }
+
+      function updateStats() {
+        const count = Object.keys(userAnswers).length;
+        document.getElementById("foundCount").textContent = `${count}/${questions.length}`;
+        currentGameScore = count;
+      }
+
+      function showAnswersReview() {
+        const reviewContainer = document.getElementById("answersReview");
+        reviewContainer.innerHTML = "<h4 style='text-align: center; margin-bottom: 10px; color: #5c2e0f;'>Mga Sagot:</h4>";
+        
+        questions.forEach((q, index) => {
+          const input = document.getElementById(`answer-${index}`);
+          const userAnswer = (userAnswers[index] || "").trim().toUpperCase();
+          const correctAnswer = q.correct;
+          const isCorrect = userAnswer === correctAnswer;
+          
+          const answerDiv = document.createElement("div");
+          answerDiv.style.padding = "10px";
+          answerDiv.style.marginBottom = "8px";
+          answerDiv.style.border = "1px solid #ddd";
+          answerDiv.style.borderRadius = "4px";
+          answerDiv.style.backgroundColor = isCorrect ? "#d4edda" : "#f8d7da";
+          answerDiv.style.fontSize = "0.9em";
+          
+          answerDiv.innerHTML = `
+            <strong>${q.question}</strong><br>
+            <span style="color: ${isCorrect ? '#155724' : '#721c24'}">
+              <strong>Iyong sagot:</strong> ${userAnswer || 'Walang sagot'}<br>
+              <strong>Tamang sagot:</strong> ${correctAnswer}
+            </span>
+          `;
+          
+          reviewContainer.appendChild(answerDiv);
+        });
+      }
+
+      function showSubmitConfirmation() {
+        if (hasSubmitted) return;
+        showModal("submitConfirmationModal");
+      }
+
+      function confirmSubmit() {
+        closeModal("submitConfirmationModal");
+        hasSubmitted = true;
+        submitQuiz();
+      }
+
+      function submitQuiz() {
+        clearInterval(timerInterval);
+        
+        // Clear in-progress flags
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+
+        let score = 0;
+
+        questions.forEach((q, index) => {
+          const input = document.getElementById(`answer-${index}`);
+          const feedback = document.getElementById(`feedback-${index}`);
+
+          input.disabled = true;
+
+          const answer = (userAnswers[index] || "").trim().toUpperCase();
+          const isCorrect = answer === q.correct;
+
+          if (isCorrect) {
+            score++;
+            input.classList.add("correct");
+            feedback.className = "answer-feedback correct";
+            feedback.textContent = "✓ Tama!";
+          } else {
+            input.classList.add("incorrect");
+            feedback.className = "answer-feedback incorrect";
+            feedback.textContent = `✗ Mali. Tamang sagot: ${q.correct}`;
+          }
+
+          feedback.style.display = "block";
+        });
+
+        currentGameScore = score;
+
+        // Save score to localStorage
+        localStorage.setItem("activity3_score", score);
+        localStorage.setItem("activity3_completed", "true");
+
+        // Show answers review
+        showAnswersReview();
+        
+        // Show game end modal
+        const percent = ((score / questions.length) * 100).toFixed(1);
+        document.getElementById(
+          "finalScoreDisplay"
+        ).textContent = `Puntos: ${score} / ${questions.length} (${percent}%)`;
+        showModal("gameEndModal");
+      }
+
+      function goToActivitiesWithScore() {
+        window.location.href = `12-15_activities.html?score3=${currentGameScore}`;
+      }
+
+      function showBackToActivitiesModal() {
+        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        
+        if (isStarted && !hasSubmitted || isInProgress) {
+          document.getElementById("backToActivitiesText").textContent = 
+            "Mayroon kang kasalukuyang laro na in progress. Sigurado ka bang gusto mong bumalik sa Mga Gawain? Ang iyong kasalukuyang iskor ay mabubura.";
+          showModal("backToActivitiesModal");
+        } else {
+          window.location.href = "12-15_activities.html";
+        }
+      }
+
+      function confirmBackToActivities() {
+        // Clear in-progress data
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        
+        closeModal("backToActivitiesModal");
+        window.location.href = "12-15_activities.html";
+      }
+
+      function showModal(modalId) {
+        document.getElementById(modalId).style.display = "flex";
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+      }
+
+      // Event listener for submit button
+      document
+        .getElementById("submitBtn")
+        .addEventListener("click", showSubmitConfirmation);
+        
+      // Check for saved in-progress game on load
+      document.addEventListener("DOMContentLoaded", function() {
+        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        const tempScore = localStorage.getItem(`activity${currentActivity}_temp_score`);
+        
+        if (isInProgress && tempScore) {
+          document.getElementById("foundCount").textContent = `${tempScore}/${questions.length}`;
+          currentGameScore = parseInt(tempScore);
+        }
+      });
+    </script>
+  </body>
+</html>

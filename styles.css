@@ -4,21 +4,96 @@
     box-sizing: border-box;
 }
 
+@keyframes fall1 {
+  0% { transform: translateY(-100px); opacity: 0; }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.7; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes fall2 {
+  0% { transform: translateY(-150px); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes fall3 {
+  0% { transform: translateY(-200px); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes fall4 {
+  0% { transform: translateY(-120px); opacity: 0; }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* Rain background (shared across pages) */
+.rain-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+}
+
+.rain-item {
+    position: absolute;
+    top: -300px;
+    opacity: 0;
+    pointer-events: none;
+}
+.rain-container .rain-item:nth-child(1) { left: 5%; animation: fall1 11s linear infinite; animation-delay: 0s; }
+.rain-container .rain-item:nth-child(2) { left: 18%; animation: fall2 13s linear infinite; animation-delay: 3s; }
+.rain-container .rain-item:nth-child(3) { left: 32%; animation: fall3 12s linear infinite; animation-delay: 6s; }
+.rain-container .rain-item:nth-child(4) { left: 47%; animation: fall4 14s linear infinite; animation-delay: 2s; }
+.rain-container .rain-item:nth-child(5) { left: 61%; animation: fall1 10s linear infinite; animation-delay: 5s; }
+.rain-container .rain-item:nth-child(6) { left: 76%; animation: fall2 12s linear infinite; animation-delay: 8s; }
+.rain-container .rain-item:nth-child(7) { left: 88%; animation: fall3 11s linear infinite; animation-delay: 1s; }
+.rain-container .rain-item:nth-child(8) { left: 11%; animation: fall4 13s linear infinite; animation-delay: 7s; }
+.rain-container .rain-item:nth-child(9) { left: 25%; animation: fall1 12s linear infinite; animation-delay: 4s; }
+.rain-container .rain-item:nth-child(10) { left: 40%; animation: fall2 14s linear infinite; animation-delay: 9s; }
+.rain-container .rain-item:nth-child(11) { left: 54%; animation: fall3 11s linear infinite; animation-delay: 2.5s; }
+.rain-container .rain-item:nth-child(12) { left: 68%; animation: fall4 13s linear infinite; animation-delay: 6.5s; }
+.rain-container .rain-item:nth-child(13) { left: 82%; animation: fall1 12s linear infinite; animation-delay: 3.5s; }
+.rain-container .rain-item:nth-child(14) { left: 94%; animation: fall2 11s linear infinite; animation-delay: 8.5s; }
+.rain-container .rain-item:nth-child(15) { left: 15%; animation: fall3 14s linear infinite; animation-delay: 1.5s; }
+.rain-container .rain-item:nth-child(16) { left: 8%; animation: fall2 12s linear infinite; animation-delay: 1s; }
+.rain-container .rain-item:nth-child(17) { left: 22%; animation: fall3 11s linear infinite; animation-delay: 4s; }
+.rain-container .rain-item:nth-child(18) { left: 35%; animation: fall1 13s linear infinite; animation-delay: 7s; }
+.rain-container .rain-item:nth-child(19) { left: 50%; animation: fall4 12s linear infinite; animation-delay: 2.5s; }
+.rain-container .rain-item:nth-child(20) { left: 64%; animation: fall2 14s linear infinite; animation-delay: 5.5s; }
+.rain-container .rain-item:nth-child(21) { left: 79%; animation: fall3 11s linear infinite; animation-delay: 8.5s; }
+.rain-container .rain-item:nth-child(22) { left: 91%; animation: fall1 13s linear infinite; animation-delay: 0.5s; }
+.rain-container .rain-item:nth-child(23) { left: 14%; animation: fall4 12s linear infinite; animation-delay: 6s; }
+.rain-container .rain-item:nth-child(24) { left: 28%; animation: fall2 11s linear infinite; animation-delay: 3s; }
+.rain-container .rain-item:nth-child(25) { left: 43%; animation: fall3 14s linear infinite; animation-delay: 9s; }
+.rain-container .rain-item:nth-child(26) { left: 57%; animation: fall1 12s linear infinite; animation-delay: 1.5s; }
+.rain-container .rain-item:nth-child(27) { left: 71%; animation: fall4 13s linear infinite; animation-delay: 4.5s; }
+.rain-container .rain-item:nth-child(28) { left: 85%; animation: fall2 11s linear infinite; animation-delay: 7.5s; }
+.rain-container .rain-item:nth-child(29) { left: 3%; animation: fall3 12s linear infinite; animation-delay: 2s; }
+.rain-container .rain-item:nth-child(30) { left: 97%; animation: fall1 14s linear infinite; animation-delay: 5s; }
+
 body {
-    font-family: "Garamond", "Georgia", serif;
-    background: #f4ead5;
-    background-image: repeating-linear-gradient(90deg,
-            transparent,
-            transparent 2px,
-            rgba(139, 69, 19, 0.03) 2px,
-            rgba(139, 69, 19, 0.03) 4px),
-        repeating-linear-gradient(0deg,
-            transparent,
-            transparent 2px,
-            rgba(139, 69, 19, 0.03) 2px,
-            rgba(139, 69, 19, 0.03) 4px);
-    color: #2c1810;
-    min-height: 100vh;
+  font-family: "Garamond", "Georgia", serif;
+  background: linear-gradient(180deg, #0d0a08 0%, #1a1410 50%, #2c1810 100%);
+  color: #f4ead5;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+body > * {
+  position: relative;
+  z-index: 2;
 }
 
 .container {
@@ -38,6 +113,34 @@ header {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15),
         inset 0 0 50px rgba(139, 69, 19, 0.05);
     position: relative;
+}
+
+/* Title banner (image-based) */
+.title-banner {
+    display: inline-block;
+    background: linear-gradient(180deg, rgba(92,46,15,0.06), rgba(139,69,19,0.04));
+    border: 2px solid rgba(139,69,19,0.12);
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(44,24,16,0.25), inset 0 0 30px rgba(212,175,116,0.04);
+    max-width: 680px;
+     margin-bottom: 20px;
+}
+
+.title-banner img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.title-banner .title-caption {
+    margin-top: 8px;
+    color: #5c2e0f;
+    font-family: "Times New Roman", serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
 }
 
 header::before,
@@ -257,7 +360,7 @@ h1 {
 }
 
 .chapter-card p {
-    font-size: 1.15em;
+    font-size: 1.2em;
     color: #6b4423;
     font-style: italic;
 }
@@ -1029,7 +1132,7 @@ audio {
   }
 }
 
-/* Disable audio seeking for desktop - SHOW progress bar but make it non-interactive */
+/* Desktop audio controls: enable seeking and full interaction */
 @media (min-width: 769px) {
     audio {
         -webkit-user-select: none;
@@ -1037,66 +1140,67 @@ audio {
         -ms-user-select: none;
         user-select: none;
     }
-    
-    /* Show the progress bar but make it non-interactive */
+
+    /* Make the native controls fully interactive (allow seeking) */
     audio::-webkit-media-controls-timeline {
         display: flex !important;
-        pointer-events: none;
-        opacity: 0.7;
-        cursor: default;
+        pointer-events: auto;
+        opacity: 1;
+        cursor: pointer;
     }
-    
-    /* Show time displays but make them non-interactive */
+
     audio::-webkit-media-controls-current-time-display,
     audio::-webkit-media-controls-time-remaining-display {
         display: flex !important;
-        pointer-events: none;
-        opacity: 0.7;
+        pointer-events: auto;
+        opacity: 1;
         cursor: default;
     }
-    
-    /* Hide seek buttons */
+
+    /* Show seek buttons if available */
     audio::-webkit-media-controls-seek-back-button,
     audio::-webkit-media-controls-seek-forward-button {
-        display: none !important;
+        display: inline-flex !important;
     }
-    
-    /* Make the progress bar non-clickable */
+
+    /* Ensure slider/thumb are interactive */
     audio::-webkit-slider-thumb {
-        pointer-events: none;
+        pointer-events: auto;
+        cursor: pointer;
     }
-    
+
     audio::-webkit-slider-runnable-track {
-        pointer-events: none;
+        pointer-events: auto;
+        cursor: pointer;
     }
-    
-    /* For Firefox - show but disable */
+
+    /* For Firefox - enable interaction */
     audio::-moz-range-track {
-        pointer-events: none;
-        cursor: default;
+        pointer-events: auto;
+        cursor: pointer;
     }
-    
+
     audio::-moz-range-thumb {
-        pointer-events: none;
-        cursor: default;
+        pointer-events: auto;
+        cursor: pointer;
     }
-    
-    /* For IE/Edge */
+
+    /* For IE/Edge - enable interaction */
     audio::-ms-track {
-        pointer-events: none;
-        cursor: default;
+        pointer-events: auto;
+        cursor: pointer;
     }
-    
+
     audio::-ms-thumb {
-        pointer-events: none;
-        cursor: default;
+        pointer-events: auto;
+        cursor: pointer;
     }
-    
-    /* Add a semi-transparent overlay to block clicks but show progress */
+
+    /* Keep audio-controls relative but allow interactions through it */
     .audio-controls {
         position: relative;
     }
-    
+
     .audio-controls::after {
         content: '';
         position: absolute;
@@ -1105,21 +1209,21 @@ audio {
         right: 0;
         bottom: 0;
         z-index: 1;
-        pointer-events: none;
+        pointer-events: none; /* do not block interactions */
         background: transparent;
     }
-    
-    /* Allow only play/pause, volume, and mute buttons */
+
+    /* Allow the native play/pause/volume buttons to remain usable */
     audio::-webkit-media-controls-play-button,
     audio::-webkit-media-controls-volume-slider,
     audio::-webkit-media-controls-mute-button {
         pointer-events: auto;
         cursor: pointer;
     }
-    
-    /* Disable pointer events on the timeline container */
+
+    /* Keep timeline container interactive */
     audio::-webkit-media-controls-timeline-container {
-        pointer-events: none;
+        pointer-events: auto;
     }
 }
 
@@ -1149,5 +1253,6 @@ audio {
   text-align: center;
   animation: fadeInScale 0.3s ease;
 }
+
 
 
