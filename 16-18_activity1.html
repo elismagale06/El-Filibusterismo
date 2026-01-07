@@ -1593,7 +1593,8 @@
       
       function handleTouchMove(e) {
         if (!isSelecting || !gameStarted || !startCell) {
-          e.preventDefault();
+          // Not currently selecting — don't prevent defaults so other touch
+          // interactions (buttons, links) still work on mobile.
           return;
         }
         
@@ -1608,10 +1609,12 @@
       
       function handleTouchEnd(e) {
         if (!isSelecting || !gameStarted) {
-          e.preventDefault();
+          // If we're not selecting, allow the event to propagate so
+          // taps on buttons (start/back) still generate clicks.
           return;
         }
-        
+
+        // Actively handling a selection — prevent default and finish.
         e.preventDefault();
         endSelection();
       }
