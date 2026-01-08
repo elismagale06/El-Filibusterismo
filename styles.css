@@ -46,7 +46,7 @@
 
 .rain-item {
     position: absolute;
-    top: -300px;
+    top: -50px;
     opacity: 0;
     pointer-events: none;
 }
