@@ -1200,6 +1200,7 @@
     <audio id="bgAudio" src="audio/background.mp3" loop preload="auto"></audio>
     <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
     <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
+    <audio id="clickAudio" src="audio/click.mp3" preload="auto"></audio>
     <audio id="countdownAudio" src="audio/countdown.mp3" preload="auto"></audio>
 
     <!-- Reset Confirmation Modal -->
@@ -1382,6 +1383,7 @@
       const bgAudioEl = document.getElementById ? document.getElementById('bgAudio') : null;
       const correctAudioEl = document.getElementById ? document.getElementById('correctAudio') : null;
       const wrongAudioEl = document.getElementById ? document.getElementById('wrongAudio') : null;
+      const clickAudioEl = document.getElementById ? document.getElementById('clickAudio') : null;
       const countdownAudioEl = document.getElementById ? document.getElementById('countdownAudio') : null;
 
       function initAudio() {
@@ -1486,6 +1488,27 @@
         g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
         o.start(now);
         o.stop(now + 0.25);
+      }
+
+      function playClickSound() {
+        if (clickAudioEl && clickAudioEl.src) {
+          try { clickAudioEl.currentTime = 0; clickAudioEl.play().catch(() => {}); } catch (e) {}
+          return;
+        }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = 1500;
+        o.connect(g);
+        g.connect(masterGain);
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+        o.start(now);
+        o.stop(now + 0.07);
       }
 
       function playCountdownSound() {
@@ -1940,6 +1963,7 @@
         if (!selectedCells.some((c) => c.row === row && c.col === col)) {
           selectedCells.push({ row, col, element: cell });
           cell.classList.add("selected");
+          try { playClickSound(); } catch (e) {}
         }
       }
 
