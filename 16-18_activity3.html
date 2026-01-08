@@ -411,6 +411,12 @@
   <body>
     <!-- Countdown Animation Overlay -->
     <div class="countdown-overlay" id="countdownOverlay"></div>
+    <!-- Audio Elements -->
+    <audio id="bgAudio" src="audio/background.mp3" loop preload="auto"></audio>
+    <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
+    <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
+    <audio id="clickAudio" src="audio/click.mp3" preload="auto"></audio>
+    <audio id="countdownAudio" src="audio/countdown.mp3" preload="auto"></audio>
 
     <!-- Modal for going back to activities when game is in progress -->
     <div class="modal" id="backToActivitiesModal">
@@ -589,13 +595,11 @@
 
         function showNumber(num) {
           overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
+          if (num >= 1) playCountdownTick();
 
-          if (num === 0) {
-            // Show "START!"
+          if (num === 1) {
             setTimeout(() => {
               overlay.innerHTML = `<div class="countdown-start">MAGSIMULA</div>`;
-
-              // After "START" is shown, hide overlay and execute callback
               setTimeout(() => {
                 overlay.style.display = "none";
                 overlay.innerHTML = "";
@@ -603,18 +607,18 @@
               }, 1000);
             }, 1000);
           } else {
-            // Show next number
             setTimeout(() => {
               showNumber(num - 1);
             }, 1000);
           }
         }
 
-        // Start the countdown
         showNumber(count);
       }
 
       function startWithCountdown() {
+        initAudio();
+        resumeAudioContext();
         showCountdownAnimation(() => {
           startGame();
         });
@@ -687,10 +691,12 @@
           input.addEventListener("input", () => {
             userAnswers[index] = input.value.trim().toUpperCase();
             updateStats();
+            playClickSound();
           });
         });
 
         startTimer();
+        playBackground();
         
         // Mark as in progress
         localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
@@ -794,10 +800,12 @@
             input.classList.add("correct");
             feedback.className = "answer-feedback correct";
             feedback.textContent = "✓ Tama!";
+            playCorrectSound();
           } else {
             input.classList.add("incorrect");
             feedback.className = "answer-feedback incorrect";
             feedback.textContent = `✗ Mali. Tamang sagot: ${q.correct}`;
+            playWrongSound();
           }
 
           feedback.style.display = "block";
@@ -821,6 +829,7 @@
       }
 
       function goToActivitiesWithScore() {
+        stopBackground();
         window.location.href = `16-18_activities.html?score3=${currentGameScore}`;
       }
 
@@ -843,6 +852,7 @@
         localStorage.removeItem(`activity${currentActivity}_last_score`);
         
         closeModal("backToActivitiesModal");
+        stopBackground();
         window.location.href = "16-18_activities.html";
       }
 
@@ -853,6 +863,144 @@
       function closeModal(modalId) {
         document.getElementById(modalId).style.display = "none";
       }
+
+      /* Audio Elements and Helpers */
+      const audioState = {
+        ctx: null,
+        masterGain: null,
+        bgAudio: null,
+        correctAudio: null,
+        wrongAudio: null,
+        clickAudio: null,
+        countdownAudio: null,
+        bgFadeInterval: null,
+      };
+
+      function initAudio() {
+        if (audioState.bgAudio) return;
+        audioState.bgAudio = document.getElementById('bgAudio');
+        audioState.correctAudio = document.getElementById('correctAudio');
+        audioState.wrongAudio = document.getElementById('wrongAudio');
+        audioState.clickAudio = document.getElementById('clickAudio');
+        audioState.countdownAudio = document.getElementById('countdownAudio');
+
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioState.ctx = new AudioContext();
+          audioState.masterGain = audioState.ctx.createGain();
+          audioState.masterGain.gain.value = 1;
+          audioState.masterGain.connect(audioState.ctx.destination);
+        } catch (e) {
+          audioState.ctx = null;
+          audioState.masterGain = null;
+        }
+      }
+
+      function resumeAudioContext() {
+        if (audioState.ctx && audioState.ctx.state === 'suspended') {
+          audioState.ctx.resume().catch(() => {});
+        }
+      }
+
+      function playAudioElement(el) {
+        if (!el) return false;
+        try {
+          el.currentTime = 0;
+          const p = el.play();
+          if (p && p.catch) p.catch(() => {});
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function playClickSound() {
+        if (!audioState.clickAudio) return;
+        playAudioElement(audioState.clickAudio);
+      }
+
+      function playCountdownTick() {
+        if (audioState.countdownAudio && playAudioElement(audioState.countdownAudio)) return;
+        if (audioState.ctx) {
+          const o = audioState.ctx.createOscillator();
+          const g = audioState.ctx.createGain();
+          o.frequency.value = 880;
+          g.gain.value = 0.05;
+          o.connect(g);
+          g.connect(audioState.ctx.destination);
+          o.start();
+          setTimeout(() => { o.stop(); }, 120);
+        }
+      }
+
+      function playCorrectSound() {
+        if (audioState.correctAudio && playAudioElement(audioState.correctAudio)) return;
+        if (audioState.ctx) {
+          const o = audioState.ctx.createOscillator();
+          const g = audioState.ctx.createGain();
+          o.frequency.value = 660;
+          g.gain.value = 0.06;
+          o.connect(g);
+          g.connect(audioState.ctx.destination);
+          o.start();
+          setTimeout(() => { o.stop(); }, 220);
+        }
+      }
+
+      function playWrongSound() {
+        if (audioState.wrongAudio && playAudioElement(audioState.wrongAudio)) return;
+        if (audioState.ctx) {
+          const o = audioState.ctx.createOscillator();
+          const g = audioState.ctx.createGain();
+          o.frequency.value = 220;
+          g.gain.value = 0.06;
+          o.connect(g);
+          g.connect(audioState.ctx.destination);
+          o.start();
+          setTimeout(() => { o.stop(); }, 220);
+        }
+      }
+
+      function playBackground() {
+        if (!audioState.bgAudio) return;
+        try {
+          audioState.bgAudio.volume = 0.0;
+          playAudioElement(audioState.bgAudio);
+          if (audioState.bgFadeInterval) clearInterval(audioState.bgFadeInterval);
+          audioState.bgFadeInterval = setInterval(() => {
+            if (audioState.bgAudio.volume < 0.6) {
+              audioState.bgAudio.volume = Math.min(0.6, audioState.bgAudio.volume + 0.02);
+            } else {
+              clearInterval(audioState.bgFadeInterval);
+              audioState.bgFadeInterval = null;
+            }
+          }, 120);
+        } catch (e) {}
+      }
+
+      function stopBackground() {
+        if (!audioState.bgAudio) return;
+        try {
+          if (audioState.bgFadeInterval) clearInterval(audioState.bgFadeInterval);
+          audioState.bgFadeInterval = setInterval(() => {
+            if (audioState.bgAudio.volume > 0.05) {
+              audioState.bgAudio.volume = Math.max(0, audioState.bgAudio.volume - 0.05);
+            } else {
+              audioState.bgAudio.pause();
+              audioState.bgAudio.currentTime = 0;
+              clearInterval(audioState.bgFadeInterval);
+              audioState.bgFadeInterval = null;
+            }
+          }, 120);
+        } catch (e) {}
+      }
+
+      // Play click sound for any button press (global)
+      document.addEventListener('click', function(e) {
+        if (e.target && e.target.tagName === 'BUTTON') {
+          playClickSound();
+        }
+      });
 
       // Event listener for submit button
       document

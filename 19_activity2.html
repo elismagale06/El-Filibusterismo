@@ -556,6 +556,13 @@
     <!-- Countdown Animation Overlay -->
     <div class="countdown-overlay" id="countdownOverlay"></div>
 
+    <!-- Audio Elements -->
+    <audio id="bgAudio" src="audio/background.mp3" loop preload="auto"></audio>
+    <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
+    <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
+    <audio id="clickAudio" src="audio/click.mp3" preload="auto"></audio>
+    <audio id="countdownAudio" src="audio/countdown.mp3" preload="auto"></audio>
+
     <!-- Modal for going back to activities when game is in progress -->
     <div class="modal" id="backToActivitiesModal">
       <div class="modal-content">
@@ -730,6 +737,152 @@
       let currentGameScore = 0;
       const currentActivity = 2;
 
+      // Audio / WebAudio helpers
+      let audioContext = null;
+      let masterGain = null;
+
+      function initAudio() {
+        if (audioContext) return;
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          masterGain = audioContext.createGain();
+          masterGain.gain.value = 1;
+          masterGain.connect(audioContext.destination);
+        } catch (e) {
+          audioContext = null;
+          masterGain = null;
+        }
+      }
+
+      function resumeAudioContext() {
+        initAudio();
+        if (audioContext && audioContext.state === 'suspended') {
+          audioContext.resume().catch(() => {});
+        }
+      }
+
+      function fadeInAudio(el, duration = 500) {
+        try {
+          el.volume = 0;
+          el.play();
+          const step = 50;
+          const inc = step / duration;
+          let vol = 0;
+          const iv = setInterval(() => {
+            vol += inc;
+            if (vol >= 1) {
+              el.volume = 1;
+              clearInterval(iv);
+            } else {
+              el.volume = vol;
+            }
+          }, step);
+        } catch (e) {}
+      }
+
+      function fadeOutAudio(el, duration = 300) {
+        try {
+          const step = 50;
+          const dec = step / duration;
+          let vol = el.volume || 1;
+          const iv = setInterval(() => {
+            vol -= dec;
+            if (vol <= 0) {
+              el.pause();
+              el.currentTime = 0;
+              el.volume = 1;
+              clearInterval(iv);
+            } else {
+              el.volume = vol;
+            }
+          }, step);
+        } catch (e) {}
+      }
+
+      function playBackground() {
+        const el = document.getElementById('bgAudio');
+        if (!el) return;
+        try {
+          fadeInAudio(el, 800);
+        } catch (e) {
+          try { el.play(); } catch (e) {}
+        }
+      }
+
+      function stopBackground() {
+        const el = document.getElementById('bgAudio');
+        if (!el) return;
+        try {
+          fadeOutAudio(el, 300);
+        } catch (e) {
+          try { el.pause(); el.currentTime = 0; } catch (e) {}
+        }
+      }
+
+      function playCountdownTick() {
+        const el = document.getElementById('countdownAudio');
+        if (el && el.play) {
+          try { el.currentTime = 0; el.play(); } catch (e) {}
+        } else if (audioContext) {
+          const o = audioContext.createOscillator();
+          const g = audioContext.createGain();
+          o.frequency.value = 800;
+          g.gain.value = 0.05;
+          o.connect(g);
+          g.connect(masterGain);
+          o.start();
+          setTimeout(() => { o.stop(); }, 120);
+        }
+      }
+
+      function playCorrectSound() {
+        const el = document.getElementById('correctAudio');
+        if (el && el.play) {
+          try { el.currentTime = 0; el.play(); } catch (e) {}
+        } else if (audioContext) {
+          const o = audioContext.createOscillator();
+          const g = audioContext.createGain();
+          o.frequency.value = 1200;
+          g.gain.value = 0.06;
+          o.connect(g);
+          g.connect(masterGain);
+          o.start();
+          setTimeout(() => { o.stop(); }, 300);
+        }
+      }
+
+      function playWrongSound() {
+        const el = document.getElementById('wrongAudio');
+        if (el && el.play) {
+          try { el.currentTime = 0; el.play(); } catch (e) {}
+        } else if (audioContext) {
+          const o = audioContext.createOscillator();
+          const g = audioContext.createGain();
+          o.frequency.value = 300;
+          g.gain.value = 0.06;
+          o.connect(g);
+          g.connect(masterGain);
+          o.start();
+          setTimeout(() => { o.stop(); }, 300);
+        }
+      }
+
+      function playClickSound() {
+        const el = document.getElementById('clickAudio');
+        if (el && el.play) {
+          try { el.currentTime = 0; el.play(); } catch (e) {}
+        } else if (audioContext) {
+          const o = audioContext.createOscillator();
+          const g = audioContext.createGain();
+          o.frequency.value = 1000;
+          g.gain.value = 0.04;
+          o.connect(g);
+          g.connect(masterGain);
+          o.start();
+          setTimeout(() => { o.stop(); }, 80);
+        }
+      }
+
       // Shuffle function - UPDATED to use Fisher-Yates algorithm
       function shuffleArray(array) {
         const shuffled = [...array];
@@ -750,13 +903,11 @@
 
         function showNumber(num) {
           overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
+          playCountdownTick();
 
-          if (num === 0) {
-            // Show "START!"
+          if (num === 1) {
             setTimeout(() => {
               overlay.innerHTML = `<div class="countdown-start">MAGSIMULA</div>`;
-
-              // After "START" is shown, hide overlay and execute callback
               setTimeout(() => {
                 overlay.style.display = "none";
                 overlay.innerHTML = "";
@@ -764,18 +915,17 @@
               }, 1000);
             }, 1000);
           } else {
-            // Show next number
             setTimeout(() => {
               showNumber(num - 1);
             }, 1000);
           }
         }
 
-        // Start the countdown
         showNumber(count);
       }
 
       function startWithCountdown() {
+        resumeAudioContext();
         showCountdownAnimation(() => {
           startGame();
         });
@@ -858,6 +1008,8 @@
         
         // Mark as in progress
         localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
+        // Start background music
+        playBackground();
       }
 
       function updateTimer() {
@@ -966,10 +1118,12 @@
             feedback.className = "feedback correct";
             feedback.textContent = "✓ Tama! " + correctAnswer;
             correct++;
+            try { playCorrectSound(); } catch (e) {}
           } else {
             input.className = "incorrect";
             feedback.className = "feedback incorrect";
             feedback.textContent = "✗ Mali. Tamang sagot: " + correctAnswer;
+            try { playWrongSound(); } catch (e) {}
           }
           feedback.style.display = "block";
         });
@@ -991,6 +1145,7 @@
       }
 
       function goToActivitiesWithScore() {
+        stopBackground();
         window.location.href = `19_activities.html?score2=${currentGameScore}`;
       }
 
@@ -1013,6 +1168,7 @@
         localStorage.removeItem(`activity${currentActivity}_last_score`);
         
         closeModal("backToActivitiesModal");
+        stopBackground();
         window.location.href = "19_activities.html";
       }
 
@@ -1033,8 +1189,10 @@
           '#questionsContainer input[type="text"]'
         );
         inputs.forEach((input) => {
-          input.addEventListener("input", updateStats);
+          input.addEventListener("input", () => { updateStats(); playClickSound(); });
         });
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) submitBtn.addEventListener('click', () => { try { playClickSound(); } catch (e) {} });
         
         // Check for saved in-progress game
         const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
