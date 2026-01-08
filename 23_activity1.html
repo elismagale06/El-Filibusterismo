@@ -1196,6 +1196,11 @@
     <!-- Countdown Animation Overlay -->
     <div class="countdown-overlay" id="countdownOverlay"></div>
 
+    <audio id="bgAudio" src="audio/background.mp3" loop preload="auto"></audio>
+    <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
+    <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
+    <audio id="countdownAudio" src="audio/countdown.mp3" preload="auto"></audio>
+
     <!-- Reset Confirmation Modal -->
     <div class="modal" id="resetModal">
       <div class="modal-content">
@@ -1362,6 +1367,152 @@
       const COMPLETED_KEY = "activity1_completed";
       const LAST_SCORE_KEY = "activity1_last_score";
 
+      // Audio and WebAudio fallback
+      let audioCtx = null;
+      let masterGain = null;
+      const bgAudioEl = document.getElementById ? document.getElementById('bgAudio') : null;
+      const correctAudioEl = document.getElementById ? document.getElementById('correctAudio') : null;
+      const wrongAudioEl = document.getElementById ? document.getElementById('wrongAudio') : null;
+      const countdownAudioEl = document.getElementById ? document.getElementById('countdownAudio') : null;
+
+      function initAudio() {
+        if (audioCtx) return;
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.9;
+          masterGain.connect(audioCtx.destination);
+        } catch (e) {
+          audioCtx = null;
+        }
+      }
+
+      function resumeAudioContext() {
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+      }
+
+      function fadeInAudio(el, target = 0.6, duration = 800) {
+        if (!el) return;
+        el.volume = 0;
+        el.play().catch(() => {});
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = t * target;
+          if (t === 1) clearInterval(id);
+        }, 30);
+      }
+
+      function fadeOutAudio(el, duration = 600) {
+        if (!el) return;
+        const startVol = el.volume || 0.6;
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = Math.max(0, startVol * (1 - t));
+          if (t === 1) {
+            el.pause();
+            el.currentTime = 0;
+            clearInterval(id);
+          }
+        }, 30);
+      }
+
+      function playBackground() {
+        initAudio();
+        resumeAudioContext();
+        if (bgAudioEl && bgAudioEl.src) {
+          fadeInAudio(bgAudioEl, 0.55, 700);
+        }
+      }
+
+      function stopBackground() {
+        if (bgAudioEl) fadeOutAudio(bgAudioEl, 600);
+      }
+
+      function playCorrectSound() {
+        if (correctAudioEl && correctAudioEl.src) {
+          correctAudioEl.currentTime = 0;
+          correctAudioEl.play().catch(() => {});
+          return;
+        }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880;
+        g.gain.value = 0.001;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        o.start(now);
+        o.stop(now + 0.3);
+      }
+
+      function playWrongSound() {
+        if (wrongAudioEl && wrongAudioEl.src) {
+          wrongAudioEl.currentTime = 0;
+          wrongAudioEl.play().catch(() => {});
+          return;
+        }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.value = 220;
+        g.gain.value = 0.001;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.15, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+        o.start(now);
+        o.stop(now + 0.25);
+      }
+
+      function playCountdownSound() {
+        initAudio();
+        resumeAudioContext();
+        if (countdownAudioEl && countdownAudioEl.src) {
+          countdownAudioEl.currentTime = 0;
+          countdownAudioEl.play().catch(() => {});
+        } else if (audioCtx) {
+          const now = audioCtx.currentTime;
+          for (let i = 0; i < 3; i++) {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'square';
+            o.frequency.value = 1200;
+            g.gain.value = 0.0001;
+            o.connect(g);
+            g.connect(masterGain);
+            const t = now + i * 0.5;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.08, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+            o.start(t);
+            o.stop(t + 0.09);
+          }
+        }
+      }
+
+      function stopCountdownSound() {
+        if (countdownAudioEl) {
+          try {
+            countdownAudioEl.pause();
+            countdownAudioEl.currentTime = 0;
+          } catch (e) {}
+        }
+      }
+
       // Countdown Animation Function
       function showCountdownAnimation(callback) {
         const overlay = document.getElementById("countdownOverlay");
@@ -1373,18 +1524,22 @@
           overlay.classList.add("mobile-countdown");
         }
 
+        // Play countdown audio/ticks
+        try { playCountdownSound(); } catch (e) {}
+
         let count = 3;
 
         function showNumber(num) {
           overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
 
-          if (num === 0) {
-            // Show "START!"
+          if (num === 1) {
+            // After showing 1, display START (no zero)
             setTimeout(() => {
               overlay.innerHTML = `<div class="countdown-start">MAGSIMULA</div>`;
 
-              // After "START" is shown, hide overlay and execute callback
+              // After "START" is shown, hide overlay, stop countdown audio and execute callback
               setTimeout(() => {
+                try { stopCountdownSound(); } catch (e) {}
                 overlay.style.display = "none";
                 overlay.innerHTML = "";
                 overlay.classList.remove("mobile-countdown");
@@ -1404,6 +1559,7 @@
       }
 
       function startWithCountdown() {
+        initAudio();
         showCountdownAnimation(() => {
           startGame();
         });
@@ -2082,6 +2238,7 @@
         } else {
           showGameEndModal(won, finalScore);
         }
+        try { stopBackground(); } catch (e) {}
       }
 
       function showGameEndModal(won, finalScore) {
@@ -2104,6 +2261,7 @@
 
       function startGame() {
         gameStarted = true;
+        try { initAudio(); resumeAudioContext(); playBackground(); } catch (e) {}
         foundWords.clear();
         selectedCells = [];
         hintsRemaining = 3; // Changed from 2
