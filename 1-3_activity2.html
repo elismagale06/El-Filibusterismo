@@ -556,7 +556,7 @@
     <div class="countdown-overlay" id="countdownOverlay"></div>
 
     <!-- Audio elements: background, feedback, click, countdown -->
-    <audio id="bgAudio" src="audio/background.mp3" loop preload="auto"></audio>
+    <audio id="bgAudio" src="audio/background2.mp3" loop preload="auto"></audio>
     <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
     <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
     <audio id="clickAudio" src="audio/click.mp3" preload="auto"></audio>
@@ -764,6 +764,7 @@
       // Audio and WebAudio fallback
       let audioCtx = null;
       let masterGain = null;
+      let countdownStarted = false;
       const bgAudioEl = document.getElementById ? document.getElementById('bgAudio') : null;
       const correctAudioEl = document.getElementById ? document.getElementById('correctAudio') : null;
       const wrongAudioEl = document.getElementById ? document.getElementById('wrongAudio') : null;
@@ -824,8 +825,9 @@
       function playCountdownTick() {
         initAudio();
         resumeAudioContext();
+        // If a countdown audio file exists, it is started once at the
+        // beginning of the visual countdown; do not restart it per tick.
         if (countdownAudioEl && countdownAudioEl.src) {
-          try { countdownAudioEl.currentTime = 0; countdownAudioEl.play().catch(() => {}); } catch (e) {}
           return;
         }
         if (!audioCtx) return;
@@ -925,14 +927,28 @@
         // play ticking for each number and show 3 -> 2 -> 1 -> MAGSIMULA
         let count = 3;
 
+        // Reset countdown flag for this animation run
+        countdownStarted = false;
+
+        // If an audio file for the countdown exists, start it once here
+        if (countdownAudioEl && countdownAudioEl.src) {
+          try {
+            countdownAudioEl.currentTime = 0;
+            countdownAudioEl.play().catch(() => {});
+          } catch (e) {}
+          countdownStarted = true;
+        }
+
         function showNumber(num) {
           overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
-          try { playCountdownTick(); } catch (e) {}
+          try {
+            // Only play a synthetic tick if there is no countdown audio file
+            if (!(countdownAudioEl && countdownAudioEl.src)) playCountdownTick();
+          } catch (e) {}
 
           if (num === 1) {
             setTimeout(() => {
               overlay.innerHTML = `<div class="countdown-start">MAGSIMULA</div>`;
-              try { /* allow any playing countdown audio to stop */ } catch (e) {}
               setTimeout(() => {
                 overlay.style.display = "none";
                 overlay.innerHTML = "";

@@ -413,7 +413,7 @@
     <div class="countdown-overlay" id="countdownOverlay"></div>
 
     <!-- Audio elements: background, feedback, click, countdown -->
-    <audio id="bgAudio" src="audio/background.mp3" loop preload="auto"></audio>
+    <audio id="bgAudio" src="audio/background3.mp3" loop preload="auto"></audio>
     <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
     <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
     <audio id="clickAudio" src="audio/click.mp3" preload="auto"></audio>
@@ -650,7 +650,11 @@
             function playCountdownTick() {
               initAudio();
               resumeAudioContext();
-              if (countdownAudioEl && countdownAudioEl.src) { try { countdownAudioEl.currentTime = 0; countdownAudioEl.play().catch(()=>{}); } catch(e) {} }
+              // If a countdown audio file exists, it is started once by
+              // showCountdownAnimation; don't restart it per tick.
+              if (countdownAudioEl && countdownAudioEl.src) {
+                return;
+              }
               if (!audioCtx) return;
               const o = audioCtx.createOscillator();
               const g = audioCtx.createGain();
@@ -760,6 +764,14 @@
             }, 1000);
           }
         }
+
+        // Start countdown audio once if present
+        try {
+          if (countdownAudioEl && countdownAudioEl.src) {
+            countdownAudioEl.currentTime = 0;
+            countdownAudioEl.play().catch(() => {});
+          }
+        } catch (e) {}
 
         // Start the countdown
         showNumber(count);

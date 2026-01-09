@@ -412,7 +412,7 @@
     <!-- Countdown Animation Overlay -->
     <div class="countdown-overlay" id="countdownOverlay"></div>
     <!-- Audio Elements -->
-    <audio id="bgAudio" src="audio/background.mp3" loop preload="auto"></audio>
+    <audio id="bgAudio" src="audio/background3.mp3" loop preload="auto"></audio>
     <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
     <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
     <audio id="clickAudio" src="audio/click.mp3" preload="auto"></audio>
@@ -593,9 +593,17 @@
 
         let count = 3;
 
+        // Start countdown audio once if present
+        try {
+          if (audioState.countdownAudio && audioState.countdownAudio.src) {
+            audioState.countdownAudio.currentTime = 0;
+            audioState.countdownAudio.play().catch(() => {});
+          }
+        } catch (e) {}
+
         function showNumber(num) {
           overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
-          if (num >= 1) playCountdownTick();
+          if (num >= 1) try { if (!(audioState.countdownAudio && audioState.countdownAudio.src)) playCountdownTick(); } catch (e) {}
 
           if (num === 1) {
             setTimeout(() => {
@@ -920,7 +928,11 @@
       }
 
       function playCountdownTick() {
-        if (audioState.countdownAudio && playAudioElement(audioState.countdownAudio)) return;
+        // If a countdown audio file exists, it is started once by
+        // showCountdownAnimation; don't restart it per tick.
+        if (audioState.countdownAudio && audioState.countdownAudio.src) {
+          return;
+        }
         if (audioState.ctx) {
           const o = audioState.ctx.createOscillator();
           const g = audioState.ctx.createGain();
