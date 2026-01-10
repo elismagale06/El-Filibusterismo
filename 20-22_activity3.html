@@ -487,25 +487,26 @@
       </header>
 
       <div class="word-box">
-        <h3>Pagpipilian ng Sagot</h3>
-        <div class="words">
-          <span>Parusahan</span>
-          <span>labanan</span>
-          <span>Trabaho</span>
-          <span>Baton</span>
-          <span>dulaang palabas</span>
-          <span>Nagpapangap na ibang tao</span>
-          <span>Papel na anunsyo</span>
-          <span>Pamahalaan sa takot</span>
-          <span>kainan o tindahan ng pagkain</span>
-          <span>Nagbebenta ng produkto</span>
-          <span>Paghahanda ng plano</span>
-          <span>Malipas</span>
-          <span>entablado</span>
-          <span>umunlad</span>
-          <span>katunggali sa pag-ibig</span>
-        </div>
-      </div>
+  <h3>Pagpipilian ng Sagot</h3>
+  <div class="words">
+    <span>PARUSAHAN</span>
+    <span>LABANAN</span>
+    <span>TRABAHO</span>
+    <span>BATON</span>
+    <span>DULAANG PALABAS</span>
+    <span>NAGPAPANGAP NA IBANG TAO</span>
+    <span>PAPEL NA ANUNSYO</span>
+    <span>PAMAHALAAN SA TAKOT</span>
+    <span>KAINAN O TINDIHAN NG PAGKAIN</span>
+    <span>NAGBEBENTA NG PRODUKTO</span>
+    <span>PAGHAHANDA NG PLANO</span>
+    <span>MALIPAS</span>
+    <span>ENTABLADO</span>
+    <span>UMUNLAD</span>
+    <span>KATUNGGALI SA PAG-IBIG</span>
+  </div>
+</div>
+
 
       <div class="controls-wrapper">
         <div class="controls">
@@ -696,10 +697,11 @@
           feedback.style.display = "none";
 
           input.addEventListener("input", () => {
-            userAnswers[index] = input.value.trim().toUpperCase();
-            updateStats();
+            input.value = input.value.toUpperCase();
+            userAnswers[index] = input.value.trim();
             playClickSound();
           });
+
         });
 
         startTimer();
@@ -785,55 +787,65 @@
       }
 
       function submitQuiz() {
-        clearInterval(timerInterval);
-        
-        // Clear in-progress flags
-        localStorage.removeItem(`activity${currentActivity}_in_progress`);
-        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+  clearInterval(timerInterval); // Stop the timer
 
-        let score = 0;
+  // Clear in-progress flags
+  localStorage.removeItem(`activity${currentActivity}_in_progress`);
+  localStorage.removeItem(`activity${currentActivity}_temp_score`);
 
-        questions.forEach((q, index) => {
-          const input = document.getElementById(`answer-${index}`);
-          const feedback = document.getElementById(`feedback-${index}`);
+  let score = 0; // Initialize score
 
-          input.disabled = true;
+  questions.forEach((q, index) => {
+    const input = document.getElementById(`answer-${index}`);
+    const feedback = document.getElementById(`feedback-${index}`);
 
-          const answer = (userAnswers[index] || "").trim().toUpperCase();
-          const isCorrect = answer === q.correct;
+    input.disabled = true; // Disable input after submission
 
-          if (isCorrect) {
-            score++;
-            input.classList.add("correct");
-            feedback.className = "answer-feedback correct";
-            feedback.textContent = "✓ Tama!";
-            playCorrectSound();
-          } else {
-            input.classList.add("incorrect");
-            feedback.className = "answer-feedback incorrect";
-            feedback.textContent = `✗ Mali. Tamang sagot: ${q.correct}`;
-            playWrongSound();
-          }
+    // Get the user's answer in uppercase
+    const answer = (userAnswers[index] || "").trim().toUpperCase();
+    const correctAnswer = q.correct.trim().toUpperCase();
+    const isCorrect = answer === correctAnswer;
 
-          feedback.style.display = "block";
-        });
+    // Increment score only if correct
+    if (isCorrect) score++;
 
-        currentGameScore = score;
+    // Add visual feedback
+    if (isCorrect) {
+      input.classList.add("correct");
+      feedback.className = "answer-feedback correct";
+      feedback.textContent = "✓ Tama!";
+      playCorrectSound();
+    } else {
+      input.classList.add("incorrect");
+      feedback.className = "answer-feedback incorrect";
+      feedback.textContent = `✗ Mali. Tamang sagot: ${q.correct}`;
+      playWrongSound();
+    }
 
-        // Save score to localStorage
-        localStorage.setItem("activity3_score", score);
-        localStorage.setItem("activity3_completed", "true");
+    feedback.style.display = "block"; // Show feedback
+  });
 
-        // Show answers review
-        showAnswersReview();
-        
-        // Show game end modal
-        const percent = ((score / questions.length) * 100).toFixed(1);
-        document.getElementById(
-          "finalScoreDisplay"
-        ).textContent = `Puntos: ${score} / ${questions.length} (${percent}%)`;
-        showModal("gameEndModal");
-      }
+  currentGameScore = score;
+
+  // Save final score
+  localStorage.setItem(`activity${currentActivity}_last_score`, score);
+  localStorage.setItem(`activity${currentActivity}_completed`, "true");
+
+  // Update points display
+  document.getElementById("foundCount").textContent = `${score}/${questions.length}`;
+
+  // Show answers review
+  showAnswersReview();
+
+  // Show game end modal with percentage
+  const percent = ((score / questions.length) * 100).toFixed(1);
+  document.getElementById(
+    "finalScoreDisplay"
+  ).textContent = `Puntos: ${score} / ${questions.length} (${percent}%)`;
+
+  showModal("gameEndModal");
+}
+
 
       function goToActivitiesWithScore() {
         stopBackground();

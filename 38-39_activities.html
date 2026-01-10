@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="tl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Filibusterismo - Mga Gawain</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Additional styles for completed activities */
+      .chapter-card.completed {
+        background: linear-gradient(135deg, #fdfbf5 0%, #e8f5e8 100%);
+        border-color: #28a745;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .modal-content p {
+        color: #5c2e0f;          /* dark brown */
+        font-weight: 500;
+        line-height: 1.6;
+        }
+
+      /* Optional: make confirmation text clearer */
+      #backToActivitiesText {
+        color: #5c2e0f;
+        }
+
+      .chapter-card.completed::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid #28a745;
+        pointer-events: none;
+      }
+
+      .chapter-card.completed::after {
+        content: "✓";
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 30px;
+        height: 30px;
+        background: #28a745;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+
+      .chapter-card.completed h3 {
+        color: #28a745;
+      }
+
+      .chapter-card.completed .activity-score {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+        color: #28a745;
+        font-size: 1.1em;
+      }
+
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1003;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        border-radius: 10px;
+        padding: 30px;
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+        animation: fadeInScale 0.3s ease;
+      }
+
+      .modal h3 {
+        color: #5c2e0f;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+      }
+
+      .modal p {
+        margin-bottom: 25px;
+        font-size: 1.1em;
+        line-height: 1.5;
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .modal-btn {
+        padding: 12px 25px;
+        min-width: 120px;
+        background-color: #8b4513;
+        color: #fff8e7;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: "Georgia", serif;
+        transition: all 0.3s;
+      }
+
+      .modal-btn:hover {
+        background-color: #5c2e0f;
+        transform: translateY(-2px);
+      }
+
+      .modal-btn.cancel {
+        background-color: #6c757d;
+      }
+
+      .modal-btn.cancel:hover {
+        background-color: #5a6268;
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      h2 {
+          color: #5c2e0f;
+          font-size: 1.1em;
+          margin: 0 0 20px 0;
+          text-align: center;
+          font-weight: 500;
+        }
+
+      /* Confetti animation for completed activities */
+      .confetti-piece {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        z-index: 1001;
+        pointer-events: none;
+        animation: confetti 3s ease-out forwards;
+      }
+
+      @keyframes confetti {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(500px) rotate(720deg);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="activities">
+    <!-- Confirmation Modal -->
+    <div class="modal" id="resetModal">
+      <div class="modal-content">
+        <h3>Kumpirmasyon</h3>
+        <p id="resetModalText">
+          <!-- Text will be set by JavaScript -->
+        </p>
+        <div class="modal-buttons">
+          <button class="modal-btn cancel" onclick="closeResetModal()">
+            Kanselahin
+          </button>
+          <button class="modal-btn" onclick="confirmReset()">
+            Oo, Gawin Muli
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>Mga Gawain</h1>
+        <h2>Kabanata 38 to 39</h2>
+        <p class="subtitle">Pumili ng gawain</p>
+      </header>
+
+      <div class="content-section">
+        <a href="talasalitaan38-39.html" class="back-button"
+          >← Bumalik sa Talasalitaan</a
+        >
+
+        <div class="ornament">❦</div>
+
+        <div class="chapter-grid" id="activitiesGrid">
+          <!-- Activity cards will be populated by JavaScript -->
+        </div>
+
+        <div class="ornament">❦</div>
+      </div>
+    </div>
+
+    <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const activitiesGrid = document.getElementById("activitiesGrid");
+
+    // Get scores from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const score1FromActivity = urlParams.get("score1");
+    const score2FromActivity = urlParams.get("score2");
+    const score3FromActivity = urlParams.get("score3");
+
+    // Get saved scores from localStorage
+    const savedScore1 = localStorage.getItem("activity1_score");
+    const savedScore2 = localStorage.getItem("activity2_score");
+    const savedScore3 = localStorage.getItem("activity3_score");
+
+    // Get completion status
+    const isCompleted1 = localStorage.getItem("activity1_completed");
+    const isCompleted2 = localStorage.getItem("activity2_completed");
+    const isCompleted3 = localStorage.getItem("activity3_completed");
+
+    // Save scores from URL to localStorage if provided
+    if (score1FromActivity !== null) {
+      localStorage.setItem("activity1_score", score1FromActivity);
+      localStorage.setItem("activity1_completed", "true");
+      // Clear in-progress flag when coming back with a score
+      localStorage.removeItem("activity1_in_progress");
+    }
+
+    if (score2FromActivity !== null) {
+      localStorage.setItem("activity2_score", score2FromActivity);
+      localStorage.setItem("activity2_completed", "true");
+      // Clear in-progress flag when coming back with a score
+      localStorage.removeItem("activity2_in_progress");
+      
+      // Show confetti for Activity 2 if perfect score (15/15)
+      if (parseInt(score2FromActivity) === 15) {
+        createConfetti();
+      }
+    }
+
+    if (score3FromActivity !== null) {
+      localStorage.setItem("activity3_score", score3FromActivity);
+      localStorage.setItem("activity3_completed", "true");
+      // Clear in-progress flag when coming back with a score
+      localStorage.removeItem("activity3_in_progress");
+      
+      // Show confetti for Activity 3 if perfect score (15/15)
+      if (parseInt(score3FromActivity) === 15) {
+        createConfetti();
+      }
+    }
+
+    // Use the most recent scores (check localStorage first, then URL)
+    const finalScore1 = savedScore1 || score1FromActivity || "0";
+    const finalScore2 = savedScore2 || score2FromActivity || "0";
+    const finalScore3 = savedScore3 || score3FromActivity || "0";
+
+    // Get current completion status (may have been updated by URL params)
+    const currentCompleted1 = localStorage.getItem("activity1_completed") === "true";
+    const currentCompleted2 = localStorage.getItem("activity2_completed") === "true";
+    const currentCompleted3 = localStorage.getItem("activity3_completed") === "true";
+
+    // Create activity cards
+    activitiesGrid.innerHTML = `
+      <a href="#" class="chapter-card ${
+        currentCompleted1 ? "completed" : ""
+      }" onclick="handleActivityClick(event, 1)">
+        <h3>Gawain 1</h3>
+        <p>Word Search - Mga Tauhan</p>
+        ${
+          currentCompleted1
+            ? `<span class="activity-score">Iskor: ${finalScore1}/15</span>`
+            : ""
+        }
+      </a>
+      <a href="#" class="chapter-card ${
+        currentCompleted2 ? "completed" : ""
+      }" onclick="handleActivityClick(event, 2)">
+        <h3>Gawain 2</h3>
+        <p>Scramble Words- Mga Lugar at Tagpuan</p>
+        ${
+          currentCompleted2
+            ? `<span class="activity-score">Iskor: ${finalScore2}/15</span>`
+            : ""
+        }
+      </a>
+      <a href="#" class="chapter-card ${
+        currentCompleted3 ? "completed" : ""
+      }" onclick="handleActivityClick(event, 3)">
+        <h3>Gawain 3</h3>
+        <p>Pagsusulit - Kasingkahulugan</p>
+        ${
+          currentCompleted3
+            ? `<span class="activity-score">Iskor: ${finalScore3}/15</span>`
+            : ""
+        }
+      </a>
+    `;
+
+    // Add animations to cards
+    addCardAnimations();
+  });
+
+  let currentActivity = 1;
+
+ function handleActivityClick(event, activityNumber) {
+  event.preventDefault();
+  currentActivity = activityNumber;
+
+  const isCompleted = localStorage.getItem(`activity${activityNumber}_completed`) === "true";
+  const savedScore = localStorage.getItem(`activity${activityNumber}_score`);
+  const isInProgress = localStorage.getItem(`activity${activityNumber}_in_progress`) === "true";
+
+  console.log(`Activity ${activityNumber} clicked:`, {
+    isCompleted,
+    savedScore,
+    isInProgress,
+    savedScoreExists: savedScore !== null
+  });
+
+    // Show modal if:
+    // 1. Activity is marked as completed
+    // 2. OR there's a saved score (even if not marked as completed)
+    // 3. OR game is in progress
+    if (isCompleted || savedScore !== null || isInProgress) {
+    console.log(`Showing retry modal for activity ${activityNumber}`);
+    // Show confirmation modal
+    document.getElementById(
+      "resetModalText"
+    ).textContent = `Sigurado ka bang gusto mong gawin muli ang Gawain ${activityNumber}? Ang iyong kasalukuyang iskor ay mabubura at magsisimula ka mula sa simula.`;
+    
+    // Force show the modal with inline styles
+    const modal = document.getElementById("resetModal");
+    modal.style.display = "flex";
+    modal.style.opacity = "1";
+    modal.style.visibility = "visible";
+    modal.style.zIndex = "1003";
+    } else {
+    console.log(`Direct start for activity ${activityNumber} - first time`);
+    // Clear any existing in-progress data before starting
+    localStorage.removeItem(`activity${currentActivity}_in_progress`);
+    localStorage.removeItem(`activity${currentActivity}_temp_score`);
+    localStorage.removeItem(`activity${currentActivity}_last_score`);
+    
+    // Go directly to the activity (first time playing)
+    window.location.href = `38-39_activity${activityNumber}.html`;
+  }
+}
+
+
+function closeResetModal() {
+  const modal = document.getElementById("resetModal");
+  modal.style.display = "none";
+  modal.style.opacity = "0";
+  modal.style.visibility = "hidden";
+}
+
+function confirmReset() {
+  // Clear localStorage for the specific activity
+  localStorage.removeItem(`activity${currentActivity}_score`);
+  localStorage.removeItem(`activity${currentActivity}_completed`);
+  localStorage.removeItem(`activity${currentActivity}_in_progress`);
+  localStorage.removeItem(`activity${currentActivity}_temp_score`);
+  localStorage.removeItem(`activity${currentActivity}_last_score`);
+  
+  // Hide modal first
+  closeResetModal();
+  
+  // Go to the activity
+  window.location.href = `38-39_activity${currentActivity}.html`;
+}
+
+  function createConfetti() {
+    const colors = ["#28a745", "#20c997", "#8b4513", "#ffd700", "#5c2e0f"];
+    const confettiCount = 50;
+
+    for (let i = 0; i < confettiCount; i++) {
+      const confetti = document.createElement("div");
+      confetti.className = "confetti-piece";
+      confetti.style.left = Math.random() * window.innerWidth + "px";
+      confetti.style.top = "0px";
+      confetti.style.backgroundColor =
+        colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDelay = Math.random() * 0.3 + "s";
+
+      document.body.appendChild(confetti);
+
+      setTimeout(() => {
+        confetti.remove();
+      }, 3000);
+    }
+  }
+
+  function addCardAnimations() {
+    setTimeout(() => {
+      const cards = document.querySelectorAll(
+        ".character-card, .chapter-card:not(.disabled)"
+      );
+      cards.forEach((card, index) => {
+        card.classList.remove("hidden");
+        card.style.animation = `fadeInCard 0.5s ease ${
+          index * 0.05
+        }s forwards`;
+      });
+    }, 100);
+  }
+    </script>
+    <script src="rain.js"></script>
+  </body>
+</html>

@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="tl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Filibusterismo - Word Search Activity</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Garamond", "Georgia", serif;
+        background: #f4ead5;
+        padding: 20px;
+        background: linear-gradient(180deg, #0d0a08 0%, #1a1410 50%, #2c1810 100%);
+        color: #2c1810;
+        min-height: 100vh;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0 10px;
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        border-radius: 10px;
+      }
+
+      header {
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-top: 15px;
+      }
+
+      h1 {
+        color: #5c2e0f;
+        font-size: 2em;
+        margin-bottom: 10px;
+      }
+      h2 {
+          color: #5c2e0f;
+          font-size: 1.1em;
+          margin: 0 0 20px 0;
+          text-align: center;
+          font-weight: 500;
+        }
+      .instructions {
+        font-size: 0.95em;
+        line-height: 1.6;
+        margin-top: 10px;
+      }
+
+      .instructions .highlight {
+        color: #8b4513;
+        font-weight: bold;
+        background-color: rgba(139, 69, 19, 0.1);
+        padding: 2px 4px;
+        border-radius: 3px;
+      }
+
+      .game-container {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        margin-bottom: 20px;
+        align-items: flex-start;
+        justify-content: center;
+      }
+
+      .left-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
+        flex-shrink: 0;
+      }
+
+      .stats-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .stat-box {
+        background-color: #fff8e7;
+        border: 2px solid #8b4513;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-label {
+        font-size: 0.85em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .stat-value {
+        font-size: 1.5em;
+        color: #5c2e0f;
+        font-weight: bold;
+      }
+
+      .timer-container {
+        background-color: #fff8e7;
+        border: 2px solid #8b4513;
+        padding: 15px;
+        border-radius: 8px;
+      }
+
+      .timer-label {
+        font-size: 0.9em;
+        font-weight: bold;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 25px;
+        background-color: #f4ead5;
+        border: 2px solid #8b4513;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background-color: #8b4513;
+        transition: width 1s linear;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff8e7;
+        font-weight: bold;
+        font-size: 0.85em;
+      }
+
+      .hint-container {
+        background-color: #fff8e7;
+        border: 2px solid #8b4513;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .hint-info {
+        font-size: 0.9em;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      .grid-container {
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        padding: 15px;
+        border-radius: 10px;
+        overflow-x: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        margin-top: 0;
+        position: relative;
+      }
+
+      .word-grid {
+        display: grid;
+        grid-template-columns: repeat(16, 35px);
+        gap: 8px;
+        user-select: none;
+        width: fit-content;
+        position: relative;
+        touch-action: none;
+      }
+
+      .grid-cell {
+        width: 35px;
+        height: 35px;
+        border: 2px solid #8b4513;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+        cursor: pointer;
+        background-color: #f4ead5;
+        transition: all 0.2s;
+        position: relative;
+        z-index: 2;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      /* Improved touch target for mobile */
+      .grid-cell::after {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        z-index: 1;
+      }
+
+      .grid-cell:hover {
+        background-color: #e8d9ba;
+      }
+
+      .grid-cell.selected {
+        background-color: #d4a574;
+        color: #fff;
+        transform: scale(1.05);
+        z-index: 3;
+        box-shadow: 0 0 0 2px #8b4513;
+        transition: transform 0.1s ease, background-color 0.1s ease;
+      }
+
+      .grid-cell.found {
+        background-color: #8b4513;
+        color: #fff8e7;
+        animation: cellFound 0.5s ease;
+      }
+
+      .grid-cell.hint {
+        background-color: #ffd700;
+        animation: pulse 1s ease-in-out;
+      }
+
+      /* Selection line visualization */
+      .selection-line {
+        position: absolute;
+        background-color: rgba(139, 69, 19, 0.3);
+        height: 4px;
+        transform-origin: 0 0;
+        z-index: 1;
+        pointer-events: none;
+        border-radius: 2px;
+      }
+
+      .selection-guide {
+        position: absolute;
+        background-color: rgba(139, 69, 19, 0.1);
+        z-index: 1;
+        pointer-events: none;
+        border-radius: 3px;
+      }
+
+      @keyframes cellFound {
+        0% {
+          transform: scale(1);
+        }
+
+        50% {
+          transform: scale(1.2);
+        }
+
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        50% {
+          transform: scale(1.1);
+          opacity: 0.8;
+        }
+      }
+
+      @keyframes celebrate {
+        0% {
+          transform: translateY(0) rotate(0deg);
+        }
+
+        25% {
+          transform: translateY(-10px) rotate(5deg);
+        }
+
+        75% {
+          transform: translateY(-10px) rotate(-5deg);
+        }
+
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+
+      @keyframes confetti {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+
+        100% {
+          transform: translateY(500px) rotate(720deg);
+          opacity: 0;
+        }
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+
+        25% {
+          transform: translateX(-5px);
+        }
+
+        75% {
+          transform: translateX(5px);
+        }
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          box-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700;
+        }
+
+        50% {
+          box-shadow: 0 0 20px #ffd700, 0 0 30px #ffd700, 0 0 40px #ffd700;
+        }
+      }
+
+      @keyframes popIn {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.5);
+        }
+        50% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.1);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      .confetti-piece {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        z-index: 1001;
+        pointer-events: none;
+        animation: confetti 3s ease-out forwards;
+      }
+
+      .word-item.found-animate {
+        animation: shake 0.5s ease, glow 1s ease;
+      }
+
+      .word-list {
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        padding: 20px;
+        border-radius: 10px;
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
+        max-height: 674px;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+
+      .word-list::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      .word-list::-webkit-scrollbar-track {
+        background: #f4ead5;
+        border-radius: 5px;
+        margin: 5px 0;
+      }
+
+      .word-list::-webkit-scrollbar-thumb {
+        background: #8b4513;
+        border-radius: 5px;
+        border: 2px solid #f4ead5;
+      }
+
+      .word-list::-webkit-scrollbar-thumb:hover {
+        background: #5c2e0f;
+      }
+
+      .word-list h3 {
+        color: #5c2e0f;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .word-item {
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        border: 2px solid #8b4513;
+        border-radius: 5px;
+        background-color: #f4ead5;
+        transition: all 0.3s;
+      }
+
+      .word-item.found {
+        background-color: #8b4513;
+        color: #fff8e7;
+        text-decoration: line-through;
+        animation: celebrate 0.6s ease;
+      }
+
+      .controls {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .controls-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 0;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .start-button-container {
+        text-align: center;
+        margin: 20px 0;
+        width: 100%;
+      }
+
+      button {
+        background-color: #8b4513;
+        color: #fff8e7;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1em;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: "Georgia", serif;
+        margin: 0 10px;
+        transition: all 0.3s;
+      }
+
+      button:hover {
+        background-color: #5c2e0f;
+        transform: translateY(-2px);
+      }
+
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Improved success message animation */
+      .success-message {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        background-color: #fff8e7;
+        border: 4px solid #8b4513;
+        padding: 30px 50px;
+        border-radius: 15px;
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #5c2e0f;
+        z-index: 1002;
+        animation: popIn 0.5s ease forwards;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 90%;
+      }
+
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(109, 106, 106, 0.7);
+        z-index: 1001;
+        display: none;
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1003;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background-color: #fff8e7;
+        border: 3px solid #8b4513;
+        border-radius: 10px;
+        padding: 30px;
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+        animation: fadeInScale 0.3s ease;
+      }
+
+      .modal h3 {
+        color: #5c2e0f;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+      }
+
+      .modal p {
+        margin-bottom: 25px;
+        font-size: 1.1em;
+        line-height: 1.5;
+        white-space: pre-line;
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .modal-btn {
+        padding: 12px 25px;
+        min-width: 120px;
+        background-color: #8b4513;
+        color: #fff8e7;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: "Georgia", serif;
+        transition: all 0.3s;
+      }
+
+      .modal-btn:hover {
+        background-color: #5c2e0f;
+        transform: translateY(-2px);
+      }
+
+      .modal-btn.cancel {
+        background-color: #6c757d;
+      }
+
+      .modal-btn.cancel:hover {
+        background-color: #5a6268;
+      }
+
+      /* Game End Modal */
+      .game-end-modal .modal-content {
+        background-color: #fff8e7;
+        border: 3px solid #28a745;
+      }
+
+      .game-end-modal h3 {
+        color: #28a745;
+      }
+
+      .game-end-score {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #5c2e0f;
+        margin: 15px 0;
+      }
+
+      /* Back button styles */
+      .back-btn-container {
+        margin-bottom: 20px;
+        margin-right: 20px;
+        margin-top: 25px;
+      }
+
+      .back-btn {
+        background-color: #5c2e0f;
+        color: #f4ead5;
+        padding: 10px 20px;
+        border: 2px solid #8b4513;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 0.9em;
+        font-family: "Times New Roman", serif;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        width: 100%;
+        text-align: center;
+        display: block;
+      }
+
+      .back-btn:hover {
+        background-color: #8b4513;
+        color: #fff;
+        transform: translateY(-2px);
+      }
+
+      /* Selection Mode Toggle */
+      .selection-mode-toggle {
+        background-color: #fff8e7;
+        border: 2px solid #8b4513;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+        text-align: center;
+      }
+
+      .selection-mode-info {
+        font-size: 0.85em;
+        margin-bottom: 10px;
+        color: #5c2e0f;
+      }
+
+      .mode-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .mode-btn {
+        padding: 8px 15px;
+        font-size: 0.9em;
+        background-color: #f4ead5;
+        color: #5c2e0f;
+        border: 1px solid #8b4513;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .mode-btn.active {
+        background-color: #8b4513;
+        color: #fff8e7;
+      }
+
+      .mode-btn:hover:not(.active) {
+        background-color: #e8d9ba;
+      }
+
+      /* Countdown Animation Styles */
+      .countdown-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        pointer-events: none;
+      }
+
+      .countdown-number {
+        font-size: 20vw;
+        font-weight: bold;
+        color: #fff8e7;
+        text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700, 0 0 60px #ffd700;
+        animation: countdownPop 1s ease-out forwards;
+        opacity: 0;
+        font-family: "Garamond", "Georgia", serif;
+      }
+
+      .countdown-start {
+        font-size: 10vw;
+        font-weight: bold;
+        color: #ffd700;
+        text-shadow: 0 0 20px #8b4513, 0 0 40px #8b4513;
+        animation: startPulse 2s ease-in-out infinite;
+        font-family: "Garamond", "Georgia", serif;
+        position: relative;
+      }
+
+      .countdown-start::after {
+        content: "!";
+        animation: exclamationPop 1s ease-in-out infinite;
+      }
+
+      @keyframes countdownPop {
+        0% {
+          opacity: 0;
+          transform: scale(0.1) rotate(-360deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2) rotate(10deg);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+      }
+
+      @keyframes startPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          text-shadow: 0 0 20px #8b4513, 0 0 40px #8b4513;
+        }
+        50% {
+          transform: scale(1.1);
+          text-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700, 0 0 80px #ffd700;
+        }
+      }
+
+      @keyframes exclamationPop {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.8;
+          transform: scale(1.3);
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .game-container {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .left-section {
+          width: 100%;
+          max-width: 100%;
+          min-width: 100%;
+          order: 1;
+        }
+
+        .word-list {
+          width: 100%;
+          max-width: 100%;
+          min-width: 100%;
+          max-height: 300px;
+          order: 2;
+        }
+
+        .grid-container {
+          order: 3;
+        }
+
+        .start-button-container {
+          order: 0;
+          margin-bottom: 10px;
+        }
+
+        .word-grid {
+          grid-template-columns: repeat(16, 30px);
+          gap: 6px;
+        }
+
+        .grid-cell {
+          width: 30px;
+          height: 30px;
+          font-size: 0.8em;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        .container {
+          padding: 0 5px;
+        }
+
+        header {
+          padding: 15px;
+          margin-bottom: 15px;
+        }
+
+        h1 {
+          font-size: 1.3em;
+          margin-bottom: 8px;
+        }
+
+        .instructions {
+          font-size: 0.9em;
+        }
+
+        .stats-container {
+          grid-template-columns: 1fr;
+        }
+
+        .game-container {
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .word-grid {
+          grid-template-columns: repeat(16, 28px);
+          gap: 5px;
+        }
+
+        .grid-cell {
+          width: 28px;
+          height: 28px;
+          font-size: 0.7em;
+          border: 1px solid #8b4513;
+        }
+
+        .grid-cell::after {
+          top: -8px;
+          left: -8px;
+          right: -8px;
+          bottom: -8px;
+        }
+
+        .grid-container {
+          padding: 10px;
+          margin-bottom: 15px;
+        }
+
+        .word-list {
+          max-height: 250px;
+          padding: 15px;
+          border: 2px solid #8b4513;
+          width: 100%;
+          max-width: 100%;
+          min-width: 100%;
+        }
+
+        .word-list h3 {
+          font-size: 0.95em;
+          margin-bottom: 10px;
+        }
+
+        .word-item {
+          padding: 6px 10px;
+          margin-bottom: 6px;
+          font-size: 0.9em;
+          border: 1px solid #8b4513;
+        }
+
+        button {
+          padding: 10px 20px;
+          font-size: 0.9em;
+          margin: 5px;
+        }
+
+        .controls-wrapper {
+          order: 1;
+          width: 100%;
+        }
+
+        .controls {
+          margin-top: 15px;
+          margin-bottom: 20px;
+        }
+
+        .game-container {
+          margin-top: 0;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 6px;
+        }
+
+        .container {
+          padding: 0 3px;
+        }
+
+        header {
+          padding: 10px;
+          border: 2px solid #8b4513;
+          margin-bottom: 10px;
+        }
+
+        h1 {
+          font-size: 1.1em;
+          margin-bottom: 5px;
+        }
+
+        .instructions {
+          font-size: 0.8em;
+          line-height: 1.4;
+        }
+
+        .stat-box {
+          padding: 10px;
+          border: 1px solid #8b4513;
+        }
+
+        .stat-label {
+          font-size: 0.75em;
+        }
+
+        .stat-value {
+          font-size: 1.2em;
+        }
+
+        .timer-container {
+          padding: 10px;
+          border: 1px solid #8b4513;
+        }
+
+        .hint-container {
+          padding: 10px;
+          border: 1px solid #8b4513;
+          margin-bottom: 10px;
+        }
+
+        .hint-info {
+          font-size: 0.8em;
+        }
+
+        .left-section {
+          width: 100%;
+          max-width: 100%;
+          min-width: 100%;
+          gap: 10px;
+        }
+
+        .word-grid {
+          grid-template-columns: repeat(16, 20px);
+          gap: 2px;
+        }
+
+        .grid-cell {
+          width: 20px;
+          height: 20px;
+          font-size: 0.6em;
+          border-width: 1px;
+          border: 1px solid #8b4513;
+          padding: 0;
+        }
+
+        .grid-cell::after {
+          top: -6px;
+          left: -6px;
+          right: -6px;
+          bottom: -6px;
+        }
+
+        .grid-container {
+          padding: 6px;
+          border: 2px solid #8b4513;
+          margin-bottom: 10px;
+          width: 100%;
+          min-height: auto;
+          flex-shrink: 1;
+        }
+
+        .word-list {
+          max-height: 180px;
+          padding: 10px;
+          border: 2px solid #8b4513;
+          margin-bottom: 0;
+          width: 100%;
+          max-width: 100%;
+          min-width: 100%;
+        }
+
+        .word-list h3 {
+          font-size: 0.85em;
+          margin-bottom: 6px;
+        }
+
+        .word-item {
+          padding: 4px 6px;
+          margin-bottom: 4px;
+          font-size: 0.8em;
+          border: 1px solid #8b4513;
+        }
+
+        .word-item.found {
+          font-size: 0.8em;
+        }
+
+        button {
+          padding: 8px 12px;
+          font-size: 0.8em;
+          margin: 3px;
+        }
+
+        .controls-wrapper {
+          order: 1;
+          width: 100%;
+          margin-bottom: 10px;
+        }
+
+        .controls {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        .game-container {
+          margin-top: 0;
+          margin-bottom: 0;
+          gap: 10px;
+          flex-direction: column;
+        }
+
+        .success-message {
+          padding: 15px 25px;
+          font-size: 1.1em;
+          border: 3px solid #8b4513;
+          max-width: 85vw;
+        }
+      }
+
+      @media (max-width: 373px) {
+        body {
+          padding: 4px;
+        }
+
+        .container {
+          padding: 0 2px;
+        }
+
+        header {
+          padding: 8px;
+          border: 2px solid #8b4513;
+          margin-bottom: 8px;
+        }
+
+        h1 {
+          font-size: 0.95em;
+          margin-bottom: 4px;
+        }
+
+        .instructions {
+          font-size: 0.75em;
+          line-height: 1.3;
+        }
+
+        .stat-box {
+          padding: 8px;
+          border: 1px solid #8b4513;
+        }
+
+        .stat-label {
+          font-size: 0.7em;
+        }
+
+        .stat-value {
+          font-size: 1.1em;
+        }
+
+        .timer-container {
+          padding: 8px;
+          border: 1px solid #8b4513;
+        }
+
+        .timer-label {
+          font-size: 0.8em;
+        }
+
+        .progress-bar {
+          height: 22px;
+        }
+
+        .progress-fill {
+          font-size: 0.75em;
+        }
+
+        .hint-container {
+          padding: 8px;
+          border: 1px solid #8b4513;
+          margin-bottom: 8px;
+        }
+
+        .hint-info {
+          font-size: 0.75em;
+        }
+
+        .left-section {
+          width: 100%;
+          max-width: 100%;
+          min-width: 100%;
+          gap: 8px;
+        }
+
+        .word-grid {
+          grid-template-columns: repeat(16, 18px);
+          gap: 5px;
+        }
+
+        .grid-cell {
+          width: 18px;
+          height: 18px;
+          font-size: 0.55em;
+          border: 1px solid #8b4513;
+          padding: 0;
+        }
+
+        .grid-container {
+          padding: 4px;
+          border: 1px solid #8b4513;
+          margin-bottom: 8px;
+          width: 100%;
+        }
+
+        .word-list {
+          max-height: 160px;
+          padding: 8px;
+          border: 1px solid #8b4513;
+          margin-bottom: 0;
+          width: 100%;
+        }
+
+        .word-list h3 {
+          font-size: 0.8em;
+          margin-bottom: 4px;
+        }
+
+        .word-item {
+          padding: 3px 5px;
+          margin-bottom: 3px;
+          font-size: 0.75em;
+          border: 1px solid #8b4513;
+        }
+
+        button {
+          padding: 6px 10px;
+          font-size: 0.75em;
+          margin: 2px;
+        }
+
+        .controls-wrapper {
+          margin-bottom: 8px;
+        }
+
+        .controls {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        .game-container {
+          gap: 9px;
+          margin-bottom: 0;
+        }
+
+        .success-message {
+          padding: 12px 20px;
+          font-size: 1em;
+          border: 2px solid #8b4513;
+          max-width: 90vw;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Countdown Animation Overlay -->
+    <div class="countdown-overlay" id="countdownOverlay"></div>
+
+    <!-- Audio elements: replace files in audio/ with your own assets if needed -->
+    <audio id="bgAudio" src="audio/background1.mp3" loop preload="auto"></audio>
+    <audio id="correctAudio" src="audio/correct.mp3" preload="auto"></audio>
+    <audio id="wrongAudio" src="audio/wrong.mp3" preload="auto"></audio>
+    <audio id="clickAudio" src="audio/click.mp3" preload="auto"></audio>
+    <audio id="countdownAudio" src="audio/countdown.mp3" preload="auto"></audio>
+
+    <!-- Reset Confirmation Modal -->
+    <div class="modal" id="resetModal">
+      <div class="modal-content">
+        <h3>Kumpirmasyon</h3>
+        <p>
+          Mayroon kang kasalukuyang laro na in progress. Sigurado ka bang gusto
+          mong bumalik sa Mga Gawain? Ang iyong kasalukuyang iskor ay mabubura.
+        </p>
+        <div class="modal-buttons">
+          <button class="modal-btn cancel" onclick="closeModal('resetModal')">
+            Kanselahin
+          </button>
+          <button class="modal-btn" onclick="confirmBackToActivities()">
+            Oo, Bumalik
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game End Modal -->
+    <div class="modal game-end-modal" id="gameEndModal">
+      <div class="modal-content">
+        <h3 id="gameEndTitle">Tapos na ang Laro!</h3>
+        <p id="gameEndMessage"></p>
+        <div class="game-end-score" id="gameEndScore"></div>
+        <div class="modal-buttons">
+          <button class="modal-btn" onclick="goToActivities()">
+            Bumalik sa Mga Gawain
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Retry Confirmation Modal -->
+    <div class="modal" id="retryModal">
+      <div class="modal-content">
+        <h3>Kumpirmasyon</h3>
+        <p>
+          Sigurado ka bang gusto mong gawin muli ang Gawain 1? Ang iyong
+          kasalukuyang iskor ay mabubura at magsisimula ka mula sa simula.
+        </p>
+        <div class="modal-buttons">
+          <button class="modal-btn cancel" onclick="closeModal('retryModal')">
+            Kanselahin
+          </button>
+          <button class="modal-btn" onclick="confirmRetry()">
+            Oo, Gawin Muli
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>El Filibusterismo - Word Search</h1>
+        <h2>Kabanata 30-31</h2>
+        <div class="instructions">
+          <strong>GAWAIN 1 - Panuto:</strong> Hanapin ang mga salita sa listahan
+          na maaaring makita nang pahalang, patayo, o diagonal. Markahan ang
+          buong salita mula simula hanggang katapusan kapag nahanap.
+          <br><span class="highlight">Tip:</span> Pindutin at i-drag ang unang titik hanggang sa huling titik ng salita.
+        </div>
+      </header>
+
+      <!-- Centered start button above the grid -->
+      <div class="start-button-container">
+        <div class="controls-wrapper">
+          <button onclick="startWithCountdown()" id="startButton">
+            Magsimula
+          </button>
+        </div>
+      </div>
+
+      <div class="game-container">
+        <div class="left-section">
+          <!-- Back button moved here -->
+          <div class="back-btn-container">
+            <button onclick="showBackToActivitiesModal()" class="back-btn">
+              ← Bumalik sa Mga Gawain
+            </button>
+          </div>
+
+          <div class="stats-container">
+            <div class="stat-box">
+              <div class="stat-label">Nahanap</div>
+              <div class="stat-value" id="foundCount">0/15</div>
+            </div>
+          </div>
+
+          <div class="timer-container">
+            <div class="timer-label">Oras na Natitira</div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill">30:00</div>
+            </div>
+          </div>
+
+          <div class="hint-container">
+            <div class="hint-info">
+              Mga Hint: <span id="hintsRemaining">3</span>
+            </div>
+            <button onclick="useHint()" id="hintButton">Gumamit ng Hint</button>
+          </div>
+
+          <!-- Selection Mode Toggle -->
+          <div class="selection-mode-toggle">
+            <div class="selection-mode-info">Paraan ng Pagpili:</div>
+            <div class="mode-buttons">
+              <button class="mode-btn active" onclick="setSelectionMode('straight')" id="straightMode">
+                Diretso
+              </button>
+              <button class="mode-btn" onclick="setSelectionMode('free')" id="freeMode">
+                Libre
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-container">
+          <div class="word-grid" id="wordGrid"></div>
+        </div>
+
+        <div class="word-list">
+          <h3>Mga Tauhang Hahanapin:</h3>
+          <div id="wordList"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const GRID_SIZE = 16;
+      const TOTAL_TIME = 1800; // 30 minutes in seconds
+      const displayWords = [
+        "HULI",
+        "BASILIO",
+        "KAPITAN TIYAGO",
+        "HERMANA PENCHANG",
+        "HERMANA BALI",
+        "PADRE CAMORRA",
+        "HUKOM PAMAYAPA",
+        "TANDANG SELO",
+        "KABESANG TALES",
+        "KAPITAN HENERAL",
+        "MATAAS NA KAWANI",
+        "KALIHIM",
+        "BEN ZAYB",
+        "MAKARAIG",
+        "ISAGANI"
+      ];
+
+
+      // Words used for placement (no spaces)
+      const words = displayWords.map((w) => w.replace(/\s+/g, ""));
+
+      let grid = [];
+      let placedWords = [];
+      let selectedCells = [];
+      let foundWords = new Set();
+      let score = 0;
+      let timeRemaining = TOTAL_TIME;
+      let timerInterval = null;
+      let isSelecting = false;
+      let hintsRemaining = 3;
+      let gameStarted = false;
+      let currentGameScore = 0;
+      let isShowingSuccessMessage = false;
+      let selectionMode = 'straight'; // 'straight' or 'free'
+      let startCell = null;
+      let lastTouchTime = 0;
+      const TOUCH_DEBOUNCE = 50; // ms
+
+      // Local storage keys
+      const SCORE_KEY = "activity1_score";
+      const COMPLETED_KEY = "activity1_completed";
+      const LAST_SCORE_KEY = "activity1_last_score";
+
+      // Audio and WebAudio fallback
+      let audioCtx = null;
+      let masterGain = null;
+      const bgAudioEl = document.getElementById ? document.getElementById('bgAudio') : null;
+      const correctAudioEl = document.getElementById ? document.getElementById('correctAudio') : null;
+      const wrongAudioEl = document.getElementById ? document.getElementById('wrongAudio') : null;
+      const clickAudioEl = document.getElementById ? document.getElementById('clickAudio') : null;
+      const countdownAudioEl = document.getElementById ? document.getElementById('countdownAudio') : null;
+
+      function initAudio() {
+        if (audioCtx) return;
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.9;
+          masterGain.connect(audioCtx.destination);
+        } catch (e) {
+          audioCtx = null;
+        }
+      }
+
+      function resumeAudioContext() {
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+      }
+
+      // Fade in/out helpers for the HTMLAudioElement
+      function fadeInAudio(el, target = 0.6, duration = 800) {
+        if (!el) return;
+        el.volume = 0;
+        el.play().catch(() => {});
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = t * target;
+          if (t === 1) clearInterval(id);
+        }, 30);
+      }
+
+      function fadeOutAudio(el, duration = 600) {
+        if (!el) return;
+        const startVol = el.volume || 0.6;
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = Math.max(0, startVol * (1 - t));
+          if (t === 1) {
+            el.pause();
+            el.currentTime = 0;
+            clearInterval(id);
+          }
+        }, 30);
+      }
+
+      function playBackground() {
+        initAudio();
+        resumeAudioContext();
+        if (bgAudioEl && bgAudioEl.src) {
+          fadeInAudio(bgAudioEl, 0.55, 700);
+        }
+      }
+
+      function stopBackground() {
+        if (bgAudioEl) fadeOutAudio(bgAudioEl, 600);
+      }
+
+      function playCorrectSound() {
+        if (correctAudioEl && correctAudioEl.src) {
+          correctAudioEl.currentTime = 0;
+          correctAudioEl.play().catch(() => {});
+          return;
+        }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880;
+        g.gain.value = 0.001;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        o.start(now);
+        o.stop(now + 0.3);
+      }
+
+      function playWrongSound() {
+        if (wrongAudioEl && wrongAudioEl.src) {
+          wrongAudioEl.currentTime = 0;
+          wrongAudioEl.play().catch(() => {});
+          return;
+        }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.value = 220;
+        g.gain.value = 0.001;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.15, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+        o.start(now);
+        o.stop(now + 0.25);
+      }
+
+      function playClickSound() {
+        if (clickAudioEl && clickAudioEl.src) {
+          try { clickAudioEl.currentTime = 0; clickAudioEl.play().catch(() => {}); } catch (e) {}
+          return;
+        }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = 1500;
+        o.connect(g);
+        g.connect(masterGain);
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+        o.start(now);
+        o.stop(now + 0.07);
+      }
+
+      function playCountdownSound() {
+        initAudio();
+        resumeAudioContext();
+        if (countdownAudioEl && countdownAudioEl.src) {
+          countdownAudioEl.currentTime = 0;
+          countdownAudioEl.play().catch(() => {});
+        } else if (audioCtx) {
+          const now = audioCtx.currentTime;
+          for (let i = 0; i < 3; i++) {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'square';
+            o.frequency.value = 1200;
+            g.gain.value = 0.0001;
+            o.connect(g);
+            g.connect(masterGain);
+            const t = now + i * 0.5;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.08, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+            o.start(t);
+            o.stop(t + 0.09);
+          }
+        }
+      }
+
+      function stopCountdownSound() {
+        if (countdownAudioEl) {
+          try {
+            countdownAudioEl.pause();
+            countdownAudioEl.currentTime = 0;
+          } catch (e) {}
+        }
+      }
+
+      // Countdown Animation Function
+      function showCountdownAnimation(callback) {
+        const overlay = document.getElementById("countdownOverlay");
+        overlay.style.display = "flex";
+        overlay.innerHTML = "";
+
+        // Add mobile-specific class
+        if (window.innerWidth <= 768) {
+          overlay.classList.add("mobile-countdown");
+        }
+
+        // Play countdown audio/ticks
+        try {
+          playCountdownSound();
+        } catch (e) {}
+
+        let count = 3;
+
+        function showNumber(num) {
+          overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
+
+          if (num === 1) {
+            // After showing 1, display START (no zero)
+            setTimeout(() => {
+              overlay.innerHTML = `<div class="countdown-start">MAGSIMULA</div>`;
+
+              // After "START" is shown, hide overlay, stop countdown audio and execute callback
+              setTimeout(() => {
+                try {
+                  stopCountdownSound();
+                } catch (e) {}
+                overlay.style.display = "none";
+                overlay.innerHTML = "";
+                overlay.classList.remove("mobile-countdown");
+                if (callback) callback();
+              }, 1000);
+            }, 1000);
+          } else {
+            // Show next number
+            setTimeout(() => {
+              showNumber(num - 1);
+            }, 1000);
+          }
+        }
+
+        // Start the countdown
+        showNumber(count);
+      }
+
+      function startWithCountdown() {
+        initAudio();
+        showCountdownAnimation(() => {
+          startGame();
+        });
+      }
+
+      function initGrid() {
+        grid = Array(GRID_SIZE)
+          .fill(null)
+          .map(() => Array(GRID_SIZE).fill(""));
+        placedWords = [];
+
+        const sortedWords = [...words].sort((a, b) => b.length - a.length);
+
+        sortedWords.forEach((word) => {
+          let placed = false;
+          let attempts = 0;
+          while (!placed && attempts < 100) {
+            const direction = Math.floor(Math.random() * 8);
+            const row = Math.floor(Math.random() * GRID_SIZE);
+            const col = Math.floor(Math.random() * GRID_SIZE);
+
+            if (canPlaceWord(word, row, col, direction)) {
+              placeWord(word, row, col, direction);
+              placed = true;
+            }
+            attempts++;
+          }
+        });
+
+        for (let i = 0; i < GRID_SIZE; i++) {
+          for (let j = 0; j < GRID_SIZE; j++) {
+            if (grid[i][j] === "") {
+              grid[i][j] = String.fromCharCode(
+                65 + Math.floor(Math.random() * 26)
+              );
+            }
+          }
+        }
+      }
+
+      function canPlaceWord(word, row, col, direction) {
+        const directions = [
+          [0, 1],
+          [1, 0],
+          [1, 1],
+          [-1, 1],
+          [0, -1],
+          [-1, 0],
+          [-1, -1],
+          [1, -1],
+        ];
+        const [dx, dy] = directions[direction];
+
+        for (let i = 0; i < word.length; i++) {
+          const newRow = row + dx * i;
+          const newCol = col + dy * i;
+
+          if (
+            newRow < 0 ||
+            newRow >= GRID_SIZE ||
+            newCol < 0 ||
+            newCol >= GRID_SIZE
+          ) {
+            return false;
+          }
+
+          if (grid[newRow][newCol] !== "" && grid[newRow][newCol] !== word[i]) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function placeWord(word, row, col, direction) {
+        const directions = [
+          [0, 1],
+          [1, 0],
+          [1, 1],
+          [-1, 1],
+          [0, -1],
+          [-1, 0],
+          [-1, -1],
+          [1, -1],
+        ];
+        const [dx, dy] = directions[direction];
+        const positions = [];
+
+        for (let i = 0; i < word.length; i++) {
+          const newRow = row + dx * i;
+          const newCol = col + dy * i;
+          grid[newRow][newCol] = word[i];
+          positions.push([newRow, newCol]);
+        }
+
+        placedWords.push({ word, positions });
+      }
+
+      function renderGrid() {
+        const gridEl = document.getElementById("wordGrid");
+        gridEl.innerHTML = "";
+
+        for (let i = 0; i < GRID_SIZE; i++) {
+          for (let j = 0; j < GRID_SIZE; j++) {
+            const cell = document.createElement("div");
+            cell.className = "grid-cell";
+            cell.textContent = grid[i][j];
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+
+            // Mouse events for desktop
+            cell.addEventListener("mousedown", handleMouseDown);
+            cell.addEventListener("mouseenter", handleMouseEnter);
+            
+            // Touch events for mobile
+            cell.addEventListener("touchstart", handleTouchStart, { passive: false });
+            cell.addEventListener("touchmove", handleTouchMove, { passive: false });
+            
+            // Prevent text selection
+            cell.addEventListener("selectstart", (e) => e.preventDefault());
+
+            gridEl.appendChild(cell);
+          }
+        }
+        
+        // Add mouseup/touchend to document for better handling
+        document.addEventListener("mouseup", handleMouseUp);
+        document.addEventListener("touchend", handleTouchEnd, { passive: false });
+      }
+
+      // ================== IMPROVED SELECTION LOGIC ==================
+      
+      function handleMouseDown(e) {
+        if (timerInterval === null || !gameStarted) return;
+        
+        const cell = e.target;
+        if (!cell.classList.contains("grid-cell")) return;
+        
+        e.preventDefault();
+        startSelection(cell);
+      }
+      
+      function handleMouseEnter(e) {
+        if (!isSelecting || !gameStarted || !startCell) return;
+        
+        const cell = e.target;
+        if (!cell.classList.contains("grid-cell")) return;
+        
+        e.preventDefault();
+        continueSelection(cell);
+      }
+      
+      function handleMouseUp() {
+        if (!isSelecting || !gameStarted) return;
+        
+        endSelection();
+      }
+      
+      function handleTouchStart(e) {
+        const now = Date.now();
+        if (now - lastTouchTime < TOUCH_DEBOUNCE) {
+          e.preventDefault();
+          return;
+        }
+        lastTouchTime = now;
+        
+        if (timerInterval === null || !gameStarted) {
+          e.preventDefault();
+          return;
+        }
+        
+        const touch = e.touches[0];
+        const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        if (cell && cell.classList.contains("grid-cell")) {
+          e.preventDefault();
+          startSelection(cell);
+        }
+      }
+      
+      function handleTouchMove(e) {
+        if (!isSelecting || !gameStarted || !startCell) {
+          // Not currently selecting — don't prevent defaults so other touch
+          // interactions (buttons, links) still work on mobile.
+          return;
+        }
+        
+        const touch = e.touches[0];
+        const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        if (cell && cell.classList.contains("grid-cell")) {
+          e.preventDefault();
+          continueSelection(cell);
+        }
+      }
+      
+      function handleTouchEnd(e) {
+        if (!isSelecting || !gameStarted) {
+          // If we're not selecting, allow the event to propagate so
+          // taps on buttons (start/back) still generate clicks.
+          return;
+        }
+
+        // Actively handling a selection — prevent default and finish.
+        e.preventDefault();
+        endSelection();
+      }
+      
+      function startSelection(cell) {
+        isSelecting = true;
+        startCell = cell;
+        selectedCells = [];
+        
+        // Clear previous selections
+        document.querySelectorAll(".grid-cell.selected").forEach((c) => {
+          c.classList.remove("selected");
+        });
+        
+        // Clear any existing selection guides
+        clearSelectionGuides();
+        
+        addToSelection(cell);
+      }
+      
+      function continueSelection(cell) {
+        if (!startCell) return;
+        
+        const startRow = parseInt(startCell.dataset.row);
+        const startCol = parseInt(startCell.dataset.col);
+        const currentRow = parseInt(cell.dataset.row);
+        const currentCol = parseInt(cell.dataset.col);
+        
+        // Clear current selection
+        document.querySelectorAll(".grid-cell.selected").forEach((c) => {
+          c.classList.remove("selected");
+        });
+        
+        // Clear selection guides
+        clearSelectionGuides();
+        
+        if (selectionMode === 'straight') {
+          // Straight line mode - only allow 8 directions
+          const dx = currentRow - startRow;
+          const dy = currentCol - startCol;
+          
+          // Determine direction (allow diagonal, horizontal, vertical only)
+          let dirX = 0, dirY = 0;
+          if (dx !== 0) dirX = dx > 0 ? 1 : -1;
+          if (dy !== 0) dirY = dy > 0 ? 1 : -1;
+          
+          // Calculate distance based on the larger movement
+          const maxDistance = Math.max(Math.abs(dx), Math.abs(dy));
+          
+          selectedCells = [];
+          for (let i = 0; i <= maxDistance; i++) {
+            const row = startRow + (dirX * i);
+            const col = startCol + (dirY * i);
+            
+            const pathCell = document.querySelector(
+              `[data-row="${row}"][data-col="${col}"]`
+            );
+            
+            if (pathCell) {
+              addToSelection(pathCell);
+            }
+          }
+          
+          // Add visual guide line
+          if (maxDistance > 0) {
+            addSelectionGuide(startRow, startCol, currentRow, currentCol);
+          }
+        } else {
+          // Free mode - allow any path (original behavior)
+          const row = parseInt(cell.dataset.row);
+          const col = parseInt(cell.dataset.col);
+          
+          // Check if cell is already in selection
+          if (!selectedCells.some(c => c.row === row && c.col === col)) {
+            addToSelection(cell);
+          }
+        }
+      }
+      
+      function addSelectionGuide(startRow, startCol, endRow, endCol) {
+        const gridEl = document.getElementById("wordGrid");
+        const startCell = document.querySelector(
+          `[data-row="${startRow}"][data-col="${startCol}"]`
+        );
+        const endCell = document.querySelector(
+          `[data-row="${endRow}"][data-col="${endCol}"]`
+        );
+        
+        if (!startCell || !endCell) return;
+        
+        const startRect = startCell.getBoundingClientRect();
+        const endRect = endCell.getBoundingClientRect();
+        const gridRect = gridEl.getBoundingClientRect();
+        
+        const startX = startRect.left + startRect.width / 2 - gridRect.left;
+        const startY = startRect.top + startRect.height / 2 - gridRect.top;
+        const endX = endRect.left + endRect.width / 2 - gridRect.left;
+        const endY = endRect.top + endRect.height / 2 - gridRect.top;
+        
+        // Calculate distance and angle
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        
+        // Create guide line
+        const guideLine = document.createElement("div");
+        guideLine.className = "selection-line";
+        guideLine.style.width = distance + "px";
+        guideLine.style.height = "4px";
+        guideLine.style.left = startX + "px";
+        guideLine.style.top = startY + "px";
+        guideLine.style.transform = `rotate(${angle}deg)`;
+        
+        gridEl.appendChild(guideLine);
+      }
+      
+      function clearSelectionGuides() {
+        document.querySelectorAll(".selection-line, .selection-guide").forEach(el => {
+          el.remove();
+        });
+      }
+      
+      function endSelection() {
+        if (!isSelecting || !gameStarted || selectedCells.length === 0) {
+          isSelecting = false;
+          startCell = null;
+          clearSelectionGuides();
+          return;
+        }
+        
+        const selectedWord = selectedCells
+          .sort((a, b) => {
+            // Sort by row first, then column
+            if (a.row !== b.row) return a.row - b.row;
+            return a.col - b.col;
+          })
+          .map((c) => grid[c.row][c.col])
+          .join("");
+        
+        // Check word after a short delay to allow user to adjust
+        setTimeout(() => {
+          checkWord(selectedWord);
+          
+          // Clear selection after checking
+          setTimeout(() => {
+            selectedCells.forEach((c) => c.element.classList.remove("selected"));
+            selectedCells = [];
+            clearSelectionGuides();
+          }, 300);
+        }, 100);
+        
+        isSelecting = false;
+        startCell = null;
+      }
+      
+      function addToSelection(cell) {
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+        
+        if (!selectedCells.some((c) => c.row === row && c.col === col)) {
+          selectedCells.push({ row, col, element: cell });
+          cell.classList.add("selected");
+          try { playClickSound(); } catch (e) {}
+        }
+      }
+
+      function renderWordList() {
+        const listEl = document.getElementById("wordList");
+        listEl.innerHTML = "";
+
+        displayWords.forEach((word, index) => {
+          const item = document.createElement("div");
+          item.className = "word-item";
+          item.textContent = `${index + 1}. ${word}`;
+          // id uses the no-space form so it matches placedWords.word
+          item.id = `word-${word.replace(/\s+/g, "")}`;
+          listEl.appendChild(item);
+        });
+      }
+
+      function checkWord(selectedWord) {
+        // Check both forward and reverse
+        const foundWord = placedWords.find((pw) => {
+          const word = pw.word;
+          const reverseWord = word.split("").reverse().join("");
+          
+          if (word !== selectedWord && reverseWord !== selectedWord) {
+            return false;
+          }
+
+          const positions = pw.positions;
+          if (positions.length !== selectedCells.length) return false;
+
+          // Check if positions match in forward direction
+          const forwardMatch = positions.every(
+            (pos, i) =>
+              pos[0] === selectedCells[i].row &&
+              pos[1] === selectedCells[i].col
+          );
+
+          // Check if positions match in reverse direction
+          const reverseMatch = positions.every(
+            (pos, i) =>
+              pos[0] === selectedCells[selectedCells.length - 1 - i].row &&
+              pos[1] === selectedCells[selectedCells.length - 1 - i].col
+          );
+
+          return forwardMatch || reverseMatch;
+        });
+
+        if (foundWord && !foundWords.has(foundWord.word)) {
+          foundWords.add(foundWord.word);
+          currentGameScore = foundWords.size;
+
+          // Create confetti effect
+          createConfetti();
+
+          // Animate found cells with stagger
+          foundWord.positions.forEach((pos, index) => {
+            setTimeout(() => {
+              const cell = document.querySelector(
+                `[data-row="${pos[0]}"][data-col="${pos[1]}"]`
+              );
+              cell.classList.add("found");
+            }, index * 50);
+          });
+
+          // Animate word list item with special effect
+          setTimeout(() => {
+            const wordItem = document.getElementById(`word-${foundWord.word}`);
+            wordItem.classList.add("found-animate");
+            setTimeout(() => {
+              wordItem.classList.add("found");
+            }, 500);
+          }, 200);
+
+          // Show success message
+          showSuccessMessage(foundWord.word);
+
+          try { playCorrectSound(); } catch (e) {}
+
+          updateStats();
+          
+          // Check if game is complete
+          if (foundWords.size === words.length) {
+            setTimeout(() => {
+              endGame(true);
+            }, 1000);
+          }
+        } else {
+          // wrong selection
+          try { playWrongSound(); } catch (e) {}
+        }
+      }
+
+      function showSuccessMessage(word) {
+        if (isShowingSuccessMessage) return;
+
+        isShowingSuccessMessage = true;
+
+        const message = document.createElement("div");
+        message.className = "success-message";
+        message.textContent = `Nakita mo: ${word}! 🎉`;
+        message.style.display = "block";
+
+        const overlay = document.createElement("div");
+        overlay.className = "overlay";
+        overlay.style.display = "block";
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(message);
+
+        setTimeout(() => {
+          message.style.animation = "fadeOut 0.3s ease forwards";
+          overlay.style.animation = "fadeOut 0.3s ease forwards";
+
+          setTimeout(() => {
+            message.style.display = "none";
+            overlay.style.display = "none";
+            message.remove();
+            overlay.remove();
+            isShowingSuccessMessage = false;
+          }, 300);
+        }, 1500);
+      }
+
+      function createConfetti() {
+        const colors = ["#8b4513", "#d4a574", "#ffd700", "#fff8e7", "#5c2e0f"];
+        const confettiCount = 30;
+
+        for (let i = 0; i < confettiCount; i++) {
+          const confetti = document.createElement("div");
+          confetti.className = "confetti-piece";
+          confetti.style.left = Math.random() * window.innerWidth + "px";
+          confetti.style.top = "0px";
+          confetti.style.backgroundColor =
+            colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.animationDelay = Math.random() * 0.3 + "s";
+
+          document.body.appendChild(confetti);
+
+          setTimeout(() => {
+            confetti.remove();
+          }, 3000);
+        }
+      }
+
+    function setSelectionMode(mode) {
+      selectionMode = mode;
+      
+      // Update UI
+      document.getElementById('straightMode').classList.toggle('active', mode === 'straight');
+      document.getElementById('freeMode').classList.toggle('active', mode === 'free');
+      
+      // Show temporary hint that won't replace the hint button
+      const hint = mode === 'straight' 
+        ? "Moda: Diretso - Pumipili lamang ng mga titik sa isang tuwid na linya" 
+        : "Moda: Libre - Maaaring pumili ng anumang mga titik";
+      
+      showTemporaryHint(hint);
+    }
+
+          // Replace the showTemporaryHint function with this improved version
+      function showTemporaryHint(message) {
+        const hintContainer = document.querySelector('.hint-container');
+        const originalContent = hintContainer.innerHTML;
+        
+        // Create a temporary message element
+        const tempHint = document.createElement('div');
+        tempHint.className = 'temporary-hint';
+        tempHint.textContent = message;
+        tempHint.style.cssText = `
+          font-size: 0.85em;
+          color: #5c2e0f;
+          background-color: rgba(212, 165, 116, 0.2);
+          padding: 8px;
+          border-radius: 4px;
+          margin-bottom: 10px;
+          border: 1px solid #d4a574;
+          text-align: center;
+          animation: fadeIn 0.3s ease;
+        `;
+        
+        // Insert the temporary hint at the beginning of the container
+        hintContainer.insertBefore(tempHint, hintContainer.firstChild);
+        
+        // Remove after 2 seconds
+        setTimeout(() => {
+          if (tempHint.parentNode === hintContainer) {
+            tempHint.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => {
+              if (tempHint.parentNode === hintContainer) {
+                hintContainer.removeChild(tempHint);
+              }
+            }, 300);
+          }
+        }, 2000);
+      }
+
+                  // Also update the useHint function to prevent conflicts
+      function useHint() {
+        if (
+          hintsRemaining <= 0 ||
+          timerInterval === null ||
+          foundWords.size === words.length ||
+          !gameStarted
+        ) {
+          return;
+        }
+
+        // Find an unfound word
+        const unfoundWords = placedWords.filter(
+          (pw) => !foundWords.has(pw.word)
+        );
+        if (unfoundWords.length === 0) return;
+
+        const randomWord =
+          unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+
+        // Highlight first letter of the word
+        const firstPos = randomWord.positions[0];
+        const cell = document.querySelector(
+          `[data-row="${firstPos[0]}"][data-col="${firstPos[1]}"]`
+        );
+
+        if (cell) {
+          cell.classList.add("hint");
+          setTimeout(() => {
+            cell.classList.remove("hint");
+          }, 2000);
+
+          hintsRemaining--;
+          document.getElementById("hintsRemaining").textContent = hintsRemaining;
+
+          // Disable button and change text when hints are used up
+          if (hintsRemaining === 0) {
+            const hintButton = document.getElementById("hintButton");
+            hintButton.disabled = true;
+            hintButton.textContent = "Ubos na mga Hint";
+          }
+          
+          // Show temporary message about the hint
+          showTemporaryHint(`Hint: Ang salitang "${randomWord.word}" ay nagsisimula sa titik na ito`);
+        }
+      }
+
+            // Add this CSS for the temporary hint animation
+      const tempHintStyle = document.createElement('style');
+      tempHintStyle.textContent = `
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .temporary-hint {
+          animation: fadeIn 0.3s ease;
+        }
+      `;
+      document.head.appendChild(tempHintStyle);
+
+      function updateStats() {
+        document.getElementById(
+          "foundCount"
+        ).textContent = `${foundWords.size}/${words.length}`;
+      }
+
+      function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timeRemaining = TOTAL_TIME;
+
+        timerInterval = setInterval(() => {
+          timeRemaining--;
+          updateTimer();
+
+          if (timeRemaining <= 0) {
+            endGame(false);
+          }
+        }, 1000);
+      }
+
+      function updateTimer() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        const timeText = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+        const percentage = (timeRemaining / TOTAL_TIME) * 100;
+        const progressFill = document.getElementById("progressFill");
+        progressFill.style.width = percentage + "%";
+        progressFill.textContent = timeText;
+      }
+
+      function endGame(won) {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        gameStarted = false;
+
+        // Stop background audio when game ends
+        try { stopBackground(); } catch (e) {}
+
+        // Save score to localStorage
+        const finalScore = foundWords.size;
+        localStorage.setItem(SCORE_KEY, finalScore);
+        localStorage.setItem(COMPLETED_KEY, "true");
+
+        // Don't save as last score if game was completed
+        if (!won) {
+          localStorage.setItem(LAST_SCORE_KEY, finalScore);
+        }
+
+        // Wait a bit if success message is showing
+        if (isShowingSuccessMessage) {
+          setTimeout(() => {
+            showGameEndModal(won, finalScore);
+          }, 500);
+        } else {
+          showGameEndModal(won, finalScore);
+        }
+      }
+
+      function showGameEndModal(won, finalScore) {
+        const title = document.getElementById("gameEndTitle");
+        const message = document.getElementById("gameEndMessage");
+        const scoreElement = document.getElementById("gameEndScore");
+
+        if (won) {
+          title.textContent = "Binabati kita!";
+          message.textContent = `Nahanap mo lahat ng ${words.length} salita!`;
+          scoreElement.textContent = `Iskor: ${words.length}/${words.length}`;
+        } else {
+          title.textContent = "Tapos na ang oras!";
+          message.textContent = `Nahanap: ${finalScore}/${words.length}`;
+          scoreElement.textContent = `Iskor: ${finalScore}/${words.length}`;
+        }
+
+        showModal("gameEndModal");
+      }
+
+      function startGame() {
+        gameStarted = true;
+        // Ensure audio is initialized and background music plays
+        try { initAudio(); resumeAudioContext(); playBackground(); } catch (e) {}
+        foundWords.clear();
+        selectedCells = [];
+        hintsRemaining = 3; // Changed from 2
+        currentGameScore = 0;
+        isShowingSuccessMessage = false;
+        startCell = null;
+        isSelecting = false;
+
+        document.getElementById("hintsRemaining").textContent = hintsRemaining;
+        
+        // Reset hint button to enabled state with original text
+        const hintButton = document.getElementById("hintButton");
+        hintButton.disabled = false;
+        hintButton.textContent = "Gumamit ng Hint";
+
+        // Reset selection mode to straight
+        setSelectionMode('straight');
+
+        initGrid();
+        renderGrid();
+        renderWordList();
+        updateStats();
+        startTimer();
+
+        document.querySelectorAll(".grid-cell").forEach((cell) => {
+          cell.classList.remove("found", "selected", "hint");
+        });
+
+        // Disable start button once game starts
+        document.getElementById("startButton").disabled = true;
+        document.getElementById("startButton").textContent =
+          "Nagsimula na ang laro";
+      }
+
+      function showModal(modalId) {
+        document.getElementById(modalId).style.display = "flex";
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+      }
+
+      function showBackToActivitiesModal() {
+        if (gameStarted) {
+          showModal("resetModal");
+        } else {
+          window.location.href = "30-31_activities.html";
+        }
+      }
+
+      function confirmBackToActivities() {
+        // Save current progress as last score if game was in progress
+        if (gameStarted && currentGameScore > 0) {
+          localStorage.setItem(LAST_SCORE_KEY, currentGameScore);
+        }
+        closeModal("resetModal");
+        try { stopBackground(); } catch (e) {}
+        window.location.href = "30-31_activities.html";
+      }
+
+      function confirmRetry() {
+        // Clear localStorage for the specific activity
+        localStorage.removeItem(SCORE_KEY);
+        localStorage.removeItem(COMPLETED_KEY);
+        localStorage.removeItem(LAST_SCORE_KEY);
+        localStorage.removeItem("activity1_in_progress");
+        localStorage.removeItem("activity1_temp_score");
+        
+        closeModal("retryModal");
+        try { stopBackground(); } catch (e) {}
+        startGame();
+      }
+
+      function goToActivities() {
+        closeModal("gameEndModal");
+        try { stopBackground(); } catch (e) {}
+        window.location.href = "30-31_activities.html?score1=" + foundWords.size;
+      }
+
+      // Prevent text selection during drag
+      document.addEventListener("selectstart", function(e) {
+        if (isSelecting) {
+          e.preventDefault();
+        }
+      });
+
+      window.onload = () => {
+          initGrid();
+          renderGrid();
+          renderWordList();
+
+          // Check if there's a saved score to resume
+          const savedScore = localStorage.getItem(SCORE_KEY);
+          const isCompleted = localStorage.getItem(COMPLETED_KEY);
+          const lastScore = localStorage.getItem(LAST_SCORE_KEY);
+          const isInProgress = localStorage.getItem("activity1_in_progress") === "true";
+
+          // If coming back from activities page with modal confirmation, clear all data
+          const urlParams = new URLSearchParams(window.location.search);
+          const resetRequested = urlParams.get('reset') === 'true';
+          
+          if (resetRequested) {
+            // Clear all localStorage for this activity
+            localStorage.removeItem(SCORE_KEY);
+            localStorage.removeItem(COMPLETED_KEY);
+            localStorage.removeItem(LAST_SCORE_KEY);
+            localStorage.removeItem("activity1_in_progress");
+            localStorage.removeItem("activity1_temp_score");
+            
+            // Reset button to start
+            document.getElementById("startButton").textContent = "Magsimula";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              startWithCountdown();
+            };
+            
+            // Clear URL parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } 
+          // Show the most recent score
+          else if (isCompleted === "true" && savedScore) {
+            document.getElementById(
+              "foundCount"
+            ).textContent = `${savedScore}/15`;
+            document.getElementById("startButton").textContent = "Gawin Muli";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              showModal("retryModal");
+            };
+          } else if (lastScore && !isInProgress) {
+            // Show last known score from incomplete game
+            document.getElementById("foundCount").textContent = `${lastScore}/15`;
+            document.getElementById("startButton").textContent = "Magsimula";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              startWithCountdown();
+            };
+          } else if (isInProgress) {
+            // Game was in progress, show retry modal
+            document.getElementById("startButton").textContent = "Ipagpatuloy";
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("startButton").onclick = function () {
+              showModal("retryModal");
+            };
+          } else {
+            document.getElementById("startButton").onclick = function () {
+              startWithCountdown();
+            };
+          }
+        };
+    </script>
+  </body>
+</html>
