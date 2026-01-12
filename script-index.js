@@ -148,26 +148,49 @@ function initializeCharacterGrid() {
     const characterGrid = document.getElementById("characterGrid");
     if (!characterGrid) return;
     characterGrid.innerHTML = "";
+    
     characters.forEach(character => {
         const characterCard = document.createElement("div");
         characterCard.className = "character-card";
         characterCard.dataset.name = character.name;
         characterCard.dataset.description = character.description;
         characterCard.dataset.image = character.image;
+        
         characterCard.innerHTML = `
             <div class="character-img">
-                <img src="${character.image}" alt="${character.name}" onerror="this.style.display='none'; this.parentElement.textContent='${character.name}';" />
+                <div class="golden-frame">
+                    <div class="golden-frame-inner">
+                        <img src="${character.image}" alt="${character.name}" 
+                             onerror="handleImageError(this, '${character.name}')" />
+                    </div>
+                </div>
             </div>
             <div class="character-name">${character.name}</div>
         `;
+        
         characterGrid.appendChild(characterCard);
     });
 
+    // Add click event listeners
     document.querySelectorAll('.character-card').forEach(card => {
         card.addEventListener('click', () => {
-            showCharacterModal(card.dataset.name, card.dataset.description, card.dataset.image);
+            showCharacterModal(
+                card.dataset.name, 
+                card.dataset.description, 
+                card.dataset.image
+            );
         });
     });
+}
+
+// Add this helper function for image error handling
+function handleImageError(imgElement, characterName) {
+    const frameInner = imgElement.parentElement;
+    frameInner.innerHTML = `
+        <div class="image-fallback">
+            ${characterName}
+        </div>
+    `;
 }
 
 function initializeModal() {
@@ -196,23 +219,42 @@ function showCharacterModal(name, description, image) {
     const modal = document.getElementById('characterModal');
     const modalName = document.getElementById('modalCharacterName');
     const modalDescription = document.getElementById('modalCharacterDescription');
-    const modalImage = document.getElementById('modalCharacterImage');
-    if (!modal) return;
+    const modalImageContainer = document.querySelector('.modal-image');
+    
+    if (!modal || !modalName || !modalDescription || !modalImageContainer) return;
+    
     modalName.textContent = name;
     modalDescription.textContent = description;
-    modalImage.src = image;
-    modalImage.alt = name;
+    
+    // Clear previous content and set up new modal image with frame
+    modalImageContainer.innerHTML = '';
+    modalImageContainer.innerHTML = `
+        <img id="modalCharacterImage" src="${image}" alt="${name}" 
+             onerror="handleModalImageError(this, '${name}')" />
+    `;
+    
     modal.classList.remove('hidden');
     modal.classList.add('show');
-    modalImage.onerror = function() {
-        this.style.display = 'none';
-        const modalImageContainer = document.querySelector('.modal-image');
-        const fallbackText = document.createElement('div');
-        fallbackText.className = 'image-fallback';
-        fallbackText.textContent = name;
-        fallbackText.style.cssText = `color: #f4ead5; font-size: 1.5em; font-weight: bold; display:flex; align-items:center; justify-content:center; height:100%; background:linear-gradient(135deg,#d4a574 0%,#a0826d 100%);`;
-        modalImageContainer.appendChild(fallbackText);
-    };
+    
+    // Scroll to top of modal content
+    modalImageContainer.scrollTop = 0;
+}
+
+// Add this helper function for modal image errors
+function handleModalImageError(imgElement, characterName) {
+    const modalImageContainer = imgElement.parentElement;
+    modalImageContainer.innerHTML = `
+        <div class="image-fallback" style="
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+        ">
+            ${characterName}
+        </div>
+    `;
 }
 
 function initializeCharacterSearch() {
