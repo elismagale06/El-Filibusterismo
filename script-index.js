@@ -130,6 +130,97 @@ const characters = [
         description: "Anak ni Tales; sapilitang kinuha bilang sundalo.",
         image: "images/Tano.png"
     }
+    ,
+    {
+        name: "Pecson",
+        description: "Isang estudyanteng mapanlait at puno ng pagdududa sa pagbabago; kinakatawan ang kawalan ng pag-asa ng ilang kabataan.",
+        image: "images/Pecson.png"
+    },
+    {
+        name: "Quiroga",
+        description: "Isang mayamang negosyanteng Tsino na nag-iimbak ng armas para sa pansariling kapakinabangan; simbolo ng oportunismo at pakikipagsabwatan.",
+        image: "images/Quiroga.png"
+    },
+    {
+        name: "Mr. Leeds",
+        description: "Isang Amerikanong salamangkero na gumagamit ng ilusyon upang ilantad ang mga lihim na krimen ng mga prayle; kinakatawan ang katotohanang lumalabas.",
+        image: "images/Mr. Leeds.png"
+    },
+    {
+        name: "Kapitan Basilio",
+        description: "Isang lokal na opisyal na yumaman at nakisangkot sa pang-aapi sa mga estudyante; sumasagisag sa mga abusadong Pilipino.",
+        image: "images/Kapitan Basilio.png"
+    },
+    {
+        name: "Sinang",
+        description: "Masayahin at tapat na kaibigan ni Maria Clara; kinakatawan ang kabutihang-loob at pagiging totoo.",
+        image: "images/Sinang.png"
+    },
+    {
+        name: "Don Timoteo Pelaez",
+        description: "Isang mayamang Pilipino na sunud-sunuran sa mga Kastila; larawan ng bulag na pagsunod sa kolonyal na kapangyarihan.",
+        image: "images/Don Timoteo Pelaez.png"
+    },
+    {
+        name: "Kabesang Andang",
+        description: "Isang inang nawalan ng anak dahil sa kawalang-katarungan; larawan ng paghihirap at pagtitiis ng karaniwang Pilipino.",
+        image: "images/Kabesang Andang.png"
+    },
+    {
+        name: "Pepay",
+        description: "Isang mananayaw na kinagigiliwan ng mga opisyal; kinakatawan ang pagsasamantala at kabulukan ng moralidad.",
+        image: "images/Pepay.png"
+    },
+    {
+        name: "Hermana Bali",
+        description: "Isang mabait na babae na tumulong kay Basilio; simbolo ng malasakit at pagkakawanggawa.",
+        image: "images/Hermana Bali.png"
+    },
+    {
+        name: "Kutserong Sinong",
+        description: "Isang kutsero na ikinulong dahil sa paglabag sa utos ng prayle; kinakatawan ang pang-aapi sa karaniwang mamamayan.",
+        image: "images/Kutserong Sinong.png"
+    },
+    {
+        name: "Lucia",
+        description: "Ang selosang kapatid ni Paulita Gomez; ipinapakita ang inggit at pagiging mapagmataas.",
+        image: "images/Lucia.png"
+    },
+    {
+        name: "Padre Valerio",
+        description: "Isang tiwaling prayle na gumagawa ng imoral na gawain; kinakatawan ang pagkukunwari ng ilang relihiyosong pinuno.",
+        image: "images/Padre Valerio.png"
+    },
+    {
+        name: "Gertrude",
+        description: "Anak ng lalaking pinaslang ng prayle na ibinunyag sa palabas ni Mr. Leeds; simbolo ng tinatagong kawalang-katarungan.",
+        image: "images/Gertrude.png"
+    },
+    {
+        name: "Don Primitivo",
+        description: "Isang Kastilang opisyal na labis ang pagkahumaling sa titulo at pormalidad; kinakatawan ang kayabangan ng burukrasya.",
+        image: "images/Don Primitivo.png"
+    },
+    {
+        name: "Doña Patrocinio",
+        description: "Isang babaeng Pilipina na ginagaya ang asal at kultura ng mga Kastila; larawan ng kolonyal na kaisipan.",
+        image: "images/Doña Patrocinio.png"
+    },
+    {
+        name: "Chikoy",
+        description: "Isang batang lansangan na napapasok sa maliliit na krimen; kinakatawan ang kahirapan at kapabayaan ng lipunan.",
+        image: "images/Chikoy.png"
+    },
+    {
+        name: "Momoy",
+        description: "Kasama ni Chikoy na isa ring batang mahirap; simbolo ng kawalan ng pagkakataon ng kabataang maralita.",
+        image: "images/Momoy.png"
+    },
+    {
+        name: "Carolino",
+        description: "Isang Guardia Civil na unti-unting namulat sa maling sistemang kanyang pinaglilingkuran; kinakatawan ang nagigising na konsensya.",
+        image: "images/Carolino.png"
+    }
 ];
 
 document.addEventListener("DOMContentLoaded", function () {
