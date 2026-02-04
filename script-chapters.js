@@ -341,3 +341,139 @@ window.addEventListener('beforeunload', function () {
         } catch (e) {} 
     });
 });
+
+
+// Auto-play for chapter audio with better UX
+function autoPlayChapterAudio() {
+    // Only run on chapter pages
+    const page = document.body.dataset.page;
+    if (page !== "chapter" && page !== "chapter-multi") return;
+    
+    // Get audio element(s)
+    const audios = Array.from(document.querySelectorAll('audio'));
+    if (audios.length === 0) return;
+    
+    // Try to auto-play each audio
+    audios.forEach(audio => {
+        // Skip if audio has been interacted with before
+        if (audio.dataset.userInteracted === 'true') return;
+        
+        // Check if we have saved playback position
+        const savedPosition = sessionStorage.getItem(`audio_${audio.id}_position`);
+        const shouldResume = sessionStorage.getItem(`audio_${audio.id}_shouldResume`) === 'true';
+        
+        // Set a small delay to ensure DOM is ready
+        setTimeout(() => {
+            // Try to play
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log('Auto-play prevented:', error);
+                    
+                    // Show a visible play button at the TOP of the page
+                    showFloatingPlayButton(audio);
+                }).then(() => {
+                    // Success! Remove any floating button
+                    removeFloatingPlayButton();
+                });
+            }
+        }, 500); // Increased delay to ensure page is stable
+    });
+}
+
+// Show a floating play button at the top
+function showFloatingPlayButton(audioElement) {
+    // Remove existing floating button
+    removeFloatingPlayButton();
+    
+    // Create floating button container
+    const floatingContainer = document.createElement('div');
+    floatingContainer.id = 'floating-play-container';
+    floatingContainer.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(to bottom, #5c2e0f, #4a240c);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        animation: floatIn 0.3s ease-out;
+        max-width: 300px;
+    `;
+    
+    floatingContainer.innerHTML = `
+        <div style="flex-shrink: 0; font-size: 1.5em;">▶</div>
+        <div style="flex-grow: 1;">
+            <div style="font-weight: bold; font-size: 0.9em;">Simulan ang Audio</div>
+            <div style="font-size: 0.8em; opacity: 0.9;">I-click dito upang pakinggan ang kabanata</div>
+        </div>
+    `;
+    
+    // Add click handler
+    floatingContainer.addEventListener('click', function() {
+        audioElement.play().then(() => {
+            removeFloatingPlayButton();
+            // Mark as interacted
+            audioElement.dataset.userInteracted = 'true';
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        }).catch(err => {
+            console.log('Manual play also prevented:', err);
+        });
+    });
+    
+    // Add to page
+    document.body.appendChild(floatingContainer);
+    
+    // Auto-remove after 30 seconds
+    setTimeout(() => {
+        removeFloatingPlayButton();
+    }, 30000);
+}
+
+function removeFloatingPlayButton() {
+    const existing = document.getElementById('floating-play-container');
+    if (existing) existing.remove();
+}
+
+// Add floatIn animation to CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes floatIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Update DOMContentLoaded handler
+document.addEventListener("DOMContentLoaded", function () {
+    const page = document.body.dataset.page;
+    if (page === "chapters") {
+        initializeChapterSearch();
+    }
+    if (page === "chapter" || page === "chapter-multi") {
+        initializeChapterAudio();
+        restoreAudioPlaybackState();
+        // Try to auto-play after a delay
+        setTimeout(autoPlayChapterAudio, 1000);
+    }
+
+    addCardAnimations();
+    ensureSingleAudio();
+    
+    // Handle audio state for page refreshes
+    setupAudioStateManagement();
+});
