@@ -1,5 +1,17 @@
 // Chapters page script (chapter search, audio handling, animations)
 document.addEventListener("DOMContentLoaded", function () {
+    const chapterImages = document.querySelectorAll('.chapter-image img');
+    
+    chapterImages.forEach(img => {
+        // Add loading lazy for performance
+        img.loading = 'lazy';
+        
+        // Handle image load errors
+        img.onerror = function() {
+            this.src = 'images/placeholder.jpg'; // Add a fallback image
+            this.alt = 'Image not available';
+        };
+    });
     const page = document.body.dataset.page;
     
     // Initialize based on page type
@@ -12,6 +24,8 @@ document.addEventListener("DOMContentLoaded", function () {
         initializeChapterAudio();
     }
 
+    setTimeout(animateChapterCards, 300);
+    handleChapterImages();  
     addCardAnimations();
     ensureSingleAudio();
 });
@@ -24,6 +38,38 @@ function initializeChapterSearch() {
     chapterSearch.addEventListener("keyup", filterChapters);
     filterChapters(); // Initial filter on load
 }
+
+// Add this function to handle chapter images
+function handleChapterImages() {
+    const chapterImages = document.querySelectorAll('.chapter-image img');
+    
+    chapterImages.forEach(img => {
+        // Add loading attribute for lazy loading
+        img.setAttribute('loading', 'lazy');
+        
+        // Check if image loads successfully
+        img.addEventListener('load', function() {
+            console.log(`Image loaded: ${this.src}`);
+        });
+        
+        // Handle image errors
+        img.addEventListener('error', function() {
+            console.error(`Failed to load image: ${this.src}`);
+            this.classList.add('error');
+            
+            // Show fallback content
+            const frameInner = this.closest('.frame-inner');
+            if (frameInner) {
+                const fallbackText = document.createElement('div');
+                fallbackText.className = 'image-fallback';
+                fallbackText.textContent = img.alt || 'Chapter Image';
+                frameInner.innerHTML = '';
+                frameInner.appendChild(fallbackText);
+            }
+        });
+    });
+}
+
 
 function filterChapters() {
     const el = document.getElementById("chapterSearch");
@@ -291,6 +337,25 @@ function addCardAnimations() {
         });
     }, 100);
 }
+
+// Add staggered animation to chapter cards
+function animateChapterCards() {
+    const chapterCards = document.querySelectorAll('.chapter-card');
+    
+    chapterCards.forEach((card, index) => {
+        // Set initial state
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        // Animate with delay
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 50); // 50ms delay between each card
+    });
+}
+
 
 function ensureSingleAudio() {
     const audios = Array.from(document.querySelectorAll('audio'));
