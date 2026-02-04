@@ -1,428 +1,269 @@
-// ============================================
-// CHAPTER AUDIO SCRIPT - AUTO PLAY FIXED
-// ============================================
-
-let audioPlayer = null;
-let currentChapter = null;
-let isPlaying = false;
-let wasPlayingBeforeUnload = false;
-
-// ============================================
-// INIT
-// ============================================
-
-document.addEventListener("DOMContentLoaded", () => {
-
+// Chapters page script (chapter search, audio handling, animations)
+document.addEventListener("DOMContentLoaded", function () {
     const page = document.body.dataset.page;
-
+    
+    // Initialize based on page type
     if (page === "chapters") {
         initializeChapterSearch();
     }
-
+    
+    // Initialize audio for ALL chapter pages (both single and multi)
     if (page === "chapter" || page === "chapter-multi") {
-        currentChapter = getCurrentChapterId();
         initializeChapterAudio();
-        
-        // Check if this chapter was playing before page unload
-        const lastChapter = localStorage.getItem("last_active_chapter");
-        wasPlayingBeforeUnload = lastChapter === currentChapter && 
-                                 localStorage.getItem(`${currentChapter}_playing`) === "true";
     }
 
-    ensureSingleAudio();
     addCardAnimations();
-    addAutoPlayStyles();
+    ensureSingleAudio();
 });
-
-
-// ============================================
-// AUDIO SETUP
-// ============================================
-
-function initializeChapterAudio() {
-
-    const audio = document.querySelector("audio");
-    if (!audio) return;
-
-    audioPlayer = audio;
-
-    audioPlayer.preload = "auto";
-    audioPlayer.dataset.chapterId = currentChapter;
-
-    // Restore time
-    const savedTime = getSavedAudioTime();
-    if (savedTime > 0) {
-        audioPlayer.currentTime = savedTime;
-    }
-
-    // When ready → try autoplay
-    audioPlayer.addEventListener("canplay", () => {
-        initiateAudioPlayback();
-    }, { once: true });
-
-    // User interaction tracking
-    audioPlayer.addEventListener("play", () => {
-        markUserInteracted();
-        setAudioState(true);
-        isPlaying = true;
-        console.log("Audio started playing");
-    });
-
-    audioPlayer.addEventListener("pause", () => {
-        setAudioState(false);
-        isPlaying = false;
-        console.log("Audio paused");
-    });
-
-    audioPlayer.addEventListener("ended", () => {
-        setAudioState(false);
-        isPlaying = false;
-        markChapterCompleted();
-        console.log("Audio ended");
-    });
-
-    // Save time periodically
-    audioPlayer.addEventListener("timeupdate", () => {
-        if (!audioPlayer.paused) {
-            saveCurrentTime();
-        }
-    });
-
-    // Save time when seeking
-    audioPlayer.addEventListener("seeked", () => {
-        saveCurrentTime();
-    });
-}
-
-
-// ============================================
-// AUTO PLAY CORE
-// ============================================
-
-function initiateAudioPlayback() {
-
-    if (!audioPlayer) return;
-
-    // Check if user has already interacted with audio before
-    const hasInteracted = hasUserInteractedWithAudio();
-    
-    // If chapter is completed, don't autoplay
-    if (isChapterCompleted()) {
-        console.log("Chapter already completed, not autoplaying");
-        return;
-    }
-
-    // Try to resume playback if it was playing before unload
-    if (wasPlayingBeforeUnload && hasInteracted) {
-        console.log("Resuming playback from where it left off");
-        const playPromise = audioPlayer.play();
-        
-        playPromise
-            .then(() => {
-                console.log("Resume playback successful");
-                markUserInteracted();
-                isPlaying = true;
-            })
-            .catch((error) => {
-                console.log("Resume playback blocked:", error);
-                // If resume fails, show prompt if no interaction yet
-                if (!hasInteracted) {
-                    showSimplePlayPrompt();
-                }
-            });
-    }
-    // First visit to chapter - try autoplay if user has interacted before
-    else if (hasInteracted) {
-        console.log("User has interacted before, attempting autoplay");
-        const playPromise = audioPlayer.play();
-        
-        playPromise
-            .then(() => {
-                console.log("Autoplay success");
-                markUserInteracted();
-                isPlaying = true;
-            })
-            .catch((error) => {
-                console.log("Autoplay blocked:", error);
-            });
-    }
-    // First time user - show prompt
-    else {
-        console.log("First time user, showing play prompt");
-        showSimplePlayPrompt();
-    }
-}
-
-
-// ============================================
-// STORAGE HELPERS
-// ============================================
-
-function markUserInteracted() {
-    localStorage.setItem("user_audio_interaction", "true");
-}
-
-function hasUserInteractedWithAudio() {
-    return localStorage.getItem("user_audio_interaction") === "true";
-}
-
-function setAudioState(playing) {
-    localStorage.setItem(
-        `${currentChapter}_playing`,
-        playing.toString()
-    );
-
-    if (playing) {
-        localStorage.setItem(
-            "last_active_chapter",
-            currentChapter
-        );
-    }
-}
-
-function getSavedAudioTime() {
-    const t = localStorage.getItem(
-        `${currentChapter}_time`
-    );
-    return t ? parseFloat(t) : 0;
-}
-
-function saveCurrentTime() {
-    if (!audioPlayer) return;
-    localStorage.setItem(
-        `${currentChapter}_time`,
-        audioPlayer.currentTime.toString()
-    );
-}
-
-function markChapterCompleted() {
-    localStorage.setItem(
-        `${currentChapter}_completed`,
-        "true"
-    );
-}
-
-function isChapterCompleted() {
-    return localStorage.getItem(
-        `${currentChapter}_completed`
-    ) === "true";
-}
-
-
-// ============================================
-// UI PROMPTS (SIMPLIFIED - NO FLOATING BUTTON)
-// ============================================
-
-function showSimplePlayPrompt() {
-    removeAllPrompts();
-
-    const overlay = document.createElement("div");
-    overlay.id = "simple-play-prompt";
-
-    overlay.innerHTML = `
-        <div class="prompt-content">
-            <h3>Simulan ang Audio ng Kabanata</h3>
-            <p>Audio ng kabanata ay awtomatikong magpe-play.</p>
-            <p>Magre-resume sa huling pinakinggan sa mga susunod na pagbisita.</p>
-
-            <div class="prompt-buttons">
-                <button class="secondary-btn" onclick="closePrompt()">
-                    Huwag muna
-                </button>
-                <button class="primary-btn" onclick="playFromPrompt()">
-                    ▶ I-play Ngayon
-                </button>
-            </div>
-        </div>
-    `;
-
-    overlay.style.cssText = `
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.85);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-    `;
-
-    document.body.appendChild(overlay);
-}
-
-function removeAllPrompts() {
-    const el = document.getElementById("simple-play-prompt");
-    if (el) el.remove();
-}
-
-
-// ============================================
-// GLOBAL FUNCTIONS (PROMPT)
-// ============================================
-
-window.playFromPrompt = function () {
-    if (!audioPlayer) return;
-
-    markUserInteracted();
-
-    audioPlayer.play()
-        .then(() => {
-            closePrompt();
-            isPlaying = true;
-        })
-        .catch((error) => {
-            console.log("Play from prompt failed:", error);
-        });
-};
-
-window.closePrompt = function () {
-    removeAllPrompts();
-    markUserInteracted();
-    // No floating button to show
-};
-
-
-// ============================================
-// PAGE VISIBILITY HANDLING
-// ============================================
-
-// Pause when page is hidden (tab switch, minimize)
-document.addEventListener("visibilitychange", () => {
-    if (!audioPlayer) return;
-    
-    if (document.hidden) {
-        // Page is hidden - save state
-        if (!audioPlayer.paused) {
-            wasPlayingBeforeUnload = true;
-            setAudioState(true);
-            saveCurrentTime();
-        }
-    } else {
-        // Page is visible again - check if we should resume
-        const shouldResume = localStorage.getItem(`${currentChapter}_playing`) === "true";
-        const lastChapter = localStorage.getItem("last_active_chapter");
-        
-        if (shouldResume && lastChapter === currentChapter && hasUserInteractedWithAudio()) {
-            // Small delay to ensure page is fully visible
-            setTimeout(() => {
-                if (audioPlayer && !audioPlayer.paused) {
-                    audioPlayer.play().catch(error => {
-                        console.log("Resume after visibility change failed:", error);
-                    });
-                }
-            }, 300);
-        }
-    }
-});
-
-
-// ============================================
-// HELPERS
-// ============================================
-
-function getCurrentChapterId() {
-    const path = location.pathname;
-    return path
-        .split("/")
-        .pop()
-        .replace(".php", "")
-        .replace(".html", "");
-}
-
-function ensureSingleAudio() {
-    const audios = document.querySelectorAll("audio");
-    audios.forEach(a => {
-        a.addEventListener("play", () => {
-            audios.forEach(o => {
-                if (o !== a && !o.paused) {
-                    o.pause();
-                }
-            });
-        });
-    });
-}
-
-function addCardAnimations() {
-    setTimeout(() => {
-        document
-            .querySelectorAll(".character-card, .chapter-card:not(.disabled)")
-            .forEach((card, i) => {
-                card.classList.remove("hidden");
-                card.style.animation = `fadeInCard .4s ease ${i * .05}s forwards`;
-            });
-    }, 100);
-}
-
-function addAutoPlayStyles() {
-    if (document.getElementById("auto-play-styles")) return;
-
-    const style = document.createElement("style");
-    style.id = "auto-play-styles";
-    style.textContent = `
-        @keyframes fadeInCard {
-            from {opacity:0;transform:translateY(10px)}
-            to {opacity:1;transform:translateY(0)}
-        }
-        .hidden {display:none!important}
-    `;
-    document.head.appendChild(style);
-}
-
-
-// ============================================
-// SEARCH (OPTIONAL)
-// ============================================
 
 function initializeChapterSearch() {
-    const input = document.getElementById("chapterSearch");
-    if (!input) return;
-    input.addEventListener("input", filterChapters);
-    filterChapters();
+    const chapterSearch = document.getElementById("chapterSearch");
+    if (!chapterSearch) return;
+    
+    chapterSearch.addEventListener("input", filterChapters);
+    chapterSearch.addEventListener("keyup", filterChapters);
+    filterChapters(); // Initial filter on load
 }
 
 function filterChapters() {
     const el = document.getElementById("chapterSearch");
     if (!el) return;
-    const val = el.value.toLowerCase();
-    document
-        .querySelectorAll("#chapterGrid .chapter-card")
-        .forEach(card => {
-            const t = card.innerText.toLowerCase();
-            card.classList.toggle("hidden", val && !t.includes(val));
-        });
+    
+    const searchTerm = el.value.toLowerCase();
+    const chapterCards = document.querySelectorAll("#chapterGrid .chapter-card");
+    const noResults = document.getElementById("noChapterResults");
+    const searchTermSpan = document.getElementById("chapterSearchTerm");
+    
+    let visibleCount = 0;
+    let delay = 0;
+    
+    chapterCards.forEach((card) => {
+        const chapterTitle = card.querySelector("h3").textContent.toLowerCase();
+        const chapterDesc = card.querySelector("p").textContent.toLowerCase();
+        
+        if (searchTerm === "" || 
+            chapterTitle.includes(searchTerm) || 
+            chapterDesc.includes(searchTerm)) {
+            // Show card with animation
+            card.classList.remove("hidden");
+            card.style.animation = `fadeInCard 0.3s ease ${delay}s forwards`;
+            visibleCount++;
+            delay += 0.05;
+        } else {
+            // Hide card
+            card.classList.add("hidden");
+            card.style.animation = "none";
+        }
+    });
+    
+    // Show/hide no results message
+    if (visibleCount === 0 && searchTerm !== "") {
+        if (searchTermSpan) searchTermSpan.textContent = searchTerm;
+        if (noResults) noResults.classList.remove("hidden");
+    } else {
+        if (noResults) noResults.classList.add("hidden");
+    }
 }
 
+function initializeChapterAudio() {
+    // Get ALL audio elements on the page (handles both single and multiple)
+    const audios = Array.from(document.querySelectorAll('audio'));
+    if (!audios || audios.length === 0) return;
 
-// ============================================
-// SAVE ON EXIT
-// ============================================
+    // Debug log to confirm audio elements are found
+    console.log(`Found ${audios.length} audio element(s) on page:`, audios.map(a => a.id || 'unnamed'));
 
-window.addEventListener("beforeunload", () => {
-    if (!audioPlayer) return;
+    audios.forEach((audioElement) => {
+        console.log(`Initializing audio: ${audioElement.id || 'unnamed'}, src: ${audioElement.querySelector('source')?.src || 'none'}`);
+        
+        // Ensure controls are enabled and interactive
+        audioElement.controls = true;
+        audioElement.style.pointerEvents = 'auto';
+        audioElement.style.cursor = 'pointer';
+        audioElement.tabIndex = 0;
+        
+        // Remove any blocking overlays
+        const container = audioElement.closest('.audio-controls') || audioElement.parentElement;
+        if (container) {
+            const overlays = container.querySelectorAll('.play-overlay');
+            overlays.forEach(o => o.remove());
+            
+            // Also check for any elements with pointer-events: none
+            const allElements = container.querySelectorAll('*');
+            allElements.forEach(el => {
+                if (window.getComputedStyle(el).pointerEvents === 'none') {
+                    el.style.pointerEvents = 'auto';
+                }
+            });
+        }
+
+        // Add ended listener
+        audioElement.addEventListener('ended', function () {
+            const audioNote = audioElement.closest('.audio-controls')?.querySelector('.audio-note') ||
+                            document.querySelector('.audio-note');
+            if (audioNote) {
+                audioNote.textContent = 'Tapos na ang audio.';
+                audioNote.style.color = '#2e7d32'; // Green color for completion
+            }
+        });
+
+        // Add error listener
+        audioElement.addEventListener('error', function (e) {
+            console.error('Audio error:', e);
+            const audioControls = audioElement.closest('.audio-controls') || 
+                                document.querySelector('.audio-controls');
+            if (audioControls) {
+                const errorNote = document.createElement('p');
+                errorNote.className = 'audio-note';
+                errorNote.style.color = '#cc0000';
+                errorNote.innerHTML = `<em>Hindi ma-play ang audio file. Paki-check ang file path o network connection.</em>`;
+                audioControls.appendChild(errorNote);
+            }
+        });
+
+        // Try to play audio automatically (with user gesture requirement handling)
+        setTimeout(() => {
+            if (!audioElement.paused || audioElement.currentTime > 0) {
+                // Already playing or has been played
+                return;
+            }
+            
+            // Check if audio is ready
+            if (audioElement.readyState >= 2) { // HAVE_CURRENT_DATA or more
+                audioElement.play().catch(error => {
+                    console.log('Autoplay prevented, waiting for user interaction:', error);
+                    // Show play button overlay if autoplay fails
+                    showAutoplayFallback(audioElement);
+                });
+            } else {
+                // Wait for audio to load
+                audioElement.addEventListener('loadeddata', function() {
+                    audioElement.play().catch(error => {
+                        console.log('Autoplay prevented after load:', error);
+                        showAutoplayFallback(audioElement);
+                    });
+                }, { once: true });
+            }
+        }, 500); // Small delay to ensure page is ready
+    });
+}
+
+function showAutoplayFallback(audioElement) {
+    const audioContainer = audioElement.closest('.audio-controls') || 
+                          document.querySelector('.audio-controls');
+    if (!audioContainer) return;
     
-    saveCurrentTime();
+    // Remove any existing overlay
+    const existingOverlay = audioContainer.querySelector('.play-overlay');
+    if (existingOverlay) existingOverlay.remove();
     
-    // Save playing state
-    if (audioPlayer && currentChapter) {
-        setAudioState(!audioPlayer.paused);
-    }
+    // Create new overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'play-overlay';
+    overlay.style.cssText = `
+        position: relative;
+        margin-top: 10px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        text-align: center;
+    `;
     
-    // If audio was playing, mark it for resume
-    if (!audioPlayer.paused) {
-        wasPlayingBeforeUnload = true;
+    const playButton = document.createElement('button');
+    playButton.className = 'play-overlay-btn';
+    playButton.textContent = '▶ I-play ang Audio';
+    playButton.style.cssText = `
+        background: #5c2e0f;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+    `;
+    
+    playButton.addEventListener('click', function() {
+        audioElement.play().then(() => {
+            overlay.remove();
+        }).catch(error => {
+            console.error('Play failed:', error);
+        });
+    });
+    
+    overlay.appendChild(playButton);
+    
+    // Insert after the audio element
+    audioElement.parentNode.insertBefore(overlay, audioElement.nextSibling);
+}
+
+function addCardAnimations() {
+    setTimeout(() => {
+        const cards = document.querySelectorAll('.character-card, .chapter-card:not(.disabled)');
+        cards.forEach((card, index) => {
+            card.classList.remove('hidden');
+            card.style.animation = `fadeInCard 0.5s ease ${index * 0.05}s forwards`;
+        });
+    }, 100);
+}
+
+function ensureSingleAudio() {
+    const audios = Array.from(document.querySelectorAll('audio'));
+    if (!audios || audios.length === 0) return;
+    
+    audios.forEach((audio) => {
+        audio.addEventListener('play', function () {
+            audios.forEach((other) => {
+                if (other !== audio && !other.paused) {
+                    try {
+                        other.pause();
+                        other.currentTime = 0;
+                    } catch (e) {
+                        console.error('Error pausing other audio:', e);
+                    }
+                }
+            });
+        });
+    });
+}
+
+// Pause all audios when page is hidden
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+        const audios = Array.from(document.querySelectorAll('audio'));
+        audios.forEach(a => {
+            try {
+                if (!a.paused) a.pause();
+            } catch (e) {
+                console.error('Error pausing audio on visibility change:', e);
+            }
+        });
     }
 });
 
+// Clean up on page unload
+window.addEventListener('beforeunload', function () {
+    const audios = Array.from(document.querySelectorAll('audio'));
+    audios.forEach(a => {
+        try {
+            a.pause();
+            a.currentTime = 0;
+        } catch (e) {
+            // Silent fail
+        }
+    });
+});
 
-// ============================================
-// NAVIGATION HANDLING
-// ============================================
-
-// Listen for link clicks to save state before navigation
-document.addEventListener("click", (e) => {
-    const link = e.target.closest("a");
-    if (link && audioPlayer && currentChapter) {
-        // Save current state before navigating away
-        saveCurrentTime();
-        setAudioState(!audioPlayer.paused);
+// Add global click handler for audio play buttons if needed
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.play-overlay-btn')) {
+        e.preventDefault();
+        const overlay = e.target.closest('.play-overlay');
+        if (overlay && overlay.previousElementSibling && 
+            overlay.previousElementSibling.tagName === 'AUDIO') {
+            overlay.previousElementSibling.play().then(() => {
+                overlay.remove();
+            });
+        }
     }
-}, true);
+});
