@@ -65,18 +65,19 @@ function filterChapters() {
     }
 }
 
+// Update the initializeChapterAudio function in script-chapters.js
 function initializeChapterAudio() {
-    // Get ALL audio elements on the page (handles both single and multiple)
+    // Get ALL audio elements on the page
     const audios = Array.from(document.querySelectorAll('audio'));
     if (!audios || audios.length === 0) return;
 
-    // Debug log to confirm audio elements are found
-    console.log(`Found ${audios.length} audio element(s) on page:`, audios.map(a => a.id || 'unnamed'));
+    console.log(`Found ${audios.length} audio element(s) on page`);
 
+    // Configure each audio element
     audios.forEach((audioElement) => {
-        console.log(`Initializing audio: ${audioElement.id || 'unnamed'}, src: ${audioElement.querySelector('source')?.src || 'none'}`);
+        console.log(`Initializing audio: ${audioElement.id || 'unnamed'}`);
         
-        // Ensure controls are enabled and interactive
+        // Ensure controls are enabled
         audioElement.controls = true;
         audioElement.style.pointerEvents = 'auto';
         audioElement.style.cursor = 'pointer';
@@ -87,28 +88,19 @@ function initializeChapterAudio() {
         if (container) {
             const overlays = container.querySelectorAll('.play-overlay');
             overlays.forEach(o => o.remove());
-            
-            // Also check for any elements with pointer-events: none
-            const allElements = container.querySelectorAll('*');
-            allElements.forEach(el => {
-                if (window.getComputedStyle(el).pointerEvents === 'none') {
-                    el.style.pointerEvents = 'auto';
-                }
-            });
         }
 
-        // Add ended listener
-        audioElement.addEventListener('ended', function () {
+        // Add event listeners
+        audioElement.addEventListener('ended', function() {
             const audioNote = audioElement.closest('.audio-controls')?.querySelector('.audio-note') ||
                             document.querySelector('.audio-note');
             if (audioNote) {
                 audioNote.textContent = 'Tapos na ang audio.';
-                audioNote.style.color = '#2e7d32'; // Green color for completion
+                audioNote.style.color = '#2e7d32';
             }
         });
 
-        // Add error listener
-        audioElement.addEventListener('error', function (e) {
+        audioElement.addEventListener('error', function(e) {
             console.error('Audio error:', e);
             const audioControls = audioElement.closest('.audio-controls') || 
                                 document.querySelector('.audio-controls');
@@ -116,36 +108,129 @@ function initializeChapterAudio() {
                 const errorNote = document.createElement('p');
                 errorNote.className = 'audio-note';
                 errorNote.style.color = '#cc0000';
-                errorNote.innerHTML = `<em>Hindi ma-play ang audio file. Paki-check ang file path o network connection.</em>`;
+                errorNote.innerHTML = `<em>Hindi ma-play ang audio file.</em>`;
                 audioControls.appendChild(errorNote);
             }
         });
 
-        // Try to play audio automatically (with user gesture requirement handling)
-        setTimeout(() => {
-            if (!audioElement.paused || audioElement.currentTime > 0) {
-                // Already playing or has been played
-                return;
-            }
-            
-            // Check if audio is ready
-            if (audioElement.readyState >= 2) { // HAVE_CURRENT_DATA or more
-                audioElement.play().catch(error => {
-                    console.log('Autoplay prevented, waiting for user interaction:', error);
-                    // Show play button overlay if autoplay fails
-                    showAutoplayFallback(audioElement);
-                });
-            } else {
-                // Wait for audio to load
-                audioElement.addEventListener('loadeddata', function() {
-                    audioElement.play().catch(error => {
-                        console.log('Autoplay prevented after load:', error);
-                        showAutoplayFallback(audioElement);
-                    });
-                }, { once: true });
-            }
-        }, 500); // Small delay to ensure page is ready
+        // Try to autoplay using the global manager
+        attemptAutoplay(audioElement);
     });
+}
+
+// New function to handle autoplay attempts
+function attemptAutoplay(audioElement) {
+    // Check if we can autoplay
+    const canAutoplay = window.audioAutoplay?.canAutoplay() || false;
+    
+    if (canAutoplay) {
+        // User has interacted before, try to play
+        setTimeout(() => {
+            tryToPlayAudio(audioElement);
+        }, 800); // Give page time to load
+    } else {
+        // No interaction yet, show play button
+        showAutoplayPrompt(audioElement);
+    }
+}
+
+function tryToPlayAudio(audioElement) {
+    // Don't try if already playing or has been played
+    if (!audioElement.paused || audioElement.currentTime > 0) {
+        return;
+    }
+    
+    // Set volume to a reasonable level
+    audioElement.volume = 0.7;
+    
+    // Try to play
+    const playPromise = audioElement.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Audio autoplay successful');
+                // Hide any play prompts
+                const overlay = audioElement.parentElement?.querySelector('.autoplay-prompt');
+                if (overlay) overlay.remove();
+            })
+            .catch(error => {
+                console.log('Autoplay prevented:', error);
+                // Show play button
+                showAutoplayPrompt(audioElement);
+            });
+    }
+}
+
+function showAutoplayPrompt(audioElement) {
+    const container = audioElement.closest('.audio-controls') || 
+                     audioElement.parentElement;
+    if (!container) return;
+    
+    // Remove existing prompt
+    const existingPrompt = container.querySelector('.autoplay-prompt');
+    if (existingPrompt) existingPrompt.remove();
+    
+    // Create prompt
+    const prompt = document.createElement('div');
+    prompt.className = 'autoplay-prompt';
+    prompt.style.cssText = `
+        margin-top: 15px;
+        padding: 12px;
+        background: linear-gradient(135deg, #fff7e6, #f1dcc5);
+        border: 2px solid #8b4513;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(139, 69, 19, 0.15);
+    `;
+    
+    const playButton = document.createElement('button');
+    playButton.innerHTML = '▶ I-play ang Audio';
+    playButton.style.cssText = `
+        background: linear-gradient(to bottom, #a0522d, #6f3410);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 8px;
+        display: block;
+        width: 100%;
+    `;
+    
+    const infoText = document.createElement('p');
+    infoText.innerHTML = '<em>Pindutin ang button para pakinggan ang kabanata</em>';
+    infoText.style.cssText = `
+        color: #5c2e0f;
+        font-size: 0.9rem;
+        margin: 0;
+        padding-top: 5px;
+        border-top: 1px dashed #8b4513;
+    `;
+    
+    playButton.addEventListener('click', function() {
+        // Mark user as interacted
+        if (window.audioAutoplay) {
+            window.audioAutoplay.markAsInteracted();
+        }
+        
+        // Try to play audio
+        audioElement.play()
+            .then(() => {
+                prompt.remove();
+            })
+            .catch(error => {
+                console.error('Play failed:', error);
+                infoText.innerHTML = '<em style="color:#cc0000">Hindi ma-play ang audio. Pakisubukan muli.</em>';
+            });
+    });
+    
+    prompt.appendChild(playButton);
+    prompt.appendChild(infoText);
+    container.appendChild(prompt);
 }
 
 function showAutoplayFallback(audioElement) {

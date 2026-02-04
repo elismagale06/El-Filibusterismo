@@ -1501,3 +1501,27 @@ audio {
     }
 }
 
+/* Autoplay prompt styles */
+.autoplay-prompt {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.autoplay-prompt button:hover {
+    background: linear-gradient(to bottom, #b5651d, #8b4513);
+    transform: scale(1.02);
+}
+
+.autoplay-prompt button:active {
+    transform: scale(0.98);
+}
