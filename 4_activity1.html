@@ -1294,7 +1294,7 @@
           <div class="stats-container">
             <div class="stat-box">
               <div class="stat-label">Nahanap</div>
-              <div class="stat-value" id="foundCount">0/15</div>
+              <div class="stat-value" id="foundCount">0/10</div>
             </div>
           </div>
 
@@ -2228,7 +2228,7 @@
       function updateStats() {
         document.getElementById(
           "foundCount"
-        ).textContent = `${foundWords.size}/15`;
+        ).textContent = `${foundWords.size}/10`;
       }
 
       function startTimer() {
@@ -2293,12 +2293,12 @@
 
         if (won) {
           title.textContent = "Binabati kita!";
-          message.textContent = `Nahanap mo lahat ng 15 salita!`;
-          scoreElement.textContent = `Iskor: 15/15`;
+          message.textContent = `Nahanap mo lahat ng 10 salita!`;
+          scoreElement.textContent = `Iskor: 10/10`;
         } else {
           title.textContent = "Tapos na ang oras!";
-          message.textContent = `Nahanap: ${finalScore}/15`;
-          scoreElement.textContent = `Iskor: ${finalScore}/15`;
+          message.textContent = `Nahanap: ${finalScore}/10`;
+          scoreElement.textContent = `Iskor: ${finalScore}/10`;
         }
 
         showModal("gameEndModal");
@@ -2460,7 +2460,7 @@ function playInstructions() {
           else if (isCompleted === "true" && savedScore) {
             document.getElementById(
               "foundCount"
-            ).textContent = `${savedScore}/15`;
+            ).textContent = `${savedScore}/10`;
             document.getElementById("startButton").textContent = "Gawin Muli";
             document.getElementById("startButton").disabled = false;
             document.getElementById("startButton").onclick = function () {
@@ -2468,7 +2468,7 @@ function playInstructions() {
             };
           } else if (lastScore && !isInProgress) {
             // Show last known score from incomplete game
-            document.getElementById("foundCount").textContent = `${lastScore}/15`;
+            document.getElementById("foundCount").textContent = `${lastScore}/10`;
             document.getElementById("startButton").textContent = "Magsimula";
             document.getElementById("startButton").disabled = false;
             document.getElementById("startButton").onclick = function () {

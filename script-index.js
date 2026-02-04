@@ -268,6 +268,18 @@ const characters = [
         description: "Isang Guardia Civil na unti-unting namulat sa maling sistemang kanyang pinaglilingkuran; kinakatawan ang nagigising na konsensya.",
         image: "images/Carolino.png",
         audio: "audio/Carolino.mp3"
+    },
+    {
+        name: "Paulita Gomez",
+        description: "Isang mabait at magalang na dalaga, na mas pinipili ang tahimik at ligtas na buhay kaysa sa pakikibaka. Kinakatawan nya ang mga kabataang mabuti ang loob ngunit kulang sa lakas ng paninindigan sa panahon ng krisis.",
+        image: "images/Paulita.png",
+        audio: "audio/Paulita Gomez.mp3"
+    },
+    {
+        name: "Ginoong Pasta",
+        description: "Isang edukadong taong makasarili, na piniling manahimik, kaysa ipaglaban ang bayan, kinakatawan nya ang mga intelektuwal na walang pakialam sa pagbabago.",
+        image: "images/Ginoong Pasta.png",
+        audio: "audio/Ginoong Pasta.mp3"
     }
 ];
 

@@ -1295,7 +1295,7 @@
           <div class="stats-container">
             <div class="stat-box">
               <div class="stat-label">Nahanap</div>
-              <div class="stat-value" id="foundCount">0/15</div>
+              <div class="stat-value" id="foundCount">0/10</div>
             </div>
           </div>
 
@@ -2456,7 +2456,7 @@ function playInstructions() {
           else if (isCompleted === "true" && savedScore) {
             document.getElementById(
               "foundCount"
-            ).textContent = `${savedScore}/15`;
+            ).textContent = `${savedScore}/10`;
             document.getElementById("startButton").textContent = "Gawin Muli";
             document.getElementById("startButton").disabled = false;
             document.getElementById("startButton").onclick = function () {
@@ -2464,7 +2464,7 @@ function playInstructions() {
             };
           } else if (lastScore && !isInProgress) {
             // Show last known score from incomplete game
-            document.getElementById("foundCount").textContent = `${lastScore}/15`;
+            document.getElementById("foundCount").textContent = `${lastScore}/10`;
             document.getElementById("startButton").textContent = "Magsimula";
             document.getElementById("startButton").disabled = false;
             document.getElementById("startButton").onclick = function () {
