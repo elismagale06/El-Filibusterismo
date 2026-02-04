@@ -13,7 +13,7 @@ const characters = [
     },
     {
         name: "Ben-Zayb",
-        description: "Mayabang na mamamahayag; naniniwalang siya lamang ang tunky na nag-iisip sa Pilipinas.",
+        description: "Mayabang na mamamahayag; naniniwalang siya lamang ang tunay na nag-iisip sa Pilipinas.",
         image: "images/Ben-Zayb.png",
         audio: "audio/BenZayb.mp3"
     },

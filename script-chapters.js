@@ -2,6 +2,11 @@
 // REFINED CHAPTERS SCRIPT - RELIABLE AUTO-PLAY
 // ============================================
 
+// Global variables to track audio state
+let audioPlayer = null;
+let isPlaying = false;
+let currentChapter = null;
+
 document.addEventListener("DOMContentLoaded", function () {
     const page = document.body.dataset.page;
     
@@ -10,9 +15,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     if (page === "chapter" || page === "chapter-multi") {
+        currentChapter = getCurrentChapterId();
         initializeChapterAudio();
-        // Try auto-play immediately but also with a slight delay
-        setTimeout(attemptAutoPlay, 100);
+        setTimeout(initiateAudioPlayback, 500); // Slightly longer delay for better reliability
     }
 
     addCardAnimations();
@@ -69,35 +74,52 @@ function filterChapters() {
 
 function initializeChapterAudio() {
     const audios = document.querySelectorAll('audio');
-    const currentChapter = getCurrentChapterId();
     
-    audios.forEach((audioElement) => {
-        if (!audioElement.id) {
-            audioElement.id = 'chapter_audio_' + currentChapter;
-        }
-        
-        audioElement.dataset.chapterId = currentChapter;
-        audioElement.preload = "auto";
-        
-        // Mark user interaction on ANY audio interaction
-        audioElement.addEventListener('play', function() {
-            markUserInteracted();
-            saveAudioState(this, true);
-        });
-        
-        audioElement.addEventListener('pause', function() {
-            saveAudioState(this, false);
-        });
-        
-        audioElement.addEventListener('ended', function() {
-            saveAudioState(this, false);
-            localStorage.setItem(`${currentChapter}_completed`, 'true');
-        });
-        
-        // Restore position for this chapter
-        const savedTime = localStorage.getItem(`${currentChapter}_time`);
-        if (savedTime && savedTime !== '0') {
-            audioElement.currentTime = parseFloat(savedTime);
+    if (audios.length === 0) return;
+    
+    audioPlayer = audios[0];
+    
+    // Set proper ID for tracking
+    if (!audioPlayer.id) {
+        audioPlayer.id = 'chapter_audio_' + currentChapter;
+    }
+    
+    audioPlayer.dataset.chapterId = currentChapter;
+    audioPlayer.preload = "auto";
+    
+    // Restore position for this chapter
+    const savedTime = getSavedAudioTime();
+    if (savedTime > 0) {
+        audioPlayer.currentTime = savedTime;
+    }
+    
+    // Mark user interaction on ANY audio interaction
+    audioPlayer.addEventListener('play', function() {
+        markUserInteracted();
+        setAudioState(true);
+        isPlaying = true;
+    });
+    
+    audioPlayer.addEventListener('pause', function() {
+        setAudioState(false);
+        isPlaying = false;
+    });
+    
+    audioPlayer.addEventListener('ended', function() {
+        setAudioState(false);
+        isPlaying = false;
+        markChapterCompleted();
+    });
+    
+    // Handle audio ready state
+    audioPlayer.addEventListener('loadedmetadata', function() {
+        console.log('Audio metadata loaded for', currentChapter);
+    });
+    
+    // Save time periodically
+    audioPlayer.addEventListener('timeupdate', function() {
+        if (!audioPlayer.paused) {
+            saveCurrentTime();
         }
     });
 }
@@ -105,77 +127,79 @@ function initializeChapterAudio() {
 function getCurrentChapterId() {
     const path = window.location.pathname;
     const pageName = path.substring(path.lastIndexOf('/') + 1);
-    return pageName.replace('.html', '');
+    return pageName.replace('.html', '').replace('.php', '');
 }
 
 // ============================================
-// AUTO-PLAY STRATEGY
+// AUTO-PLAY STRATEGY - FIXED
 // ============================================
 
-function attemptAutoPlay() {
-    const page = document.body.dataset.page;
-    if (page !== "chapter" && page !== "chapter-multi") return;
+function initiateAudioPlayback() {
+    if (!audioPlayer) return;
     
-    const audios = document.querySelectorAll('audio');
-    if (audios.length === 0) return;
+    const isFirstVisit = !hasUserInteractedWithAudio();
+    const wasPlayingGlobally = getGlobalPlaybackState();
+    const wasPlayingThisChapter = getChapterPlaybackState(currentChapter);
     
-    const audio = audios[0];
-    const currentChapter = getCurrentChapterId();
-    const hasUserInteracted = hasUserInteractedWithAudio();
+    console.log('Audio playback state:', {
+        currentChapter,
+        isFirstVisit,
+        wasPlayingGlobally,
+        wasPlayingThisChapter
+    });
     
-    // Strategy 1: Try direct auto-play first
-    tryDirectAutoPlay(audio, currentChapter, hasUserInteracted);
-}
-
-function tryDirectAutoPlay(audio, chapterId, hasUserInteracted) {
-    // Check if we should resume from saved position
-    const wasPlaying = localStorage.getItem(`${chapterId}_playing`) === 'true';
-    const savedTime = localStorage.getItem(`${chapterId}_time`);
-    
-    if (wasPlaying && savedTime && savedTime !== '0') {
-        const time = parseFloat(savedTime);
-        if (audio.duration && time < audio.duration - 5) {
-            audio.currentTime = time;
-        }
-    }
-    
-    // First-time users: show prompt, don't try auto-play
-    if (!hasUserInteracted) {
-        showSimplePlayPrompt(audio);
+    // First-time users: show modal prompt
+    if (isFirstVisit) {
+        console.log('First visit - showing modal prompt');
+        showSimplePlayPrompt();
         return;
     }
     
-    // Returning users: try to auto-play
-    const playAudio = () => {
-        const playPromise = audio.play();
-        
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => {
-                    console.log('Auto-play successful for', chapterId);
-                    localStorage.setItem(`${chapterId}_playing`, 'true');
-                    removeAllPrompts();
-                })
-                .catch(error => {
-                    console.log('Auto-play blocked for', chapterId);
-                    
-                    // If audio was previously playing, show resume button
-                    if (wasPlaying) {
-                        showResumeButton(audio);
-                    } else {
-                        // For new chapters, show a subtle play prompt
-                        showFloatingPlayButton(audio);
-                    }
-                });
-        }
-    };
+    // Returning users who were playing audio globally
+    if (wasPlayingGlobally) {
+        console.log('Was playing globally - attempting auto-resume');
+        attemptAutoResume();
+        return;
+    }
     
-    // Wait for audio to be ready
-    if (audio.readyState >= 3) {
-        playAudio();
-    } else {
-        audio.addEventListener('canplaythrough', playAudio, { once: true });
-        setTimeout(playAudio, 1500);
+    // Returning users but audio was paused
+    console.log('Audio was not playing globally - showing floating button');
+    showFloatingPlayButton();
+}
+
+function attemptAutoResume() {
+    if (!audioPlayer) return;
+    
+    // Check if we should resume from saved position
+    const savedTime = getSavedAudioTime();
+    const isThisChapterCompleted = isChapterCompleted();
+    
+    if (isThisChapterCompleted) {
+        console.log('Chapter already completed - not auto-playing');
+        showFloatingPlayButton();
+        return;
+    }
+    
+    // Set the saved time
+    if (savedTime > 0 && savedTime < audioPlayer.duration - 1) {
+        audioPlayer.currentTime = savedTime;
+    }
+    
+    // Attempt to play
+    const playPromise = audioPlayer.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Auto-play successful for', currentChapter);
+                removeAllPrompts();
+                isPlaying = true;
+            })
+            .catch(error => {
+                console.log('Auto-play blocked for', currentChapter);
+                // If auto-play is blocked, show resume button
+                showResumeButton();
+            });
     }
 }
 
@@ -185,7 +209,6 @@ function tryDirectAutoPlay(audio, chapterId, hasUserInteracted) {
 
 function markUserInteracted() {
     localStorage.setItem('user_audio_interaction', 'true');
-    // Also set a timestamp to track when interaction happened
     localStorage.setItem('last_audio_interaction', Date.now().toString());
 }
 
@@ -194,10 +217,52 @@ function hasUserInteractedWithAudio() {
 }
 
 // ============================================
-// PROMPTS AND UI ELEMENTS
+// STATE MANAGEMENT - FIXED
 // ============================================
 
-function showSimplePlayPrompt(audio) {
+function getGlobalPlaybackState() {
+    const lastChapter = localStorage.getItem('last_active_chapter');
+    const wasPlaying = localStorage.getItem(`${lastChapter}_playing`) === 'true';
+    return wasPlaying && lastChapter !== currentChapter; // Only if it was a different chapter
+}
+
+function getChapterPlaybackState(chapterId) {
+    return localStorage.getItem(`${chapterId}_playing`) === 'true';
+}
+
+function setAudioState(playing) {
+    localStorage.setItem(`${currentChapter}_playing`, playing.toString());
+    
+    if (playing) {
+        localStorage.setItem('last_active_chapter', currentChapter);
+        localStorage.setItem('last_play_timestamp', Date.now().toString());
+    }
+}
+
+function getSavedAudioTime() {
+    const savedTime = localStorage.getItem(`${currentChapter}_time`);
+    return savedTime ? parseFloat(savedTime) : 0;
+}
+
+function saveCurrentTime() {
+    if (audioPlayer) {
+        localStorage.setItem(`${currentChapter}_time`, audioPlayer.currentTime.toString());
+    }
+}
+
+function markChapterCompleted() {
+    localStorage.setItem(`${currentChapter}_completed`, 'true');
+}
+
+function isChapterCompleted() {
+    return localStorage.getItem(`${currentChapter}_completed`) === 'true';
+}
+
+// ============================================
+// PROMPTS AND UI ELEMENTS - FIXED
+// ============================================
+
+function showSimplePlayPrompt() {
     removeAllPrompts();
     
     const overlay = document.createElement('div');
@@ -282,13 +347,10 @@ function showSimplePlayPrompt(audio) {
     };
     
     document.body.appendChild(overlay);
-    
-    // Store audio ID in global variable for easy access
-    window.currentPromptAudio = audio;
 }
 
-function showFloatingPlayButton(audio) {
-    removeFloatingButton();
+function showFloatingPlayButton() {
+    removeAllPrompts();
     
     const button = document.createElement('div');
     button.id = 'floating-play-button';
@@ -337,23 +399,26 @@ function showFloatingPlayButton(audio) {
     };
     
     button.onclick = function() {
-        audio.play().then(() => {
-            removeFloatingButton();
-        }).catch(e => {
-            console.log('Play failed:', e);
-        });
+        if (audioPlayer) {
+            audioPlayer.play().then(() => {
+                removeAllPrompts();
+                isPlaying = true;
+            }).catch(e => {
+                console.log('Play failed:', e);
+            });
+        }
     };
     
     document.body.appendChild(button);
     
     // Auto-remove after 60 seconds if not clicked
     setTimeout(() => {
-        removeFloatingButton();
+        removeAllPrompts();
     }, 60000);
 }
 
-function showResumeButton(audio) {
-    removeFloatingButton();
+function showResumeButton() {
+    removeAllPrompts();
     
     const button = document.createElement('div');
     button.id = 'resume-audio-btn';
@@ -393,40 +458,41 @@ function showResumeButton(audio) {
     };
     
     button.onclick = function() {
-        audio.play().then(() => {
-            removeFloatingButton();
-        }).catch(e => {
-            console.log('Resume failed:', e);
-        });
+        if (audioPlayer) {
+            audioPlayer.play().then(() => {
+                removeAllPrompts();
+                isPlaying = true;
+            }).catch(e => {
+                console.log('Resume failed:', e);
+            });
+        }
     };
     
     document.body.appendChild(button);
     
     // Auto-remove after 45 seconds if not clicked
     setTimeout(() => {
-        removeFloatingButton();
+        removeAllPrompts();
     }, 45000);
 }
 
-function removeFloatingButton() {
+function removeAllPrompts() {
     const floatingBtn = document.getElementById('floating-play-button');
     const resumeBtn = document.getElementById('resume-audio-btn');
+    const prompt = document.getElementById('simple-play-prompt');
+    
     if (floatingBtn) floatingBtn.remove();
     if (resumeBtn) resumeBtn.remove();
-}
-
-function removeAllPrompts() {
-    removeFloatingButton();
-    const prompt = document.getElementById('simple-play-prompt');
     if (prompt) prompt.remove();
 }
 
 // Global functions
 window.playFromPrompt = function() {
-    if (window.currentPromptAudio) {
+    if (audioPlayer) {
         markUserInteracted();
-        window.currentPromptAudio.play().then(() => {
+        audioPlayer.play().then(() => {
             closePrompt();
+            isPlaying = true;
         }).catch(e => {
             console.log('Play from prompt failed:', e);
         });
@@ -437,62 +503,63 @@ window.closePrompt = function() {
     const prompt = document.getElementById('simple-play-prompt');
     if (prompt) {
         prompt.remove();
-        // If user closes prompt without playing, still mark as interacted
-        // so they don't see it again on other chapters
-        markUserInteracted();
+        markUserInteracted(); // Mark as interacted even if closed
+        showFloatingPlayButton(); // Show floating button instead
     }
 };
 
 // ============================================
-// STATE MANAGEMENT
+// NAVIGATION AND PAGE TRANSITION HANDLING
 // ============================================
 
-function saveAudioState(audioElement, isPlaying) {
-    const currentChapter = getCurrentChapterId();
-    if (!currentChapter) return;
-    
-    localStorage.setItem(`${currentChapter}_time`, audioElement.currentTime.toString());
-    localStorage.setItem(`${currentChapter}_playing`, isPlaying.toString());
-    
-    if (isPlaying) {
-        localStorage.setItem('last_active_chapter', currentChapter);
-    }
-}
-
-// Save state on page unload
+// Save state before navigating away
 window.addEventListener('beforeunload', function() {
-    const audios = document.querySelectorAll('audio');
-    audios.forEach(audio => {
-        saveAudioState(audio, !audio.paused);
-    });
+    if (audioPlayer) {
+        saveCurrentTime();
+        setAudioState(!audioPlayer.paused);
+    }
 });
 
-// Resume when page becomes visible
+// Handle page visibility changes
 document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        const page = document.body.dataset.page;
-        if (page !== "chapter" && page !== "chapter-multi") return;
+    if (!document.hidden && audioPlayer) {
+        // Page became visible - check if we should resume
+        const shouldResume = getGlobalPlaybackState() && !isPlaying;
         
-        const currentChapter = getCurrentChapterId();
-        const wasPlaying = localStorage.getItem(`${currentChapter}_playing`) === 'true';
-        
-        if (wasPlaying && hasUserInteractedWithAudio()) {
+        if (shouldResume) {
             setTimeout(() => {
-                const audios = document.querySelectorAll('audio');
-                if (audios.length > 0) {
-                    const audio = audios[0];
-                    const savedTime = localStorage.getItem(`${currentChapter}_time`);
-                    if (savedTime) {
-                        audio.currentTime = parseFloat(savedTime);
-                    }
-                    audio.play().catch(e => {
-                        // Auto-play blocked, show resume button
-                        showResumeButton(audio);
-                    });
+                if (audioPlayer && !audioPlayer.paused) {
+                    // Already playing, do nothing
+                    return;
                 }
+                
+                const savedTime = getSavedAudioTime();
+                if (savedTime > 0) {
+                    audioPlayer.currentTime = savedTime;
+                }
+                
+                audioPlayer.play().then(() => {
+                    isPlaying = true;
+                }).catch(e => {
+                    console.log('Visibility resume failed:', e);
+                    showResumeButton();
+                });
             }, 300);
         }
     }
+});
+
+// Listen for navigation events
+window.addEventListener('popstate', function() {
+    // Handle browser back/forward navigation
+    setTimeout(() => {
+        const page = document.body.dataset.page;
+        if (page === "chapter" || page === "chapter-multi") {
+            currentChapter = getCurrentChapterId();
+            initializeChapterAudio();
+            setTimeout(initiateAudioPlayback, 100);
+        }
+    }, 100);
 });
 
 // ============================================
@@ -581,6 +648,18 @@ function addAutoPlayStyles() {
         #resume-audio-btn:hover {
             transform: translateY(-2px) !important;
             box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
+        }
+        
+        /* Floating button animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        #floating-play-button .play-icon,
+        #resume-audio-btn .resume-icon {
+            animation: pulse 2s infinite;
         }
     `;
     
