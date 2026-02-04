@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (page === "chapter" || page === "chapter-multi") {
         initializeChapterAudio();
         restoreAudioPlaybackState();
+        setTimeout(autoPlayChapterAudio, 1000);
     }
 
     addCardAnimations();
