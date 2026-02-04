@@ -17,13 +17,24 @@
             font-weight: 600;
         }
         .chapter-content { padding-top: 6px; }
+        /* Style for the single audio player at the end */
+        .combined-audio-player {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+        }
+        .combined-audio-player h3 {
+            margin-bottom: 15px;
+            color: #5c2e0f;
+        }
     </style>
 </head>
 <body data-page="chapter-multi">
     <div class="container">
         <header>
             <h1>Kabanata 16–18</h1>
-                <p class="subtitle">Pinagsamang Kabanata 16 hanggang 18</p>
+            <p class="subtitle">Pinagsamang Kabanata 16 hanggang 18</p>
         </header>
 
         <div class="content-section">
@@ -37,16 +48,7 @@
                     <p>Upang iligtas ang si Quiroga ay iminungkahi ni Simoun na siya na ang maningil sa mga may utang kay Quiroga ngunit kailangang parin bayaran ng Instik ang halagang siyam na libong piso ng tatlobg alahas. Nang hindi ito makabayad, inalok ni Simoun ng bawas kapalit ng pagtatago ng mga baril sa bodega ni Quiroga. Ipinaliwanag ni Simoun na ang mga baril ay gagamitin sa isang lihim na plano kung saan kikita si Simoun sa pagpapalaya ng mga mabibilanggo at makakapagpasok ng kontrabandong kalakal ang instik. Dahil sa takot at kawalan ng pagpipilian, napilitang pumayag si Quiroga.</p>
                     <p>Samantala, sa ibang pangkat ng mga panauhin, pinag-usapan nina Don Custodio ang isang komisyong ipinadala aa indya upang pag-aralan ang sapatos ng mga kawal. May nagmungkahing huwag nang pagsapatusin ang mga kawal na indiyo, kung saan ipinakita ang maling prayoridad ng pamahalaan na inuuna ang kapakanan ng mga Kastila kaysa sa mga Pilipino. Sa isa pang grupo, tinalakay nina Ben Zayb at ng mga prayle ang perya ni Mr. Leeds at ang ulo nitong nagsasalita, na pinagdebatehan kung mahika o ilusyon lamang. Sa huli, dahil sa pag-anyaya ni Simoun na panoorin nila ay napagpasyahan ng ilan na panoorin ang palabas ni Mr. Leeds sa bahay ni Quiroga.</p>
                 </div>
-
-                <div class="audio-player">
-                    <h3>Pakinggan ang Kabanata XVI</h3>
-                    <div class="audio-controls">
-                        <audio controls id="chapterAudio16">
-                            <source src="audio/Kabanata-16.m4a" type="audio/mpeg">
-                            Ang iyong browser ay hindi sumusuporta sa audio player.
-                        </audio>
-                    </div>
-                </div>
+                <!-- REMOVED audio player for Kabanata 16 -->
             </div>
 
             <div class="chapter-block" id="kabanata17">
@@ -54,19 +56,10 @@
                 <div class="chapter-content">
                     <p>Maganda ang gabi at masigla ang perya sa Quiapo na puno ng mga panoorin at tao. Ang labindalawang panauhing galing sa bahay ni Quiroga ay nagtungo sa kubol ni Mr. Leeds upang manood ng palabas. Habang naglalakad, namangha si Padre Camorra sa dami ng magagandang dalaga, lalo na nang makita niya si Paulita na kasama sina Isagani at Donya Victorina. Naiinis naman si Isagani sa mga lalaking tumitingin kay Paulita.</p>
                     <p>Pumasok ang grupo nina Padre Camorra sa isang tindahan ng mga kahoy na tau-tauhan. Pinagtawanan nila ang mga rebulto at sinabing kahawig ng ilan sina Ben Zayb at Padre Camorra. Napansin din nila ang mga larawan na may kahulugang panlipunan ngunit kanilang nilait at pinagtawanan.</p>
-                    <p>Isa sa mga larawan ay nagpapakita ng isang babaeng marungis at api na tinawag na “La Prensa Filipina,” habang ang isa naman ay may pamagat na “Ang Bayan na Akaba,” na nagpapakita ng isang lalaking nakagapos at binabantayan ng mga guwardiya sibil. Sa halip na unawain ang mensahe, ginawa lamang nila itong katatawanan.</p>
+                    <p>Isa sa mga larawan ay nagpapakita ng isang babaeng marungis at api na tinawag na "La Prensa Filipina," habang ang isa naman ay may pamagat na "Ang Bayan na Akaba," na nagpapakita ng isang lalaking nakagapos at binabantayan ng mga guwardiya sibil. Sa halip na unawain ang mensahe, ginawa lamang nila itong katatawanan.</p>
                     <p>May nakita rin silang larawang kahawig ni Simoun ngunit wala ito roon. Ayon kay Padre Camorra, baka natakot si Simoun na pagbayarin sila sa panonood, habang ayon naman kay Ben Zayb, maaaring ayaw nitong matuklasan ang lihim ng palabas ni Mr. Leeds at naniniwalang pawang ilusyon lamang ito.</p>
                 </div>
-
-                <div class="audio-player">
-                    <h3>Pakinggan ang Kabanata XVII</h3>
-                    <div class="audio-controls">
-                        <audio controls id="chapterAudio17">
-                            <source src="audio/Kabanata-17.m4a" type="audio/mpeg">
-                            Ang iyong browser ay hindi sumusuporta sa audio player.
-                        </audio>
-                    </div>
-                </div>
+                <!-- REMOVED audio player for Kabanata 17 -->
             </div>
 
             <div class="chapter-block" id="kabanata18">
@@ -77,13 +70,15 @@
                     <p>Dahil sa labis na takot at paglabag sa magandang kaasalan, ipinag-utos ni Don Custodio ang pagbabawal ng palabas. Kinabukasan, sumulat si Ben Zayb sa pahayagan tungkol sa espiritismo at lihim na karunungan, ngunit wala na si Mr. Leeds, na umalis patungong Hongkong.</p>
                 </div>
 
-                <div class="audio-player">
-                    <h3>Pakinggan ang Kabanata XVIII</h3>
+                <!-- Single audio player for all chapters -->
+                <div class="combined-audio-player">
+                    <h3>Pakinggan ang Diyalog ng Kabanata 16-18</h3>
                     <div class="audio-controls">
-                        <audio controls id="chapterAudio18">
-                            <source src="audio/Kabanata-18.m4a" type="audio/mpeg">
+                        <audio controls id="combinedChapterAudio" preload="auto">
+                            <source src="audio/Kabanata 16-18.mp3" type="audio/mpeg">
                             Ang iyong browser ay hindi sumusuporta sa audio player.
                         </audio>
+                       <p class="audio-note"><em>Ang audio ay magpe-play awtomatiko o maaaring ipagpatuloy mula sa huling posisyon.</em></p>
                     </div>
                 </div>
             </div>
@@ -99,5 +94,238 @@
     </div>
     <script src="script-chapters.js"></script>
     <script src="rain.js"></script>
+    <script>
+    // Auto-play script for combined chapter audio with state persistence
+    document.addEventListener('DOMContentLoaded', function() {
+        const audioElement = document.getElementById('combinedChapterAudio');
+        if (!audioElement) return;
+
+        // Set up audio element ID for state tracking
+        if (!audioElement.id) {
+            audioElement.id = 'combinedAudio16-18';
+        }
+
+        // Load saved playback state
+        loadAudioState(audioElement, '16-18');
+        
+        // Set up event listeners for state saving
+        setupAudioEventListeners(audioElement, '16-18');
+        
+        // Try to auto-play with user interaction detection
+        attemptAutoPlay(audioElement, '16-18');
+        
+        // Also try to play when page becomes visible again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && audioElement.paused && 
+                sessionStorage.getItem('userInteractedWithAudio') === 'true') {
+                attemptAutoPlay(audioElement, '16-18');
+            }
+        });
+    });
+    
+    function loadAudioState(audioElement, chapterKey) {
+        try {
+            const savedTime = sessionStorage.getItem(`chapter${chapterKey}AudioPosition`);
+            const savedIsPlaying = sessionStorage.getItem(`chapter${chapterKey}AudioIsPlaying`);
+            const audioSource = sessionStorage.getItem(`chapter${chapterKey}AudioSource`);
+            
+            // Only restore if it's the same audio source
+            const currentSource = audioElement.querySelector('source').src;
+            if (savedTime && audioSource === currentSource) {
+                const time = parseFloat(savedTime);
+                const duration = audioElement.duration;
+                
+                // Only restore if position is valid and not too close to end
+                if (!isNaN(time) && time > 0 && time < (duration || Infinity) - 1) {
+                    audioElement.currentTime = time;
+                }
+                
+                // Restore playback state
+                if (savedIsPlaying === 'true' && audioElement.paused) {
+                    sessionStorage.setItem(`shouldResumeAudio${chapterKey}`, 'true');
+                }
+            }
+            
+            // Save current source for future checks
+            sessionStorage.setItem(`chapter${chapterKey}AudioSource`, currentSource);
+        } catch (e) {
+            console.error('Error loading audio state:', e);
+        }
+    }
+    
+    function setupAudioEventListeners(audioElement, chapterKey) {
+        // Save playback position regularly
+        audioElement.addEventListener('timeupdate', function() {
+            if (!audioElement.paused && audioElement.currentTime > 0) {
+                sessionStorage.setItem(`chapter${chapterKey}AudioPosition`, audioElement.currentTime);
+            }
+        });
+        
+        // Save play state
+        audioElement.addEventListener('play', function() {
+            sessionStorage.setItem(`chapter${chapterKey}AudioIsPlaying`, 'true');
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        audioElement.addEventListener('pause', function() {
+            sessionStorage.setItem(`chapter${chapterKey}AudioIsPlaying`, 'false');
+        });
+        
+        audioElement.addEventListener('ended', function() {
+            sessionStorage.removeItem(`chapter${chapterKey}AudioPosition`);
+            sessionStorage.removeItem(`chapter${chapterKey}AudioIsPlaying`);
+            sessionStorage.removeItem(`shouldResumeAudio${chapterKey}`);
+            // Update the note to show audio is finished
+            const audioNote = document.querySelector('.audio-note');
+            if (audioNote) {
+                audioNote.innerHTML = '<em>Tapos na ang audio ng Kabanata XVI-XVIII.</em>';
+            }
+        });
+        
+        // Save state before page unload
+        window.addEventListener('beforeunload', function() {
+            if (!audioElement.paused && audioElement.currentTime > 0) {
+                sessionStorage.setItem(`chapter${chapterKey}AudioPosition`, audioElement.currentTime);
+                sessionStorage.setItem(`chapter${chapterKey}AudioIsPlaying`, 'true');
+            }
+        });
+        
+        // Handle user interaction with audio element
+        audioElement.addEventListener('click', function() {
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        audioElement.addEventListener('play', function() {
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        // Handle audio errors
+        audioElement.addEventListener('error', function() {
+            const audioControls = audioElement.closest('.audio-controls');
+            if (audioControls) {
+                const errorNote = document.createElement('p');
+                errorNote.className = 'audio-note'; 
+                errorNote.style.color = '#cc0000';
+                errorNote.innerHTML = `<em>Hindi ma-play ang audio file. Paki-check kung naka-save bilang "Kabanata 16-18.mp3" sa audio folder.</em>`;
+                audioControls.appendChild(errorNote);
+            }
+        });
+    }
+    
+    function attemptAutoPlay(audioElement, chapterKey) {
+        // Check if we should resume playback
+        const shouldResume = sessionStorage.getItem(`shouldResumeAudio${chapterKey}`) === 'true';
+        const userInteracted = sessionStorage.getItem('userInteractedWithAudio') === 'true';
+        
+        if (shouldResume || userInteracted) {
+            // Small delay to ensure page is ready
+            setTimeout(() => {
+                const playPromise = audioElement.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('Auto-play prevented:', error);
+                        
+                        // Only show fallback if this is the first load
+                        if (!userInteracted) {
+                            showAutoplayFallback(audioElement, chapterKey);
+                        }
+                    }).then(() => {
+                        // Clear the resume flag if successful
+                        sessionStorage.removeItem(`shouldResumeAudio${chapterKey}`);
+                        
+                        // Update the note
+                        const audioNote = document.querySelector('.audio-note');
+                        if (audioNote) {
+                            const currentTime = Math.floor(audioElement.currentTime);
+                            audioNote.innerHTML = `<em>Nagpe-play ang audio mula ${formatTime(currentTime)}. I-refresh ang pahina upang ipagpatuloy mula dito.</em>`;
+                        }
+                    });
+                }
+            }, 300);
+        } else {
+            // First visit, show fallback button
+            showAutoplayFallback(audioElement, chapterKey);
+        }
+    }
+    
+    function showAutoplayFallback(audioElement, chapterKey) {
+        const audioContainer = audioElement.closest('.audio-controls');
+        if (!audioContainer) return;
+        
+        // Remove any existing overlay
+        const existingOverlay = audioContainer.querySelector('.autoplay-fallback');
+        if (existingOverlay) existingOverlay.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'autoplay-fallback';
+        overlay.style.marginTop = '15px';
+        overlay.style.padding = '15px';
+        overlay.style.backgroundColor = '#f8f3e9';
+        overlay.style.borderRadius = '8px';
+        overlay.style.border = '1px solid #e0d5c0';
+        overlay.style.textAlign = 'center';
+        
+        // Check if there's saved position
+        const savedTime = sessionStorage.getItem(`chapter${chapterKey}AudioPosition`);
+        let timeInfo = '';
+        if (savedTime) {
+            const time = Math.floor(parseFloat(savedTime));
+            timeInfo = `<p style="margin-bottom: 5px; color: #5c2e0f; font-size: 0.9em;">
+                <strong>Naka-save na posisyon:</strong> ${formatTime(time)}
+            </p>`;
+        }
+        
+        overlay.innerHTML = `
+            <p style="margin-bottom: 10px; color: #5c2e0f; font-size: 0.95em;">
+                <strong>I-play ang Kabanata XVI-XVIII</strong>
+            </p>
+            ${timeInfo}
+            <button class="play-overlay-btn" 
+                    onclick="resumeChapterAudio1618(this)"
+                    style="background: linear-gradient(to bottom, #5c2e0f, #4a240c); 
+                           color: white; padding: 10px 20px; border: none; 
+                           border-radius: 6px; cursor: pointer; font-weight: bold;
+                           font-size: 1em; box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+                           margin-top: 10px;">
+                ▶ Simulan ang Audio
+            </button>
+            <p style="margin-top: 8px; font-size: 0.8em; color: #777;">
+                Magpe-play mula sa simula o huling posisyon.
+            </p>
+        `;
+        
+        audioContainer.appendChild(overlay);
+    }
+    
+    // Helper function to format time
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+    
+    // Global function for resume button (Kabanata 16-18)
+    window.resumeChapterAudio1618 = function(button) {
+        const audioElement = document.getElementById('combinedChapterAudio');
+        if (audioElement) {
+            audioElement.play().then(() => {
+                const overlay = button.closest('.autoplay-fallback');
+                if (overlay) overlay.remove();
+                sessionStorage.setItem('userInteractedWithAudio', 'true');
+                
+                // Update the note
+                const audioNote = document.querySelector('.audio-note');
+                if (audioNote) {
+                    const currentTime = Math.floor(audioElement.currentTime);
+                    audioNote.innerHTML = `<em>Nagpe-play ang audio ng Kabanata XVI-XVIII mula ${formatTime(currentTime)}.</em>`;
+                }
+            }).catch(error => {
+                console.error('Playback failed:', error);
+                alert('Hindi ma-play ang audio. Pakisubukan muli o i-check ang audio file.');
+            });
+        }
+    };
+</script>
 </body>
 </html>

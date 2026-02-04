@@ -17,6 +17,17 @@
             font-weight: 600;
         }
         .chapter-content { padding-top: 6px; }
+        /* Style for the single audio player at the end */
+        .combined-audio-player {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+        }
+        .combined-audio-player h3 {
+            margin-bottom: 15px;
+            color: #5c2e0f;
+        }
     </style>
 </head>
 <body data-page="chapter-multi">
@@ -34,16 +45,7 @@
                 <div class="chapter-content">
                     <p>Hindi nagkaroon ng himala ang Birhen at hindi nabigyan si Huli ng dagdag na perang kailangan niya para matubos ang kanyang amang si Kabesang Tales. Dahil wala na siyang ibang magagawa, napilitan siyang magpaalila kay Hermana Penchang kahit mismong araw pa iyon ng Pasko. Labis namang dinamdam ni Tandang Selo ang sinapit ng kanyang apo kaya siya'y napipi sa sobrang sama ng loob at paghihinagpis.</p>
                 </div>
-
-                <div class="audio-player">
-                    <h3>Pakinggan ang Kabanata VIII</h3>
-                    <div class="audio-controls">
-                        <audio controls id="chapterAudio8">
-                            <source src="audio/Kabanata-8.mp3" type="audio/mpeg">
-                            Ang iyong browser ay hindi sumusuporta sa audio player.
-                        </audio>
-                    </div>
-                </div>
+                <!-- REMOVED audio player for Kabanata 8 -->
             </div>
 
             <div class="chapter-block" id="kabanata9">
@@ -52,20 +54,11 @@
                     <p>Pinag-usapan ng buong bayan ang sinapit ni Tandang Selo at kung sino nga ba ang dapat sisihin sa nangyari sa matanda.</p>
                     <p>Una, ang alperes o tenyente ng gwardiya sibil. Sabi ng ilan, wala naman daw siyang kasalanan. Sinamsam lang niya ang mga sandata dahil utos iyon sa kanya. Hindi raw niya ginawa iyon para bigyang-daan ang mga tulisan na dukutin si Kabesang Tales. At hindi rin daw niya kasalanan kung hindi natagpuan si Kabesang Tales.</p>
                     <p>Pangalawa, ang asenderong pumalit sa paggawa ng lupa ni Kabesang Tales. Paano raw niya isusuplong si Tales sa pagdadala nito ng armas, gayong kapag tinitigan siya ng matanda ay para bang pinipili kung saan ito babarilin. Dagdag pa niya, kung nanatili lamang daw si Kabesang Tales sa bahay, hindi sana siya nadukot ng mga tulisan.</p>
-                    <p>Pangatlo, si Hermana Penchang, ang bagong amo ni Huli. Para sa kanya, kasalanan daw ni Tandang Selo ang lahat dahil hindi raw ito marunong magdasal at hindi nito naturuan nang wasto ang kanyang mga kaanak. Kaya raw niya ngayon tinuturuan si Huli magdasal at pinababasa ng aklat na Tandang Basyong Makunat. Nang mabalitaan niyang tutubusin ni Basilio si Huli, sinabi pa niyang si Basilio ay isang “demonyong nag-aanyong estudyante” na maaaring magpahamak sa kaluluwa ng dalaga.</p>
+                    <p>Pangatlo, si Hermana Penchang, ang bagong amo ni Huli. Para sa kanya, kasalanan daw ni Tandang Selo ang lahat dahil hindi raw ito marunong magdasal at hindi nito naturuan nang wasto ang kanyang mga kaanak. Kaya raw niya ngayon tinuturuan si Huli magdasal at pinababasa ng aklat na Tandang Basyong Makunat. Nang mabalitaan niyang tutubusin ni Basilio si Huli, sinabi pa niyang si Basilio ay isang "demonyong nag-aanyong estudyante" na maaaring magpahamak sa kaluluwa ng dalaga.</p>
                     <p>Sa huli, nakauwi si Kabesang Tales, salamat sa perang nakuha mula sa mga alahas na ibinenta ni Huli at sa perang inutang nito kay Hermana Penchang. Pagdating niya, natuklasan niyang may ibang taong gumagawa na sa kanyang lupa, naging utusan na ang kanyang anak na si Huli, at ang kanyang ama na si Tandang Selo ay nawalan na ng tinig. Pinalayas pa siya sa sarili niyang bahay ayon sa utos ng hukuman na ikinatuwa pa ng mga kura at ng taong umagaw sa lupa.</p>
                     <p>Umupo na lamang si Kabesang Tales sa tabi, tahimik at walang imik, habang pasan ang bigat ng lahat ng nangyari sa kanilang pamilya.</p>
                 </div>
-
-                <div class="audio-player">
-                    <h3>Pakinggan ang Kabanata IX</h3>
-                    <div class="audio-controls">
-                        <audio controls id="chapterAudio9">
-                            <source src="audio/Kabanata-9.mp3" type="audio/mpeg">
-                            Ang iyong browser ay hindi sumusuporta sa audio player.
-                        </audio>
-                    </div>
-                </div>
+                <!-- REMOVED audio player for Kabanata 9 -->
             </div>
 
             <div class="chapter-block" id="kabanata10">
@@ -78,13 +71,15 @@
                     <p>Sa gabing iyon, pinatay ni Kabesang Tales ang prayle, ang bagong gumagawa ng lupa, at ang asawa nito sa maruming paraan, gamit ang dugo para isulat ang mensahe sa tabi ng bangkay ng babae. Samantala, dinakip ng mga guwardiya sibil si Tandang Selo, na ikinatuwa ni Simoun.</p>
                 </div>
 
-                <div class="audio-player">
-                    <h3>Pakinggan ang Kabanata X</h3>
+                <!-- Single audio player for all chapters -->
+                <div class="combined-audio-player">
+                    <h3>Pakinggan ang Diyalog ng Kabanata VIII-X</h3>
                     <div class="audio-controls">
-                        <audio controls id="chapterAudio10">
-                            <source src="audio/Kabanata-10.mp3" type="audio/mpeg">
+                        <audio controls id="combinedChapterAudio" preload="auto">
+                            <source src="audio/Kabanata 8-10.mp3" type="audio/mpeg">
                             Ang iyong browser ay hindi sumusuporta sa audio player.
                         </audio>
+                       <p class="audio-note"><em>Ang audio ay magpe-play awtomatiko o maaaring ipagpatuloy mula sa huling posisyon.</em></p>
                     </div>
                 </div>
             </div>
@@ -100,5 +95,238 @@
     </div>
     <script src="script-chapters.js"></script>
     <script src="rain.js"></script>
+    <script>
+    // Auto-play script for combined chapter audio with state persistence
+    document.addEventListener('DOMContentLoaded', function() {
+        const audioElement = document.getElementById('combinedChapterAudio');
+        if (!audioElement) return;
+
+        // Set up audio element ID for state tracking
+        if (!audioElement.id) {
+            audioElement.id = 'combinedAudio8-10';
+        }
+
+        // Load saved playback state
+        loadAudioState(audioElement, '8-10');
+        
+        // Set up event listeners for state saving
+        setupAudioEventListeners(audioElement, '8-10');
+        
+        // Try to auto-play with user interaction detection
+        attemptAutoPlay(audioElement, '8-10');
+        
+        // Also try to play when page becomes visible again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && audioElement.paused && 
+                sessionStorage.getItem('userInteractedWithAudio') === 'true') {
+                attemptAutoPlay(audioElement, '8-10');
+            }
+        });
+    });
+    
+    function loadAudioState(audioElement, chapterKey) {
+        try {
+            const savedTime = sessionStorage.getItem(`chapter${chapterKey}AudioPosition`);
+            const savedIsPlaying = sessionStorage.getItem(`chapter${chapterKey}AudioIsPlaying`);
+            const audioSource = sessionStorage.getItem(`chapter${chapterKey}AudioSource`);
+            
+            // Only restore if it's the same audio source
+            const currentSource = audioElement.querySelector('source').src;
+            if (savedTime && audioSource === currentSource) {
+                const time = parseFloat(savedTime);
+                const duration = audioElement.duration;
+                
+                // Only restore if position is valid and not too close to end
+                if (!isNaN(time) && time > 0 && time < (duration || Infinity) - 1) {
+                    audioElement.currentTime = time;
+                }
+                
+                // Restore playback state
+                if (savedIsPlaying === 'true' && audioElement.paused) {
+                    sessionStorage.setItem(`shouldResumeAudio${chapterKey}`, 'true');
+                }
+            }
+            
+            // Save current source for future checks
+            sessionStorage.setItem(`chapter${chapterKey}AudioSource`, currentSource);
+        } catch (e) {
+            console.error('Error loading audio state:', e);
+        }
+    }
+    
+    function setupAudioEventListeners(audioElement, chapterKey) {
+        // Save playback position regularly
+        audioElement.addEventListener('timeupdate', function() {
+            if (!audioElement.paused && audioElement.currentTime > 0) {
+                sessionStorage.setItem(`chapter${chapterKey}AudioPosition`, audioElement.currentTime);
+            }
+        });
+        
+        // Save play state
+        audioElement.addEventListener('play', function() {
+            sessionStorage.setItem(`chapter${chapterKey}AudioIsPlaying`, 'true');
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        audioElement.addEventListener('pause', function() {
+            sessionStorage.setItem(`chapter${chapterKey}AudioIsPlaying`, 'false');
+        });
+        
+        audioElement.addEventListener('ended', function() {
+            sessionStorage.removeItem(`chapter${chapterKey}AudioPosition`);
+            sessionStorage.removeItem(`chapter${chapterKey}AudioIsPlaying`);
+            sessionStorage.removeItem(`shouldResumeAudio${chapterKey}`);
+            // Update the note to show audio is finished
+            const audioNote = document.querySelector('.audio-note');
+            if (audioNote) {
+                audioNote.innerHTML = '<em>Tapos na ang audio ng Kabanata VIII-X.</em>';
+            }
+        });
+        
+        // Save state before page unload
+        window.addEventListener('beforeunload', function() {
+            if (!audioElement.paused && audioElement.currentTime > 0) {
+                sessionStorage.setItem(`chapter${chapterKey}AudioPosition`, audioElement.currentTime);
+                sessionStorage.setItem(`chapter${chapterKey}AudioIsPlaying`, 'true');
+            }
+        });
+        
+        // Handle user interaction with audio element
+        audioElement.addEventListener('click', function() {
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        audioElement.addEventListener('play', function() {
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        // Handle audio errors
+        audioElement.addEventListener('error', function() {
+            const audioControls = audioElement.closest('.audio-controls');
+            if (audioControls) {
+                const errorNote = document.createElement('p');
+                errorNote.className = 'audio-note'; 
+                errorNote.style.color = '#cc0000';
+                errorNote.innerHTML = `<em>Hindi ma-play ang audio file. Paki-check kung naka-save bilang "Kabanata 8-10.mp3" sa audio folder.</em>`;
+                audioControls.appendChild(errorNote);
+            }
+        });
+    }
+    
+    function attemptAutoPlay(audioElement, chapterKey) {
+        // Check if we should resume playback
+        const shouldResume = sessionStorage.getItem(`shouldResumeAudio${chapterKey}`) === 'true';
+        const userInteracted = sessionStorage.getItem('userInteractedWithAudio') === 'true';
+        
+        if (shouldResume || userInteracted) {
+            // Small delay to ensure page is ready
+            setTimeout(() => {
+                const playPromise = audioElement.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('Auto-play prevented:', error);
+                        
+                        // Only show fallback if this is the first load
+                        if (!userInteracted) {
+                            showAutoplayFallback(audioElement, chapterKey);
+                        }
+                    }).then(() => {
+                        // Clear the resume flag if successful
+                        sessionStorage.removeItem(`shouldResumeAudio${chapterKey}`);
+                        
+                        // Update the note
+                        const audioNote = document.querySelector('.audio-note');
+                        if (audioNote) {
+                            const currentTime = Math.floor(audioElement.currentTime);
+                            audioNote.innerHTML = `<em>Nagpe-play ang audio mula ${formatTime(currentTime)}. I-refresh ang pahina upang ipagpatuloy mula dito.</em>`;
+                        }
+                    });
+                }
+            }, 300);
+        } else {
+            // First visit, show fallback button
+            showAutoplayFallback(audioElement, chapterKey);
+        }
+    }
+    
+    function showAutoplayFallback(audioElement, chapterKey) {
+        const audioContainer = audioElement.closest('.audio-controls');
+        if (!audioContainer) return;
+        
+        // Remove any existing overlay
+        const existingOverlay = audioContainer.querySelector('.autoplay-fallback');
+        if (existingOverlay) existingOverlay.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'autoplay-fallback';
+        overlay.style.marginTop = '15px';
+        overlay.style.padding = '15px';
+        overlay.style.backgroundColor = '#f8f3e9';
+        overlay.style.borderRadius = '8px';
+        overlay.style.border = '1px solid #e0d5c0';
+        overlay.style.textAlign = 'center';
+        
+        // Check if there's saved position
+        const savedTime = sessionStorage.getItem(`chapter${chapterKey}AudioPosition`);
+        let timeInfo = '';
+        if (savedTime) {
+            const time = Math.floor(parseFloat(savedTime));
+            timeInfo = `<p style="margin-bottom: 5px; color: #5c2e0f; font-size: 0.9em;">
+                <strong>Naka-save na posisyon:</strong> ${formatTime(time)}
+            </p>`;
+        }
+        
+        overlay.innerHTML = `
+            <p style="margin-bottom: 10px; color: #5c2e0f; font-size: 0.95em;">
+                <strong>I-play ang Kabanata VIII-X</strong>
+            </p>
+            ${timeInfo}
+            <button class="play-overlay-btn" 
+                    onclick="resumeChapterAudio810(this)"
+                    style="background: linear-gradient(to bottom, #5c2e0f, #4a240c); 
+                           color: white; padding: 10px 20px; border: none; 
+                           border-radius: 6px; cursor: pointer; font-weight: bold;
+                           font-size: 1em; box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+                           margin-top: 10px;">
+                ▶ Simulan ang Audio
+            </button>
+            <p style="margin-top: 8px; font-size: 0.8em; color: #777;">
+                Magpe-play mula sa simula o huling posisyon.
+            </p>
+        `;
+        
+        audioContainer.appendChild(overlay);
+    }
+    
+    // Helper function to format time
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+    
+    // Global function for resume button (Kabanata 8-10)
+    window.resumeChapterAudio810 = function(button) {
+        const audioElement = document.getElementById('combinedChapterAudio');
+        if (audioElement) {
+            audioElement.play().then(() => {
+                const overlay = button.closest('.autoplay-fallback');
+                if (overlay) overlay.remove();
+                sessionStorage.setItem('userInteractedWithAudio', 'true');
+                
+                // Update the note
+                const audioNote = document.querySelector('.audio-note');
+                if (audioNote) {
+                    const currentTime = Math.floor(audioElement.currentTime);
+                    audioNote.innerHTML = `<em>Nagpe-play ang audio ng Kabanata VIII-X mula ${formatTime(currentTime)}.</em>`;
+                }
+            }).catch(error => {
+                console.error('Playback failed:', error);
+                alert('Hindi ma-play ang audio. Pakisubukan muli o i-check ang audio file.');
+            });
+        }
+    };
+</script>
 </body>
 </html>

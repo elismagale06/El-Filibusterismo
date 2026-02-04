@@ -17,6 +17,17 @@
             font-weight: 600;
         }
         .chapter-content { padding-top: 6px; }
+        /* Style for the single audio player at the end */
+        .combined-audio-player {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+        }
+        .combined-audio-player h3 {
+            margin-bottom: 15px;
+            color: #5c2e0f;
+        }
     </style>
 </head>
 <body data-page="chapter">
@@ -43,13 +54,15 @@
                     <p>Isang araw, dinukot siya ng mga tulisan at hiningi ang malaking panubos. Upang mailigtas ang ama, isinangla ni Huli ang kanyang mga hiyas, maliban sa isang locket o agnos na ibinigay sa kanya ni Basilio. Ngunit kahit ganito, hindi pa rin sapat ang panubos. Dahil dito, napilitan siyang mangutang kay Hermana Penchang at maglingkod bilang utusan simula Araw ng Pasko. Nang bisperas ng Pasko, natulog si Huli na mabigat ang loob at nagkaroon ng masalimuot na panaginip, na tila nagbabadya ng paghihirap na darating.</p>
                 </div>
 
-                <div class="audio-player">
-                    <h3>Pakinggan ang Kabanata IV</h3>
+                <!-- Single audio player for the chapter -->
+                <div class="combined-audio-player">
+                    <h3>Pakinggan ang Diyalog ng Kabanata IV</h3>
                     <div class="audio-controls">
-                        <audio controls id="chapterAudio4">
-                            <source src="audio/Kabanata-4.m4a" type="audio/mpeg">
+                        <audio controls id="chapterAudio4" preload="auto">
+                            <source src="audio/Kabanata 4.mp3" type="audio/mpeg">
                             Ang iyong browser ay hindi sumusuporta sa audio player.
                         </audio>
+                        <p class="audio-note"><em>Ang audio ay magpe-play awtomatiko o maaaring ipagpatuloy mula sa huling posisyon.</em></p>
                     </div>
                 </div>
             </div>
@@ -65,5 +78,239 @@
     </div>
     <script src="script-chapters.js"></script>
     <script src="rain.js"></script>
+     <script>
+    // Auto-play script for chapter audio with state persistence
+    document.addEventListener('DOMContentLoaded', function() {
+        const audioElement = document.getElementById('chapterAudio4');
+        if (!audioElement) return;
+
+        // Set up audio element ID for state tracking if not present
+        if (!audioElement.id) {
+            audioElement.id = 'chapterAudio4';
+        }
+
+        // Load saved playback state
+        loadAudioState(audioElement);
+        
+        // Set up event listeners for state saving
+        setupAudioEventListeners(audioElement);
+        
+        // Try to auto-play with user interaction detection
+        attemptAutoPlay(audioElement);
+        
+        // Also try to play when page becomes visible again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && audioElement.paused && 
+                sessionStorage.getItem('userInteractedWithAudio') === 'true') {
+                attemptAutoPlay(audioElement);
+            }
+        });
+    });
+    
+    function loadAudioState(audioElement) {
+        try {
+            const savedTime = sessionStorage.getItem('chapter4AudioPosition');
+            const savedIsPlaying = sessionStorage.getItem('chapter4AudioIsPlaying');
+            const audioSource = sessionStorage.getItem('chapter4AudioSource');
+            
+            // Only restore if it's the same audio source
+            const currentSource = audioElement.querySelector('source').src;
+            if (savedTime && audioSource === currentSource) {
+                const time = parseFloat(savedTime);
+                const duration = audioElement.duration;
+                
+                // Only restore if position is valid and not too close to end
+                if (!isNaN(time) && time > 0 && time < (duration || Infinity) - 1) {
+                    audioElement.currentTime = time;
+                }
+                
+                // Restore playback state
+                if (savedIsPlaying === 'true' && audioElement.paused) {
+                    // We'll attempt playback in attemptAutoPlay()
+                    sessionStorage.setItem('shouldResumeAudio4', 'true');
+                }
+            }
+            
+            // Save current source for future checks
+            sessionStorage.setItem('chapter4AudioSource', currentSource);
+        } catch (e) {
+            console.error('Error loading audio state:', e);
+        }
+    }
+    
+    function setupAudioEventListeners(audioElement) {
+        // Save playback position regularly
+        audioElement.addEventListener('timeupdate', function() {
+            if (!audioElement.paused && audioElement.currentTime > 0) {
+                sessionStorage.setItem('chapter4AudioPosition', audioElement.currentTime);
+            }
+        });
+        
+        // Save play state
+        audioElement.addEventListener('play', function() {
+            sessionStorage.setItem('chapter4AudioIsPlaying', 'true');
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        audioElement.addEventListener('pause', function() {
+            sessionStorage.setItem('chapter4AudioIsPlaying', 'false');
+        });
+        
+        audioElement.addEventListener('ended', function() {
+            sessionStorage.removeItem('chapter4AudioPosition');
+            sessionStorage.removeItem('chapter4AudioIsPlaying');
+            sessionStorage.removeItem('shouldResumeAudio4');
+            // Update the note to show audio is finished
+            const audioNote = document.querySelector('.audio-note');
+            if (audioNote) {
+                audioNote.innerHTML = '<em>Tapos na ang audio ng Kabanata IV.</em>';
+            }
+        });
+        
+        // Save state before page unload
+        window.addEventListener('beforeunload', function() {
+            if (!audioElement.paused && audioElement.currentTime > 0) {
+                sessionStorage.setItem('chapter4AudioPosition', audioElement.currentTime);
+                sessionStorage.setItem('chapter4AudioIsPlaying', 'true');
+            }
+        });
+        
+        // Handle user interaction with audio element
+        audioElement.addEventListener('click', function() {
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        audioElement.addEventListener('play', function() {
+            sessionStorage.setItem('userInteractedWithAudio', 'true');
+        });
+        
+        // Handle audio errors
+        audioElement.addEventListener('error', function() {
+            const audioControls = audioElement.closest('.audio-controls');
+            if (audioControls) {
+                const errorNote = document.createElement('p');
+                errorNote.className = 'audio-note'; 
+                errorNote.style.color = '#cc0000';
+                errorNote.innerHTML = `<em>Hindi ma-play ang audio file. Paki-check kung naka-save bilang "Kabanata 4.mp3" sa audio folder.</em>`;
+                audioControls.appendChild(errorNote);
+            }
+        });
+    }
+    
+    function attemptAutoPlay(audioElement) {
+        // Check if we should resume playback
+        const shouldResume = sessionStorage.getItem('shouldResumeAudio4') === 'true';
+        const userInteracted = sessionStorage.getItem('userInteractedWithAudio') === 'true';
+        
+        if (shouldResume || userInteracted) {
+            // Small delay to ensure page is ready
+            setTimeout(() => {
+                const playPromise = audioElement.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('Auto-play prevented:', error);
+                        
+                        // Only show fallback if this is the first load
+                        if (!userInteracted) {
+                            showAutoplayFallback(audioElement);
+                        }
+                    }).then(() => {
+                        // Clear the resume flag if successful
+                        sessionStorage.removeItem('shouldResumeAudio4');
+                        
+                        // Update the note
+                        const audioNote = document.querySelector('.audio-note');
+                        if (audioNote) {
+                            const currentTime = Math.floor(audioElement.currentTime);
+                            audioNote.innerHTML = `<em>Nagpe-play ang audio mula ${formatTime(currentTime)}. I-refresh ang pahina upang ipagpatuloy mula dito.</em>`;
+                        }
+                    });
+                }
+            }, 300);
+        } else {
+            // First visit, show fallback button
+            showAutoplayFallback(audioElement);
+        }
+    }
+    
+    function showAutoplayFallback(audioElement) {
+        const audioContainer = audioElement.closest('.audio-controls');
+        if (!audioContainer) return;
+        
+        // Remove any existing overlay
+        const existingOverlay = audioContainer.querySelector('.autoplay-fallback');
+        if (existingOverlay) existingOverlay.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'autoplay-fallback';
+        overlay.style.marginTop = '15px';
+        overlay.style.padding = '15px';
+        overlay.style.backgroundColor = '#f8f3e9';
+        overlay.style.borderRadius = '8px';
+        overlay.style.border = '1px solid #e0d5c0';
+        overlay.style.textAlign = 'center';
+        
+        // Check if there's saved position
+        const savedTime = sessionStorage.getItem('chapter4AudioPosition');
+        let timeInfo = '';
+        if (savedTime) {
+            const time = Math.floor(parseFloat(savedTime));
+            timeInfo = `<p style="margin-bottom: 5px; color: #5c2e0f; font-size: 0.9em;">
+                <strong>Naka-save na posisyon:</strong> ${formatTime(time)}
+            </p>`;
+        }
+        
+        overlay.innerHTML = `
+            <p style="margin-bottom: 10px; color: #5c2e0f; font-size: 0.95em;">
+                <strong>I-play ang Kabanata IV</strong>
+            </p>
+            ${timeInfo}
+            <button class="play-overlay-btn" 
+                    onclick="resumeChapter4Audio(this)"
+                    style="background: linear-gradient(to bottom, #5c2e0f, #4a240c); 
+                           color: white; padding: 10px 20px; border: none; 
+                           border-radius: 6px; cursor: pointer; font-weight: bold;
+                           font-size: 1em; box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+                           margin-top: 10px;">
+                ▶ Simulan ang Audio
+            </button>
+            <p style="margin-top: 8px; font-size: 0.8em; color: #777;">
+                Magpe-play mula sa simula o huling posisyon.
+            </p>
+        `;
+        
+        audioContainer.appendChild(overlay);
+    }
+    
+    // Helper function to format time
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+    
+    // Global function for resume button
+    window.resumeChapter4Audio = function(button) {
+        const audioElement = document.getElementById('chapterAudio4');
+        if (audioElement) {
+            audioElement.play().then(() => {
+                const overlay = button.closest('.autoplay-fallback');
+                if (overlay) overlay.remove();
+                sessionStorage.setItem('userInteractedWithAudio', 'true');
+                
+                // Update the note
+                const audioNote = document.querySelector('.audio-note');
+                if (audioNote) {
+                    const currentTime = Math.floor(audioElement.currentTime);
+                    audioNote.innerHTML = `<em>Nagpe-play ang audio ng Kabanata IV mula ${formatTime(currentTime)}.</em>`;
+                }
+            }).catch(error => {
+                console.error('Playback failed:', error);
+                alert('Hindi ma-play ang audio. Pakisubukan muli o i-check ang audio file.');
+            });
+        }
+    };
+</script>
 </body>
 </html>
