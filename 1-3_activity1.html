@@ -1265,6 +1265,13 @@
           buong salita mula simula hanggang katapusan kapag nahanap.
           <br><span class="highlight">Tip:</span> Pindutin at i-drag ang unang titik hanggang sa huling titik ng salita.
         </div>
+        <!-- Add this right after the instructions div -->
+<div class="audio-instructions" style="text-align: center; margin: 15px 0;">
+  <audio id="instructionsAudio" preload="auto">
+    <!-- You'll need to record an audio file with the instructions in Filipino -->
+    <source src="audio/panuto.mp3" type="audio/mpeg">
+  </audio>
+</div>
       </header>
 
       <!-- Centered start button above the grid -->
@@ -2317,6 +2324,20 @@
         showModal("gameEndModal");
       }
 
+      // Add to your existing JavaScript
+function playInstructions() {
+  const audio = document.getElementById('instructionsAudio');
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(e => {
+      console.log("Audio play failed:", e);
+      // Fallback: Show instructions in alert if audio fails
+      alert("GAWAIN 1 - Panuto: Hanapin ang mga salita sa listahan na maaaring makita nang pahalang, patayo, o diagonal. Markahan ang buong salita mula simula hanggang katapusan kapag nahanap.\n\nTip: Pindutin at i-drag ang unang titik hanggang sa huling titik ng salita.");
+    });
+  }
+}
+
+
       function startGame() {
         gameStarted = true;
         foundWords.clear();
@@ -2326,6 +2347,13 @@
         isShowingSuccessMessage = false;
         startCell = null;
         isSelecting = false;
+
+                // Auto-play instructions when game starts (optional)
+        if (gameStarted && document.getElementById('instructionsAudio')) {
+          setTimeout(() => {
+            playInstructions();
+          }, 500);
+        }
 
         document.getElementById("hintsRemaining").textContent = hintsRemaining;
         
