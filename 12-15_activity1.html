@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>El Filibusterismo - Word Search Activity</title>
     <script src="global-audio.js"></script>
-    <style>
+        <style>
       * {
         margin: 0;
         padding: 0;
@@ -179,7 +179,7 @@
 
       .word-grid {
         display: grid;
-        grid-template-columns: repeat(16, 35px);
+        grid-template-columns: repeat(15, 35px);
         gap: 8px;
         user-select: none;
         width: fit-content;
@@ -791,7 +791,7 @@
         }
 
         .word-grid {
-          grid-template-columns: repeat(16, 30px);
+          grid-template-columns: repeat(15, 30px);
           gap: 6px;
         }
 
@@ -816,6 +816,10 @@
           margin-bottom: 15px;
         }
 
+      .audio-instructions {
+        display: none; /* Hide on mobile to prevent issues */
+      }
+
         h1 {
           font-size: 1.3em;
           margin-bottom: 8px;
@@ -836,7 +840,7 @@
         }
 
         .word-grid {
-          grid-template-columns: repeat(16, 28px);
+          grid-template-columns: repeat(15, 28px);
           gap: 5px;
         }
 
@@ -962,7 +966,7 @@
         }
 
         .word-grid {
-          grid-template-columns: repeat(16, 20px);
+          grid-template-columns: repeat(15, 20px);
           gap: 2px;
         }
 
@@ -1122,7 +1126,7 @@
         }
 
         .word-grid {
-          grid-template-columns: repeat(16, 18px);
+          grid-template-columns: repeat(15, 18px);
           gap: 5px;
         }
 
@@ -1188,6 +1192,21 @@
           max-width: 90vw;
         }
       }
+
+          /* For iOS compatibility */
+    @supports (-webkit-touch-callout: none) {
+      /* iOS specific styles */
+      body {
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      .grid-cell {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    }
     </style>
   </head>
 
@@ -2319,58 +2338,130 @@
 function playInstructions() {
   const audio = document.getElementById('instructionsAudio');
   if (audio) {
+    // Reset audio to start
     audio.currentTime = 0;
-    audio.play().catch(e => {
-      console.log("Audio play failed:", e);
-      // Fallback: Show instructions in alert if audio fails
-      alert("GAWAIN 1 - Panuto: Hanapin ang mga salita sa listahan na maaaring makita nang pahalang, patayo, o diagonal. Markahan ang buong salita mula simula hanggang katapusan kapag nahanap.\n\nTip: Pindutin at i-drag ang unang titik hanggang sa huling titik ng salita.");
-    });
+    
+    // Create a promise-based play for better error handling
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(e => {
+        console.log("Audio play failed:", e);
+        
+        // On mobile, we might need user interaction first
+        if (window.innerWidth <= 768) {
+          // Show a button for mobile users to tap to play audio
+          showMobileAudioPrompt();
+        } else {
+          // Desktop fallback: Show instructions in alert
+          alert("GAWAIN 1 - Panuto: Hanapin ang mga salita sa listahan na maaaring makita nang pahalang, patayo, o diagonal. Markahan ang buong salita mula simula hanggang katapusan kapag nahanap.\n\nTip: Pindutin at i-drag ang unang titik hanggang sa huling titik ng salita.");
+        }
+      });
+    }
   }
 }
 
+// Helper function for mobile audio prompt
+function showMobileAudioPrompt() {
+  const prompt = document.createElement('div');
+  prompt.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 9999;
+    text-align: center;
+  `;
+  prompt.innerHTML = `
+    <p>Pindutin ang pindutan upang marinig ang panuto</p>
+    <button onclick="playInstructionsManual()" style="
+      background: #8b4513;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 10px;
+    ">I-play ang Panuto</button>
+  `;
+  document.body.appendChild(prompt);
+}
 
-      function startGame() {
-        gameStarted = true;
-        foundWords.clear();
-        selectedCells = [];
-        hintsRemaining = 3; // Changed from 2
-        currentGameScore = 0;
-        isShowingSuccessMessage = false;
-        startCell = null;
-        isSelecting = false;
+function playInstructionsManual() {
+  const audio = document.getElementById('instructionsAudio');
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(e => {
+      console.log("Manual play also failed");
+    });
+  }
+  
+  // Remove the prompt
+  const prompt = document.querySelector('[style*="position: fixed"]');
+  if (prompt) prompt.remove();
+}
 
-                // Auto-play instructions when game starts (optional)
-        if (gameStarted && document.getElementById('instructionsAudio')) {
-          setTimeout(() => {
-            playInstructions();
-          }, 500);
-        }
-
-        document.getElementById("hintsRemaining").textContent = hintsRemaining;
-        
-        // Reset hint button to enabled state with original text
-        const hintButton = document.getElementById("hintButton");
-        hintButton.disabled = false;
-        hintButton.textContent = "Gumamit ng Hint";
-
-        // Reset selection mode to straight
-        setSelectionMode('straight');
-
-        initGrid();
-        renderGrid();
-        renderWordList();
-        updateStats();
-        startTimer();
-
-        document.querySelectorAll(".grid-cell").forEach((cell) => {
-          cell.classList.remove("found", "selected", "hint");
-        });
-
-        // Disable start button once game starts
-        document.getElementById("startButton").disabled = true;
-        document.getElementById("startButton").textContent =
-          "Nagsimula na ang laro";
+// Function to check and auto-play instructions on page load
+function autoPlayInstructionsOnLoad() {
+  // Check if we should auto-play instructions (set from activities page)
+  const shouldAutoPlay = localStorage.getItem('autoPlayInstructions') === 'true';
+  
+  if (shouldAutoPlay) {
+    // Clear the flag immediately
+    localStorage.removeItem('autoPlayInstructions');
+    
+    // Use a small delay to ensure DOM is ready
+    setTimeout(() => {
+      if (document.getElementById('instructionsAudio')) {
+        playInstructions();
       }
+    }, 500);
+  }
+}
+
+function startGame() {
+  gameStarted = true;
+  foundWords.clear();
+  selectedCells = [];
+  hintsRemaining = 3; // Changed from 2
+  currentGameScore = 0;
+  isShowingSuccessMessage = false;
+  startCell = null;
+  isSelecting = false;
+
+  // REMOVED the auto-play instructions from here to avoid redundancy
+
+  document.getElementById("hintsRemaining").textContent = hintsRemaining;
+  
+  // Reset hint button to enabled state with original text
+  const hintButton = document.getElementById("hintButton");
+  hintButton.disabled = false;
+  hintButton.textContent = "Gumamit ng Hint";
+
+  // Reset selection mode to straight
+  setSelectionMode('straight');
+
+  initGrid();
+  renderGrid();
+  renderWordList();
+  updateStats();
+  startTimer();
+
+  document.querySelectorAll(".grid-cell").forEach((cell) => {
+    cell.classList.remove("found", "selected", "hint");
+  });
+
+  // Disable start button once game starts
+  document.getElementById("startButton").disabled = true;
+  document.getElementById("startButton").textContent =
+    "Nagsimula na ang laro";
+
+  // start background music
+  playBackground();
+}
 
       function showModal(modalId) {
         document.getElementById(modalId).style.display = "flex";
@@ -2424,70 +2515,73 @@ function playInstructions() {
         }
       });
 
-      window.onload = () => {
-          initGrid();
-          renderGrid();
-          renderWordList();
+     window.onload = () => {
+  initGrid();
+  renderGrid();
+  renderWordList();
 
-          // Check if there's a saved score to resume
-          const savedScore = localStorage.getItem(SCORE_KEY);
-          const isCompleted = localStorage.getItem(COMPLETED_KEY);
-          const lastScore = localStorage.getItem(LAST_SCORE_KEY);
-          const isInProgress = localStorage.getItem("activity1_in_progress") === "true";
+  // Call auto-play instructions check
+  autoPlayInstructionsOnLoad();
 
-          // If coming back from activities page with modal confirmation, clear all data
-          const urlParams = new URLSearchParams(window.location.search);
-          const resetRequested = urlParams.get('reset') === 'true';
-          
-          if (resetRequested) {
-            // Clear all localStorage for this activity
-            localStorage.removeItem(SCORE_KEY);
-            localStorage.removeItem(COMPLETED_KEY);
-            localStorage.removeItem(LAST_SCORE_KEY);
-            localStorage.removeItem("activity1_in_progress");
-            localStorage.removeItem("activity1_temp_score");
-            
-            // Reset button to start
-            document.getElementById("startButton").textContent = "Magsimula";
-            document.getElementById("startButton").disabled = false;
-            document.getElementById("startButton").onclick = function () {
-              startWithCountdown();
-            };
-            
-            // Clear URL parameters
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } 
-          // Show the most recent score
-          else if (isCompleted === "true" && savedScore) {
-            document.getElementById(
-              "foundCount"
-            ).textContent = `${savedScore}/15`;
-            document.getElementById("startButton").textContent = "Gawin Muli";
-            document.getElementById("startButton").disabled = false;
-            document.getElementById("startButton").onclick = function () {
-              showModal("retryModal");
-            };
-          } else if (lastScore && !isInProgress) {
-            // Show last known score from incomplete game
-            document.getElementById("foundCount").textContent = `${lastScore}/15`;
-            document.getElementById("startButton").textContent = "Magsimula";
-            document.getElementById("startButton").disabled = false;
-            document.getElementById("startButton").onclick = function () {
-              startWithCountdown();
-            };
-          } else if (isInProgress) {
-            // Game was in progress, show retry modal
-            document.getElementById("startButton").textContent = "Ipagpatuloy";
-            document.getElementById("startButton").disabled = false;
-            document.getElementById("startButton").onclick = function () {
-              showModal("retryModal");
-            };
-          } else {
-            document.getElementById("startButton").onclick = function () {
-              startWithCountdown();
-            };
-          }
-        };
+  // Check if there's a saved score to resume
+  const savedScore = localStorage.getItem(SCORE_KEY);
+  const isCompleted = localStorage.getItem(COMPLETED_KEY);
+  const lastScore = localStorage.getItem(LAST_SCORE_KEY);
+  const isInProgress = localStorage.getItem("activity1_in_progress") === "true";
+
+  // If coming back from activities page with modal confirmation, clear all data
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetRequested = urlParams.get('reset') === 'true';
+  
+  if (resetRequested) {
+    // Clear all localStorage for this activity
+    localStorage.removeItem(SCORE_KEY);
+    localStorage.removeItem(COMPLETED_KEY);
+    localStorage.removeItem(LAST_SCORE_KEY);
+    localStorage.removeItem("activity1_in_progress");
+    localStorage.removeItem("activity1_temp_score");
+    
+    // Reset button to start
+    document.getElementById("startButton").textContent = "Magsimula";
+    document.getElementById("startButton").disabled = false;
+    document.getElementById("startButton").onclick = function () {
+      startWithCountdown();
+    };
+    
+    // Clear URL parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } 
+  // Show the most recent score
+  else if (isCompleted === "true" && savedScore) {
+    document.getElementById(
+      "foundCount"
+    ).textContent = `${savedScore}/15`;
+    document.getElementById("startButton").textContent = "Gawin Muli";
+    document.getElementById("startButton").disabled = false;
+    document.getElementById("startButton").onclick = function () {
+      showModal("retryModal");
+    };
+  } else if (lastScore && !isInProgress) {
+    // Show last known score from incomplete game
+    document.getElementById("foundCount").textContent = `${lastScore}/15`;
+    document.getElementById("startButton").textContent = "Magsimula";
+    document.getElementById("startButton").disabled = false;
+    document.getElementById("startButton").onclick = function () {
+      startWithCountdown();
+    };
+  } else if (isInProgress) {
+    // Game was in progress, show retry modal
+    document.getElementById("startButton").textContent = "Ipagpatuloy";
+    document.getElementById("startButton").disabled = false;
+    document.getElementById("startButton").onclick = function () {
+      showModal("retryModal");
+    };
+  } else {
+    document.getElementById("startButton").onclick = function () {
+      startWithCountdown();
+    };
+  }
+};
     </script>
   </body>
 </html>

@@ -335,11 +335,16 @@
     savedScoreExists: savedScore !== null
   });
 
-    // Show modal if:
-    // 1. Activity is marked as completed
-    // 2. OR there's a saved score (even if not marked as completed)
-    // 3. OR game is in progress
-    if (isCompleted || savedScore !== null || isInProgress) {
+  // For Activity 1 specifically, set a flag to auto-play instructions
+  if (activityNumber === 1) {
+    localStorage.setItem('autoPlayInstructions', 'true');
+  }
+
+  // Show modal if:
+  // 1. Activity is marked as completed
+  // 2. OR there's a saved score (even if not marked as completed)
+  // 3. OR game is in progress
+  if (isCompleted || savedScore !== null || isInProgress) {
     console.log(`Showing retry modal for activity ${activityNumber}`);
     // Show confirmation modal
     document.getElementById(
