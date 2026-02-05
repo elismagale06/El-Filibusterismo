@@ -17,6 +17,15 @@ class AudioAutoplayManager {
         window.addEventListener('beforeunload', () => {
             this.saveInteractionState();
         });
+
+        // Call this on chapter pages
+        if (document.body.dataset.page === 'chapters') {
+            setTimeout(() => {
+                if (!this.hasUserInteracted) {
+                    this.forceUserInteraction();
+                }
+            }, 1000);
+        }
     }
 
     setupInteractionListeners() {
@@ -55,6 +64,38 @@ class AudioAutoplayManager {
         }
     }
 
+        // In the AudioAutoplayManager class, add this method:
+    forceUserInteraction() {
+        // Create a transparent overlay that captures clicks
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 9999;
+            cursor: pointer;
+        `;
+        
+        overlay.addEventListener('click', () => {
+            this.markAsInteracted();
+            overlay.remove();
+        }, { once: true });
+        
+        document.body.appendChild(overlay);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (document.body.contains(overlay)) {
+                overlay.remove();
+            }
+        }, 10000);
+    }
+
+
+
     checkStoredInteraction() {
         const stored = localStorage.getItem('userHasInteracted');
         const timestamp = localStorage.getItem('interactionTimestamp');
@@ -82,6 +123,16 @@ class AudioAutoplayManager {
 
     canAutoplay() {
         return this.hasUserInteracted;
+    }
+
+        // Add to AudioAutoplayManager class
+    async playIntroIfAllowed() {
+        if (!this.canAutoplay()) {
+            // Try silent audio unlock
+            this.unlockWithSilentAudio();
+            return false;
+        }
+        return true;
     }
 
     // Try to force audio to play (for browsers that require it)
@@ -131,6 +182,11 @@ class AudioAutoplayManager {
 
 // Create global instance
 window.audioAutoplay = new AudioAutoplayManager();
+
+// Add global helper function
+window.playChapterIntro = async function() {
+    return await window.audioAutoplay?.playIntroIfAllowed();
+};
 
 // Export for modules
 if (typeof module !== 'undefined' && module.exports) {

@@ -111,7 +111,6 @@ function filterChapters() {
     }
 }
 
-// Update the initializeChapterAudio function in script-chapters.js
 function initializeChapterAudio() {
     // Get ALL audio elements on the page
     const audios = Array.from(document.querySelectorAll('audio'));
@@ -119,12 +118,17 @@ function initializeChapterAudio() {
 
     console.log(`Found ${audios.length} audio element(s) on page`);
 
-    // Configure each audio element
+    // Configure each audio element (END AUDIO ONLY)
     audios.forEach((audioElement) => {
-        console.log(`Initializing audio: ${audioElement.id || 'unnamed'}`);
+        // Skip if this is a potential intro audio (not in the main audio player)
+        const isMainAudio = audioElement.closest('.combined-audio-player, .audio-controls');
+        if (!isMainAudio) return;
         
-        // Ensure controls are enabled
+        console.log(`Initializing main audio: ${audioElement.id || 'unnamed'}`);
+        
+        // Ensure controls are enabled but NO AUTOPLAY
         audioElement.controls = true;
+        audioElement.autoplay = false;
         audioElement.style.pointerEvents = 'auto';
         audioElement.style.cursor = 'pointer';
         audioElement.tabIndex = 0;
@@ -132,7 +136,7 @@ function initializeChapterAudio() {
         // Remove any blocking overlays
         const container = audioElement.closest('.audio-controls') || audioElement.parentElement;
         if (container) {
-            const overlays = container.querySelectorAll('.play-overlay');
+            const overlays = container.querySelectorAll('.play-overlay, .autoplay-prompt');
             overlays.forEach(o => o.remove());
         }
 
@@ -158,9 +162,6 @@ function initializeChapterAudio() {
                 audioControls.appendChild(errorNote);
             }
         });
-
-        // Try to autoplay using the global manager
-        attemptAutoplay(audioElement);
     });
 }
 

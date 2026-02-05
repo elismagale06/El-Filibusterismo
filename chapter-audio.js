@@ -1,0 +1,637 @@
+// chapter-audio.js - Manages audio for chapter pages (Updated Solution 1)
+document.addEventListener('DOMContentLoaded', function() {
+    const page = document.body.dataset.page;
+    
+    // Only run on chapter pages
+    if (page !== 'chapter' && page !== 'chapter-multi') return;
+    
+    console.log('Chapter Audio Initialization - Page:', page);
+    
+    // Initialize audio system with improved state tracking
+    initializeChapterAudioSystem();
+    
+    // Clean up URL but preserve state for refreshes
+    cleanupUrlPreservingState();
+});
+
+function initializeChapterAudioSystem() {
+    console.log('Initializing chapter audio system');
+    
+    // Find all audio elements
+    const audioElements = Array.from(document.querySelectorAll('audio'));
+    const endAudio = document.querySelector('#chapterAudio, #combinedChapterAudio, [id*="chapterAudio"], audio');
+    
+    if (!endAudio) {
+        console.warn('No end audio player found');
+        return;
+    }
+    
+    console.log('Found end audio:', endAudio);
+    
+    // Disable autoplay for end audio
+    endAudio.autoplay = false;
+    endAudio.removeAttribute('autoplay');
+    
+    // Create floating button
+    createFloatingAudioButton(endAudio);
+    
+    // Check if we should play intro
+    checkAndPlayIntroAudio();
+    
+    // Setup scroll listener to hide floating button
+    setupScrollListener(endAudio);
+}
+
+function checkAndPlayIntroAudio() {
+    // Multiple ways to determine if we should play intro
+    const shouldPlayIntro = shouldPlayChapterIntro();
+    
+    if (shouldPlayIntro) {
+        console.log('Should play intro audio');
+        
+        // Clear session storage after checking
+        sessionStorage.removeItem('lastClickedChapter');
+        
+        setTimeout(() => {
+            playChapterIntroAudio();
+        }, 800); // Delay to ensure page is loaded
+    } else {
+        console.log('Should NOT play intro audio');
+        
+        // Still show notification without audio
+        const currentChapter = getCurrentChapterNumber();
+        if (currentChapter) {
+            const chapterData = getChapterData();
+            setTimeout(() => {
+                showIntroNotification(chapterData.title || `Kabanata ${currentChapter}`, false);
+            }, 1000);
+        }
+    }
+}
+
+function shouldPlayChapterIntro() {
+    // Check URL parameters first
+    const urlParams = new URLSearchParams(window.location.search);
+    const playIntroParam = urlParams.get('playIntro');
+    
+    console.log('Checking if should play intro:');
+    console.log('- URL playIntro parameter:', playIntroParam);
+    
+    // Method 1: Check if URL has playIntro parameter
+    if (playIntroParam === 'true') {
+        console.log('Method 1: URL parameter says play intro');
+        return true;
+    }
+    
+    // Method 2: Check sessionStorage for recent navigation
+    const storedData = sessionStorage.getItem('lastClickedChapter');
+    console.log('- Session storage data:', storedData);
+    
+    if (storedData) {
+        try {
+            const data = JSON.parse(storedData);
+            const now = Date.now();
+            
+            // Play intro if chapter was clicked within last 30 seconds
+            if (data.timestamp && (now - data.timestamp) <= 30000) {
+                // Check if this is the right chapter
+                const currentChapter = getCurrentChapterNumber();
+                console.log('- Current chapter:', currentChapter);
+                console.log('- Stored chapter:', data.number);
+                
+                if (currentChapter && data.number === currentChapter) {
+                    console.log('Method 2: Recent chapter navigation detected');
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing stored data:', e);
+        }
+    }
+    
+    // Method 3: Check if coming from a non-chapter page
+    const referrer = document.referrer;
+    console.log('- Referrer:', referrer);
+    
+    if (referrer) {
+        try {
+            const referrerUrl = new URL(referrer);
+            const currentUrl = new URL(window.location);
+            
+            // If coming from talasalitaan page back to chapter, play intro
+            if (referrerUrl.pathname.includes('talasalitaan') && 
+                currentUrl.pathname.includes('chapter')) {
+                console.log('Method 3: Returning from talasalitaan page');
+                return true;
+            }
+            
+            // If coming from activities page back to chapter
+            if (referrerUrl.pathname.includes('activities') && 
+                currentUrl.pathname.includes('chapter')) {
+                console.log('Method 3: Returning from activities page');
+                return true;
+            }
+        } catch (e) {
+            console.log('Error parsing referrer URL:', e);
+        }
+    }
+    
+    // Method 4: Check for refresh with stored state
+    const urlParamsRefresh = new URLSearchParams(window.location.search);
+    const introProcessed = urlParamsRefresh.get('introProcessed');
+    const navId = urlParamsRefresh.get('navId');
+    
+    if (introProcessed === 'true' && navId) {
+        // Check if we have matching navigation ID in session storage
+        const storedNav = sessionStorage.getItem('lastNavId');
+        if (storedNav === navId) {
+            console.log('Method 4: Refresh with preserved state');
+            return true;
+        }
+    }
+    
+    console.log('No conditions met for playing intro');
+    return false;
+}
+
+function cleanupUrlPreservingState() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldPlayIntro = urlParams.get('playIntro') === 'true';
+    const navId = urlParams.get('navId');
+    
+    // Store navigation ID for refresh handling
+    if (navId) {
+        sessionStorage.setItem('lastNavId', navId);
+    }
+    
+    // Only clean URL if we have parameters
+    if ((shouldPlayIntro || navId) && window.history.replaceState) {
+        const newUrl = new URL(window.location);
+        
+        // Remove playIntro parameter if present
+        if (shouldPlayIntro) {
+            newUrl.searchParams.delete('playIntro');
+        }
+        
+        // Keep navId but mark intro as processed
+        if (navId) {
+            newUrl.searchParams.set('introProcessed', 'true');
+        }
+        
+        // Add a timestamp to prevent caching issues
+        newUrl.searchParams.set('_t', Date.now().toString());
+        
+        window.history.replaceState({}, document.title, newUrl);
+        console.log('URL cleaned up:', newUrl.toString());
+    }
+}
+
+function getCurrentChapterNumber() {
+    // Try multiple ways to get current chapter number
+    
+    // 1. Check URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlChapter = urlParams.get('chapter');
+    if (urlChapter) {
+        console.log('Got chapter from URL parameter:', urlChapter);
+        return urlChapter;
+    }
+    
+    // 2. Extract from page title
+    const pageTitle = document.querySelector('h1')?.textContent || '';
+    console.log('Page title:', pageTitle);
+    
+    const chapterMatch = pageTitle.match(/Kabanata\s+(\d+[-]?\d*)/i);
+    if (chapterMatch) {
+        console.log('Got chapter from page title match:', chapterMatch[1]);
+        return chapterMatch[1];
+    }
+    
+    // 3. Try to match just numbers in title
+    const numberMatch = pageTitle.match(/(\d+[-]?\d*)/);
+    if (numberMatch) {
+        console.log('Got chapter from number match:', numberMatch[1]);
+        return numberMatch[1];
+    }
+    
+    // 4. Try to extract from URL path
+    const pathMatch = window.location.pathname.match(/chapter(\d+[-]?\d*)/i);
+    if (pathMatch) {
+        console.log('Got chapter from path match:', pathMatch[1]);
+        return pathMatch[1];
+    }
+    
+    // 5. Check for chapter in the URL without "chapter" prefix
+    const altPathMatch = window.location.pathname.match(/(\d+[-]?\d*)\.html$/);
+    if (altPathMatch) {
+        console.log('Got chapter from alt path match:', altPathMatch[1]);
+        return altPathMatch[1];
+    }
+    
+    console.log('Could not determine chapter number');
+    return null;
+}
+
+function getChapterData() {
+    const chapterNumber = getCurrentChapterNumber();
+    const pageTitle = document.querySelector('h1')?.textContent || `Kabanata ${chapterNumber}`;
+    
+    return {
+        number: chapterNumber,
+        title: pageTitle
+    };
+}
+
+function createFloatingAudioButton(audioElement) {
+    // Check if button already exists
+    if (document.getElementById('floatingAudioBtn')) return;
+    
+    // Create button
+    const btn = document.createElement('button');
+    btn.id = 'floatingAudioBtn';
+    btn.className = 'floating-audio-btn';
+    btn.innerHTML = '🔊<br>Audio';
+    btn.title = 'I-play ang audio ng kabanata';
+    
+    // Style the button
+    Object.assign(btn.style, {
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        width: '70px',
+        height: '70px',
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #8b4513, #5c2e0f)',
+        color: 'white',
+        border: '3px solid #d4af37',
+        cursor: 'pointer',
+        fontSize: '11px',
+        fontWeight: 'bold',
+        zIndex: '1000',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.3s ease',
+        overflow: 'hidden',
+        fontFamily: '"Times New Roman", serif',
+        animation: 'pulse 2s infinite'
+    });
+    
+    // Hover effect
+    btn.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.1)';
+        this.style.boxShadow = '0 6px 16px rgba(139, 69, 19, 0.5)';
+        this.style.background = 'linear-gradient(135deg, #a0522d, #6f3410)';
+    });
+    
+    btn.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+        this.style.background = 'linear-gradient(135deg, #8b4513, #5c2e0f)';
+    });
+    
+    // Click handler
+    btn.addEventListener('click', function() {
+        toggleAudioPlayback(audioElement, this);
+    });
+    
+    // Add to document
+    document.body.appendChild(btn);
+    
+    // Update button state based on audio status
+    updateButtonState(btn, audioElement);
+    
+    // Listen to audio events
+    audioElement.addEventListener('play', () => updateButtonState(btn, audioElement));
+    audioElement.addEventListener('pause', () => updateButtonState(btn, audioElement));
+    audioElement.addEventListener('ended', () => updateButtonState(btn, audioElement));
+}
+
+function toggleAudioPlayback(audioElement, button) {
+    if (audioElement.paused) {
+        // Try to play
+        audioElement.play()
+            .then(() => {
+                console.log('Audio playing from floating button');
+                updateButtonState(button, audioElement);
+            })
+            .catch(error => {
+                console.error('Play failed:', error);
+                showPlayError(button);
+            });
+    } else {
+        audioElement.pause();
+        updateButtonState(button, audioElement);
+    }
+}
+
+function updateButtonState(button, audioElement) {
+    if (audioElement.paused) {
+        button.innerHTML = '▶<br>Play';
+        button.style.animation = 'pulse 2s infinite';
+    } else {
+        button.innerHTML = '⏸<br>Pause';
+        button.style.animation = 'none';
+    }
+}
+
+function showPlayError(button) {
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '❌<br>Error';
+    button.style.background = 'linear-gradient(135deg, #cc0000, #990000)';
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.style.background = 'linear-gradient(135deg, #8b4513, #5c2e0f)';
+    }, 2000);
+}
+
+function playChapterIntroAudio() {
+    const chapterData = getChapterData();
+    
+    if (!chapterData.number) {
+        console.log('No chapter number found for intro audio');
+        showIntroNotification('Kabanata', false);
+        return;
+    }
+    
+    console.log('Playing intro for chapter:', chapterData.number);
+    
+    // Get intro audio file for this chapter
+    const introAudioPath = getChapterIntroAudio(chapterData.number);
+    
+    if (!introAudioPath) {
+        console.log(`No intro audio found for chapter ${chapterData.number}`);
+        showIntroNotification(chapterData.title, false);
+        return;
+    }
+    
+    console.log('Intro audio path:', introAudioPath);
+    
+    // Check if user has interacted (for autoplay)
+    if (!window.audioAutoplay?.canAutoplay()) {
+        console.log('Cannot autoplay intro - no user interaction');
+        showIntroNotification(chapterData.title, false);
+        
+        // Try to unlock audio with silent audio
+        window.audioAutoplay?.unlockWithSilentAudio();
+        return;
+    }
+    
+    // Create and play intro audio
+    const introAudio = new Audio(introAudioPath);
+    introAudio.volume = 0.7;
+    
+    // Add error handler
+    introAudio.addEventListener('error', function(e) {
+        console.error('Intro audio loading error:', e);
+        console.error('Audio source:', introAudio.src);
+        console.error('Error details:', e.target.error);
+        showIntroNotification(chapterData.title, false);
+    });
+    
+    // Add loaded handler
+    introAudio.addEventListener('loadeddata', function() {
+        console.log('Intro audio loaded successfully');
+    });
+    
+    // Try to play
+    const playPromise = introAudio.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log(`Playing intro audio for chapter ${chapterData.number}`);
+                showIntroNotification(chapterData.title, true);
+                
+                // Clean up after playing
+                introAudio.addEventListener('ended', () => {
+                    console.log('Intro audio ended');
+                    introAudio.remove();
+                });
+            })
+            .catch(error => {
+                console.error('Intro audio play failed:', error);
+                console.error('Error details:', error.message);
+                showIntroNotification(chapterData.title, false);
+                
+                // Try with user interaction
+                if (error.name === 'NotAllowedError') {
+                    console.log('Autoplay not allowed. Need user interaction.');
+                }
+            });
+    }
+}
+
+function getChapterIntroAudio(chapterNumber) {
+    // Audio file paths - make sure these are correct
+    const introMap = {
+        '1-3': 'audio/intro13.mp3',
+        '4': 'audio/intro_chapter_4.mp3',
+        '5-7': 'audio/intro_chapter_5-7.mp3',
+        '8-10': 'audio/intro_chapter_8-10.mp3',
+        '11': 'audio/intro_chapter_11.mp3',
+        '12-15': 'audio/intro_chapter_12-15.mp3',
+        '16-18': 'audio/intro_chapter_16-18.mp3',
+        '19': 'audio/intro_chapter_19.mp3',
+        '20-22': 'audio/intro_chapter_20-22.mp3',
+        '23': 'audio/intro_chapter_23.mp3',
+        '24-28': 'audio/intro_chapter_24-28.mp3',
+        '29': 'audio/intro_chapter_29.mp3',
+        '30-31': 'audio/intro_chapter_30-31.mp3',
+        '32': 'audio/intro_chapter_32.mp3',
+        '33-35': 'audio/intro_chapter_33-35.mp3',
+        '36-37': 'audio/intro_chapter_36-37.mp3',
+        '38-39': 'audio/intro_chapter_38-39.mp3'
+    };
+    
+    const path = introMap[chapterNumber];
+    console.log(`Looking up intro for chapter ${chapterNumber}:`, path);
+    
+    // Optional: Verify file exists
+    if (path && typeof verifyAudioFile === 'function') {
+        verifyAudioFile(path);
+    }
+    
+    return path || null;
+}
+
+// Helper to verify audio file exists
+async function verifyAudioFile(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        console.log(`Audio file ${url} exists:`, response.ok);
+        return response.ok;
+    } catch (error) {
+        console.warn(`Audio file ${url} may not exist:`, error);
+        return false;
+    }
+}
+
+function showIntroNotification(chapterTitle, introPlayed = false) {
+    // Remove existing notification if any
+    const existing = document.querySelector('.intro-notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.className = 'intro-notification';
+    
+    const message = introPlayed 
+        ? `<strong>${chapterTitle}</strong>`
+        : `Simula ng <strong>${chapterTitle}</strong>`;
+    
+    notification.innerHTML = `
+        <div class="intro-notification-content">
+            <div class="intro-notification-header">
+                <span class="intro-icon">${introPlayed ? '🔊' : '📖'}</span>
+                <strong>${introPlayed ? 'El Filibusterismo' : 'Kabanata'}</strong>
+            </div>
+            <p>${message}</p>
+            <p class="intro-hint">Maaaring i-play ang buong audio sa dulo ng pahina o gamitin ang floating button.</p>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => notification.remove(), 500);
+    }, 5000);
+}
+
+function setupScrollListener(audioElement) {
+    const floatingBtn = document.getElementById('floatingAudioBtn');
+    if (!floatingBtn) return;
+    
+    const audioPlayerSection = audioElement.closest('.combined-audio-player, .audio-controls');
+    if (!audioPlayerSection) return;
+    
+    let isHidden = false;
+    let hideTimeout;
+    
+    function checkScroll() {
+        const rect = audioPlayerSection.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        // If audio player is in viewport (with some margin)
+        if (rect.top >= -50 && rect.top <= windowHeight - 100) {
+            if (!isHidden) {
+                floatingBtn.style.opacity = '0.3';
+                floatingBtn.style.pointerEvents = 'none';
+                floatingBtn.style.transform = 'scale(0.8)';
+                isHidden = true;
+            }
+        } else {
+            if (isHidden) {
+                floatingBtn.style.opacity = '1';
+                floatingBtn.style.pointerEvents = 'auto';
+                floatingBtn.style.transform = 'scale(1)';
+                isHidden = false;
+            }
+        }
+    }
+    
+    // Throttle scroll events
+    window.addEventListener('scroll', function() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(checkScroll, 50);
+    });
+    
+    // Initial check
+    checkScroll();
+}
+
+// Add CSS for notifications and animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3); }
+        50% { transform: scale(1.05); box-shadow: 0 6px 16px rgba(139, 69, 19, 0.5); }
+        100% { transform: scale(1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+    }
+    
+    .intro-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1001;
+        animation: slideIn 0.5s ease;
+        max-width: 320px;
+    }
+    
+    .intro-notification-content {
+        background: linear-gradient(135deg, #fdfbf5, #f4ead5);
+        color: #5c2e0f;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #d4af37;
+        border-right: 2px solid #8b4513;
+        border-top: 2px solid #8b4513;
+        border-bottom: 2px solid #8b4513;
+        box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+        font-family: "Times New Roman", serif;
+    }
+    
+    .intro-notification-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+    }
+    
+    .intro-icon {
+        font-size: 1.3em;
+    }
+    
+    .intro-notification p {
+        margin: 8px 0;
+        line-height: 1.4;
+    }
+    
+    .intro-hint {
+        font-size: 0.85em;
+        color: #6b4423;
+        font-style: italic;
+        margin-top: 12px !important;
+        padding-top: 8px;
+        border-top: 1px dashed #8b4513;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 768px) {
+        .floating-audio-btn {
+            width: 60px !important;
+            height: 60px !important;
+            bottom: 15px !important;
+            right: 15px !important;
+            font-size: 10px !important;
+        }
+        
+        .intro-notification {
+            top: 10px;
+            right: 10px;
+            left: 10px;
+            max-width: none;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+console.log('Updated Chapter audio script loaded (Solution 1)');
+console.log('Audio autoplay manager available:', !!window.audioAutoplay);

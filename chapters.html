@@ -654,6 +654,111 @@
     </div>
     <script src="script-chapters.js"></script>
     <script src="rain.js"></script>
+    <!-- In chapters.html, replace the entire <script> section at the bottom -->
+<script>
+// Track chapter navigation for intro audio autoplay
+document.addEventListener('DOMContentLoaded', function() {
+    const chapterLinks = document.querySelectorAll('.chapter-card');
+    
+    // Clear old data on page load
+    const clearOldData = () => {
+        const stored = sessionStorage.getItem('lastClickedChapter');
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                const now = Date.now();
+                
+                // Clear if timestamp is older than 30 seconds
+                if (data.timestamp && (now - data.timestamp) > 30000) {
+                    sessionStorage.removeItem('lastClickedChapter');
+                }
+            } catch (e) {
+                console.error('Error parsing stored chapter data:', e);
+                sessionStorage.removeItem('lastClickedChapter');
+            }
+        }
+    };
+    
+    clearOldData();
+    
+    // Handle URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnParam = urlParams.get('return');
+    const playIntroParam = urlParams.get('playIntro');
+    
+    // If returning from a chapter, clear data
+    if (returnParam === 'true') {
+        sessionStorage.removeItem('lastClickedChapter');
+        
+        // Clean URL if possible
+        if (window.history.replaceState) {
+            const cleanUrl = new URL(window.location);
+            cleanUrl.searchParams.delete('return');
+            window.history.replaceState({}, '', cleanUrl);
+        }
+    }
+    
+    // If playIntro is set, you might want to trigger audio playback here
+    // (This would be handled on the chapter page, not the chapter selection page)
+    if (playIntroParam === 'true') {
+        const chapterNum = urlParams.get('chapter');
+        console.log('Should play intro for chapter:', chapterNum);
+        // Note: Audio playback logic should be on the chapter page itself
+    }
+    
+    // Add event listeners to chapter links
+    chapterLinks.forEach(link => {
+        // Store original href to prevent multiple listeners
+        if (link.hasAttribute('data-processed')) {
+            return; // Already processed
+        }
+        
+        link.setAttribute('data-processed', 'true');
+        
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get chapter data
+            const chapterNum = this.getAttribute('data-chapter-num');
+            const chapterTitle = this.querySelector('h3')?.textContent || 'Chapter';
+            const href = this.getAttribute('href');
+            
+            if (!href || !chapterNum) {
+                console.error('Missing href or data-chapter-num attribute');
+                window.location.href = href; // Fallback to normal navigation
+                return;
+            }
+            
+            // Store the chapter data in sessionStorage
+            sessionStorage.setItem('lastClickedChapter', JSON.stringify({
+                number: chapterNum,
+                title: chapterTitle,
+                href: href,
+                timestamp: Date.now()
+            }));
+            
+            // Navigate with URL parameters
+            try {
+                const url = new URL(href, window.location.origin);
+                url.searchParams.set('playIntro', 'true');
+                url.searchParams.set('chapter', chapterNum);
+                
+                console.log('Navigating to:', url.toString());
+                window.location.href = url.toString();
+            } catch (error) {
+                console.error('Error constructing URL:', error);
+                window.location.href = href; // Fallback
+            }
+        });
+    });
+    
+    // Also clear when leaving the page
+    window.addEventListener('beforeunload', function() {
+        // Optional: You might want to keep this or remove it
+        // sessionStorage.removeItem('lastClickedChapter');
+    });
+});
+</script>
 </body>
 
 </html>
