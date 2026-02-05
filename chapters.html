@@ -656,7 +656,6 @@
     <script src="rain.js"></script>
     <!-- In chapters.html, replace the entire <script> section at the bottom -->
 <script>
-// Track chapter navigation for intro audio autoplay
 document.addEventListener('DOMContentLoaded', function() {
     const chapterLinks = document.querySelectorAll('.chapter-card');
     
@@ -681,36 +680,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     clearOldData();
     
-    // Handle URL parameters
+    // Handle URL parameters if any
     const urlParams = new URLSearchParams(window.location.search);
     const returnParam = urlParams.get('return');
-    const playIntroParam = urlParams.get('playIntro');
     
-    // If returning from a chapter, clear data
     if (returnParam === 'true') {
         sessionStorage.removeItem('lastClickedChapter');
-        
-        // Clean URL if possible
-        if (window.history.replaceState) {
-            const cleanUrl = new URL(window.location);
-            cleanUrl.searchParams.delete('return');
-            window.history.replaceState({}, '', cleanUrl);
-        }
-    }
-    
-    // If playIntro is set, you might want to trigger audio playback here
-    // (This would be handled on the chapter page, not the chapter selection page)
-    if (playIntroParam === 'true') {
-        const chapterNum = urlParams.get('chapter');
-        console.log('Should play intro for chapter:', chapterNum);
-        // Note: Audio playback logic should be on the chapter page itself
     }
     
     // Add event listeners to chapter links
     chapterLinks.forEach(link => {
-        // Store original href to prevent multiple listeners
         if (link.hasAttribute('data-processed')) {
-            return; // Already processed
+            return;
         }
         
         link.setAttribute('data-processed', 'true');
@@ -725,7 +706,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!href || !chapterNum) {
                 console.error('Missing href or data-chapter-num attribute');
-                window.location.href = href; // Fallback to normal navigation
+                window.location.href = href;
                 return;
             }
             
@@ -737,28 +718,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 timestamp: Date.now()
             }));
             
-            // Navigate with URL parameters
-            try {
-                const url = new URL(href, window.location.origin);
-                url.searchParams.set('playIntro', 'true');
-                url.searchParams.set('chapter', chapterNum);
-                
-                console.log('Navigating to:', url.toString());
-                window.location.href = url.toString();
-            } catch (error) {
-                console.error('Error constructing URL:', error);
-                window.location.href = href; // Fallback
-            }
+            console.log('Navigating to:', href);
+            
+            // Navigate WITHOUT adding URL parameters
+            // The chapter page will check sessionStorage instead
+            window.location.href = href;
         });
-    });
-    
-    // Also clear when leaving the page
-    window.addEventListener('beforeunload', function() {
-        // Optional: You might want to keep this or remove it
-        // sessionStorage.removeItem('lastClickedChapter');
     });
 });
 </script>
-</body>
+    </body>
 
 </html>
