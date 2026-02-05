@@ -1,4 +1,4 @@
-// chapter-audio.js - Manages audio for chapter pages (Updated Solution 1)
+// chapter-audio.js - Manages audio for chapter pages (with intro-to-main auto-play)
 document.addEventListener('DOMContentLoaded', function() {
     const page = document.body.dataset.page;
     
@@ -28,21 +28,42 @@ function initializeChapterAudioSystem() {
     
     console.log('Found end audio:', endAudio);
     
-    // Disable autoplay for end audio
+    // Disable autoplay for end audio initially
     endAudio.autoplay = false;
     endAudio.removeAttribute('autoplay');
     
-    // Create floating button
+    // Create floating button (will be hidden when main audio auto-plays)
     createFloatingAudioButton(endAudio);
     
+    // Setup intro-to-main audio transition
+    setupIntroToMainTransition(endAudio);
+    
     // Check if we should play intro
-    checkAndPlayIntroAudio();
+    checkAndPlayIntroAudio(endAudio);
     
     // Setup scroll listener to hide floating button
     setupScrollListener(endAudio);
 }
 
-function checkAndPlayIntroAudio() {
+function setupIntroToMainTransition(endAudio) {
+    console.log('Setting up intro-to-main audio transition');
+    
+    // Store reference to end audio
+    window.chapterEndAudio = endAudio;
+    
+    // Add ended event listener to end audio to reset state
+    endAudio.addEventListener('ended', function() {
+        console.log('Chapter audio ended');
+        
+        // Update floating button if exists
+        const floatingBtn = document.getElementById('floatingAudioBtn');
+        if (floatingBtn) {
+            updateButtonState(floatingBtn, endAudio);
+        }
+    });
+}
+
+function checkAndPlayIntroAudio(endAudio) {
     // Multiple ways to determine if we should play intro
     const shouldPlayIntro = shouldPlayChapterIntro();
     
@@ -52,8 +73,9 @@ function checkAndPlayIntroAudio() {
         // Clear session storage after checking
         sessionStorage.removeItem('lastClickedChapter');
         
+        // Play intro, and auto-play end audio after intro finishes
         setTimeout(() => {
-            playChapterIntroAudio();
+            playChapterIntroAudio(endAudio);
         }, 800); // Delay to ensure page is loaded
     } else {
         console.log('Should NOT play intro audio');
@@ -63,7 +85,7 @@ function checkAndPlayIntroAudio() {
         if (currentChapter) {
             const chapterData = getChapterData();
             setTimeout(() => {
-                showIntroNotification(chapterData.title || `Kabanata ${currentChapter}`, false);
+                showIntroNotification(`Kabanata ${currentChapter}`, '📖', 'Ang kabanata ay handa na.');
             }, 1000);
         }
     }
@@ -348,12 +370,12 @@ function showPlayError(button) {
     }, 2000);
 }
 
-function playChapterIntroAudio() {
+function playChapterIntroAudio(endAudio) {
     const chapterData = getChapterData();
     
     if (!chapterData.number) {
         console.log('No chapter number found for intro audio');
-        showIntroNotification('Kabanata', false);
+        showIntroNotification('Kabanata', '📖', 'Ang kabanata ay handa na.');
         return;
     }
     
@@ -364,7 +386,12 @@ function playChapterIntroAudio() {
     
     if (!introAudioPath) {
         console.log(`No intro audio found for chapter ${chapterData.number}`);
-        showIntroNotification(chapterData.title, false);
+        showIntroNotification(chapterData.title, '📖', 'Ang kabanata ay handa na.');
+        
+        // Even if no intro, try to play main audio if user has interacted
+        setTimeout(() => {
+            attemptToPlayEndAudio(endAudio);
+        }, 1000);
         return;
     }
     
@@ -373,10 +400,12 @@ function playChapterIntroAudio() {
     // Check if user has interacted (for autoplay)
     if (!window.audioAutoplay?.canAutoplay()) {
         console.log('Cannot autoplay intro - no user interaction');
-        showIntroNotification(chapterData.title, false);
+        showIntroNotification(chapterData.title, '📖', 'Pindutin ang play button upang pakinggan.');
         
         // Try to unlock audio with silent audio
         window.audioAutoplay?.unlockWithSilentAudio();
+        
+        // Don't attempt to auto-play main audio
         return;
     }
     
@@ -389,7 +418,12 @@ function playChapterIntroAudio() {
         console.error('Intro audio loading error:', e);
         console.error('Audio source:', introAudio.src);
         console.error('Error details:', e.target.error);
-        showIntroNotification(chapterData.title, false);
+        showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang intro audio.');
+        
+        // Try to play main audio anyway
+        setTimeout(() => {
+            attemptToPlayEndAudio(endAudio);
+        }, 500);
     });
     
     // Add loaded handler
@@ -397,32 +431,117 @@ function playChapterIntroAudio() {
         console.log('Intro audio loaded successfully');
     });
     
-    // Try to play
+    // When intro ends, play the main chapter audio
+    introAudio.addEventListener('ended', function() {
+        console.log('Intro audio ended, now playing main chapter audio');
+        
+        // Hide floating button since audio will auto-play
+        const floatingBtn = document.getElementById('floatingAudioBtn');
+        if (floatingBtn) {
+            floatingBtn.style.display = 'none';
+        }
+        
+        // Auto-play the main chapter audio
+        attemptToPlayEndAudio(endAudio);
+    });
+    
+    // Try to play intro
     const playPromise = introAudio.play();
     
     if (playPromise !== undefined) {
         playPromise
             .then(() => {
                 console.log(`Playing intro audio for chapter ${chapterData.number}`);
-                showIntroNotification(chapterData.title, true);
-                
-                // Clean up after playing
-                introAudio.addEventListener('ended', () => {
-                    console.log('Intro audio ended');
-                    introAudio.remove();
-                });
+                showIntroNotification(chapterData.title, '🔊', 'Pinapakinggan ang intro...');
             })
             .catch(error => {
                 console.error('Intro audio play failed:', error);
                 console.error('Error details:', error.message);
-                showIntroNotification(chapterData.title, false);
+                showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang audio.');
                 
                 // Try with user interaction
                 if (error.name === 'NotAllowedError') {
                     console.log('Autoplay not allowed. Need user interaction.');
                 }
+                
+                // Don't try to play main audio if intro failed
             });
     }
+}
+
+function attemptToPlayEndAudio(endAudio) {
+    if (!endAudio) {
+        console.error('No end audio element found');
+        return;
+    }
+    
+    console.log('Attempting to play main chapter audio');
+    
+    // Check if user has interacted (should be true if intro played)
+    if (!window.audioAutoplay?.canAutoplay()) {
+        console.log('Cannot autoplay main audio - no user interaction');
+        
+        // Show notification that user needs to click to play
+        showIntroNotification('Kabanata', '▶', 'Pindutin ang play button upang simulan.');
+        return;
+    }
+    
+    // Set volume
+    endAudio.volume = 0.8;
+    
+    // Try to play the main audio
+    const playPromise = endAudio.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Main chapter audio playing automatically');
+                
+                // Update floating button if it exists
+                const floatingBtn = document.getElementById('floatingAudioBtn');
+                if (floatingBtn) {
+                    updateButtonState(floatingBtn, endAudio);
+                }
+                
+                // Show notification that audio is playing
+                showIntroNotification('Kabanata', '🔊', 'Pinapakinggan ang kabanata...');
+            })
+            .catch(error => {
+                console.error('Main audio autoplay failed:', error);
+                
+                // Fallback: Show notification to play manually
+                showIntroNotification('Kabanata', '▶', 'Pindutin ang play button sa ibaba.');
+            });
+    }
+}
+
+// SINGLE NOTIFICATION FUNCTION - Replaces all other notification functions
+function showIntroNotification(title, icon = '📖', message = '') {
+    // Remove existing notification if any
+    const existing = document.querySelector('.intro-notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.className = 'intro-notification';
+    
+    notification.innerHTML = `
+        <div class="intro-notification-content">
+            <div class="intro-notification-header">
+                <span class="intro-icon">${icon}</span>
+                <strong>${title}</strong>
+            </div>
+            ${message ? `<p>${message}</p>` : ''}
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 3 seconds (shorter for better UX)
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
 }
 
 function getChapterIntroAudio(chapterNumber) {
@@ -468,39 +587,6 @@ async function verifyAudioFile(url) {
         console.warn(`Audio file ${url} may not exist:`, error);
         return false;
     }
-}
-
-function showIntroNotification(chapterTitle, introPlayed = false) {
-    // Remove existing notification if any
-    const existing = document.querySelector('.intro-notification');
-    if (existing) existing.remove();
-    
-    const notification = document.createElement('div');
-    notification.className = 'intro-notification';
-    
-    const message = introPlayed 
-        ? `<strong>${chapterTitle}</strong>`
-        : `Simula ng <strong>${chapterTitle}</strong>`;
-    
-    notification.innerHTML = `
-        <div class="intro-notification-content">
-            <div class="intro-notification-header">
-                <span class="intro-icon">${introPlayed ? '🔊' : '📖'}</span>
-                <strong>${introPlayed ? 'El Filibusterismo' : 'Kabanata'}</strong>
-            </div>
-            <p>${message}</p>
-            <p class="intro-hint">Maaaring i-play ang buong audio sa dulo ng pahina o gamitin ang floating button.</p>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-20px)';
-        setTimeout(() => notification.remove(), 500);
-    }, 5000);
 }
 
 function setupScrollListener(audioElement) {
@@ -580,7 +666,7 @@ style.textContent = `
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         font-size: 1.1em;
     }
     
@@ -589,17 +675,10 @@ style.textContent = `
     }
     
     .intro-notification p {
-        margin: 8px 0;
+        margin: 0;
         line-height: 1.4;
-    }
-    
-    .intro-hint {
-        font-size: 0.85em;
+        font-size: 0.95em;
         color: #6b4423;
-        font-style: italic;
-        margin-top: 12px !important;
-        padding-top: 8px;
-        border-top: 1px dashed #8b4513;
     }
     
     @keyframes slideIn {
@@ -613,7 +692,6 @@ style.textContent = `
         }
     }
     
-    /* Responsive styles */
     @media (max-width: 768px) {
         .floating-audio-btn {
             width: 60px !important;
@@ -633,5 +711,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('Updated Chapter audio script loaded (Solution 1)');
-console.log('Audio autoplay manager available:', !!window.audioAutoplay);
+console.log('Simplified Chapter audio script loaded with intro-to-main auto-play');
