@@ -486,9 +486,12 @@
         <h2>Kabanata 38-39</h2>
         <div class="instructions">
           <p>
-            <strong>Activity 3 - Panuto:</strong> Piliin ang pinakaangkop na
+            <strong>Gawain 3 - Panuto:</strong> Piliin ang pinakaangkop na
             kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.
           </p>
+          <audio id="instructionsAudio" preload="auto">
+  <source src="audio/panuto3.mp3" type="audio/mpeg">
+</audio>
         </div>
       </header>
 
@@ -700,6 +703,7 @@
         hasSubmitted = false;
 
         userAnswers = {};
+        playInstructions();
         timeRemaining = 900;
 
         // Disable start button once game starts
@@ -906,6 +910,78 @@
         stopBackground();
         window.location.href = "38-39_activities.html";
       }
+
+      function playInstructions() {
+  const audio = document.getElementById('instructionsAudio');
+  if (audio) {
+    // Reset audio to start
+    audio.currentTime = 0;
+    
+    // Create a promise-based play for better error handling
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(e => {
+        console.log("Audio play failed:", e);
+        
+        // On mobile, we might need user interaction first
+        if (window.innerWidth <= 768) {
+          // Show a button for mobile users to tap to play audio
+          showMobileAudioPrompt();
+        } else {
+          // Desktop fallback: Show instructions in alert
+          alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+        }
+      });
+    }
+  }
+}
+
+// Helper function for mobile audio prompt
+function showMobileAudioPrompt() {
+  const prompt = document.createElement('div');
+  prompt.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 9999;
+    text-align: center;
+  `;
+  prompt.innerHTML = `
+    <p>Pindutin ang pindutan upang marinig ang panuto</p>
+    <button onclick="playInstructionsManual()" style="
+      background: #8b4513;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 10px;
+    ">I-play ang Panuto</button>
+  `;
+  document.body.appendChild(prompt);
+}
+
+function playInstructionsManual() {
+  const audio = document.getElementById('instructionsAudio');
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(e => {
+      console.log("Manual play also failed");
+    });
+  }
+  
+  // Remove the prompt
+  const prompt = document.querySelector('[style*="position: fixed"]');
+  if (prompt) prompt.remove();
+}
+
+// For activity3.html, change the alert message to:
+// alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
 
       function showModal(modalId) {
         document.getElementById(modalId).style.display = "flex";

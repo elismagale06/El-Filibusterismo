@@ -625,11 +625,14 @@
         <h1>El Filibusterismo - Scramble Words</h1>
         <h2>Kabanata 11</h2>
         <p class="directions">
-          <strong>Activity 2 -</strong><strong> Panuto:</strong> Ayusin ang mga
+          <strong>Gawain 2 -</strong><strong> Panuto:</strong> Ayusin ang mga
           letra upang mabuo ang tamang salita na tumutukoy sa lugar o tagpuan.
           Gamitin ang analisis ng pahiwatig upang masagot ito at maintindihan
           ang simbolismo ng lugar.
         </p>
+        <audio id="instructionsAudio" preload="auto">
+  <source src="audio/panuto2.mp3" type="audio/mpeg">
+</audio>
       </div>
 
       <div class="controls-wrapper">
@@ -982,6 +985,7 @@
         
         isStarted = true;
         hasSubmitted = false;
+        playInstructions();
         timeRemaining = 900;
 
         // Disable start button once game starts
@@ -1187,6 +1191,78 @@
         stopBackground();
         window.location.href = "11_activities.html";
       }
+
+      function playInstructions() {
+  const audio = document.getElementById('instructionsAudio');
+  if (audio) {
+    // Reset audio to start
+    audio.currentTime = 0;
+    
+    // Create a promise-based play for better error handling
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(e => {
+        console.log("Audio play failed:", e);
+        
+        // On mobile, we might need user interaction first
+        if (window.innerWidth <= 768) {
+          // Show a button for mobile users to tap to play audio
+          showMobileAudioPrompt();
+        } else {
+          // Desktop fallback: Show instructions in alert
+          alert("GAWAIN 2 - Panuto: Ayusin ang mga letra upang mabuo ang tamang salita na tumutukoy sa lugar o tagpuan. Gamitin ang analisis ng pahiwatig upang masagot ito at maintindihan ang simbolismo ng lugar.");
+        }
+      });
+    }
+  }
+}
+
+// For activity3.html, change the alert message to:
+// alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+
+// Helper function for mobile audio prompt
+function showMobileAudioPrompt() {
+  const prompt = document.createElement('div');
+  prompt.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 9999;
+    text-align: center;
+  `;
+  prompt.innerHTML = `
+    <p>Pindutin ang pindutan upang marinig ang panuto</p>
+    <button onclick="playInstructionsManual()" style="
+      background: #8b4513;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 10px;
+    ">I-play ang Panuto</button>
+  `;
+  document.body.appendChild(prompt);
+}
+
+function playInstructionsManual() {
+  const audio = document.getElementById('instructionsAudio');
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(e => {
+      console.log("Manual play also failed");
+    });
+  }
+  
+  // Remove the prompt
+  const prompt = document.querySelector('[style*="position: fixed"]');
+  if (prompt) prompt.remove();
+}
 
       function showModal(modalId) {
         document.getElementById(modalId).style.display = "flex";
