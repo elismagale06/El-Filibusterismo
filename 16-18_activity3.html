@@ -118,7 +118,7 @@
       }
 
       .controls button:disabled {
-        background-color: #ccc;
+        background-color: "#ccc";
         cursor: not-allowed;
       }
 
@@ -126,7 +126,7 @@
         display: grid;
         grid-template-columns: 1fr 2fr;
         gap: 15px;
-        margin-bottom: 25px;
+        margin-bottom:25px;
       }
 
       .stat-box,
@@ -172,10 +172,55 @@
         margin-bottom: 20px;
       }
 
+      /* Added: Question header with play button */
+      .question-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 15px;
+      }
+
+      .question-play-btn {
+        background-color: #5c2e0f;
+        color: #fff8e7;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+        flex-shrink: 0;
+        padding: 0;
+        margin-top: 2px;
+      }
+
+      .question-play-btn:hover {
+        background-color: #3d1f0a;
+        transform: scale(1.1);
+      }
+
+      .question-play-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .question-play-btn.playing {
+        background-color: #28a745;
+      }
+
       .question-text {
         font-weight: bold;
         margin-bottom: 10px;
         color: #5c2e0f;
+        flex: 1;
+        line-height: 1.5;
+        font-size: 1em;
       }
 
       .answer-input {
@@ -211,6 +256,27 @@
         padding: 20px;
         border-radius: 5px;
         margin-top: 20px;
+      }
+
+      /* Answer Feedback */
+      .answer-feedback {
+        margin-top: 8px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        display: none;
+        font-weight: bold;
+      }
+
+      .answer-feedback.correct {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .answer-feedback.incorrect {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
       }
 
       /* Modal Styles */
@@ -554,21 +620,51 @@
 
     <script>
       const originalQuestions = [
-        { question: "ADWANA -\nAng lugar na tinutukoy ni Don Pelaez kung saan nagaganap ang katiwalian at nagpapakita ng korapsyon sa Pilipinas.", correct: "TANGGAPAN NG BUWIS" },
-        { question: "AKABA -\nAng emosyon sa nakapintang larawan na nilait ng mga Prayle na ginamit bilang paghahalintulad sa Pilipinas", correct: "DAMDAMIN NG PAGKATAKOT AT PAGKAGULAT" },
-        { question: "ESPINGHE -\nAng tawag sa nakakasindak na ulo mula sa ehipto na muling nabuhay sa mahika ni Mr. leeds.", correct: "MAY KATAWANG LEYON AT ULO NG TAO" },
-        { question: "ESPIRITISMO -\nAng paniniwalang isinulat ni Ben Zayb tungkol sa palabas ni Mr. leeds matapos niya itong panoorin.", correct: "PANINIWALA SA ESPIRITU" },
-        { question: "ISIWALAT -\nAng pagsasabi ng sikreto binaon sa hukay gaya nalamang ng kwento ni Imuthus.", correct: "IBUNYAG O ILANTAD" },
-        { question: "KALAKAL -\nAng mga produktong ibinebenta o binibili ng mga negosyante tulad ng mga alahas ni Simoun at basar ni Quiroga.", correct: "PRODUKTO O PANINDA" },
-        { question: "KOMISYON -\nAng grupo ng mga opsiyal ng Pilipinas na pinadala sa iba’t ibang lugar upang mangalap ng impormasyon.", correct: "GRUPO NG MGA KAWANI" },
-        { question: "KONSUL -\nAng kinatawan ng bawat bansa sa ibang bansa na ninanais makuha ni Quiroga kaya nakipagtulungan siya kay Simoun.", correct: "TAGAPAMAGITAN" },
-        { question: "KUBOL -\nAng maliit na bahay mula sa mga lokal na materyal kung saan pinapasok ni Mr. leeds ang mga prayle at si Ben Zayb.", correct: "BARUNG-BARONG O MALIIT NA SILUNGAN" },
-        { question: "MAGILIW -\nAng masayang paraan ng pagtanggap ni Quiroga sa mga bisita upang makuha ang pabor nila.", correct: "MAAMO O MAGALANG" },
-        { question: "PAGSIPOT -\nAng inaasahang gagawin ni Simoun na hindi nangyari kahit na siya ang nag-aya sa pagpunta sa perya.", correct: "PAGDALO" },
-        { question: "PERYA -\nAng lugar na ginamit upang magpakita ng kasiyahan na mapanlait at nakakatakot na katotohanan.", correct: "LUGAR NG KASIYAHAN NA MAY MGA PALABAS AT KATATAKUTAN" },
-        { question: "PIGING -\nAng marangyang pagsasalo na ginagamit upang makuha ang pabor ng may kapangyarihan.", correct: "ISANG MARANGYANG HANDAAN" },
-        { question: "REBULTO -\nAng likhang sining na naging kinatawan nila Ben Zayb at Padre Camorra upang ipakita ang sa paningin ng iba sa kanila.", correct: "ESTATWA" },
-        { question: "PRENSA -\nAng salitang espanyol na ginamit bilang pamagat ng larawan ng marungis at aping babae na hinalintulad sa Pilipinas sa panahon ng espanyol.", correct: "PAGDIDIIN" }
+        { question: "ADWANA -\nAng lugar na tinutukoy ni Don Pelaez kung saan nagaganap ang katiwalian at nagpapakita ng korapsyon sa Pilipinas.", 
+          correct: "TANGGAPAN NG BUWIS",
+          hintAudio: "hint1.mp3" }, // Added hint audio
+        { question: "AKABA -\nAng emosyon sa nakapintang larawan na nilait ng mga Prayle na ginamit bilang paghahalintulad sa Pilipinas", 
+          correct: "DAMDAMIN NG PAGKATAKOT AT PAGKAGULAT",
+          hintAudio: "hint1618_2.mp3" },
+        { question: "ESPINGHE -\nAng tawag sa nakakasindak na ulo mula sa ehipto na muling nabuhay sa mahika ni Mr. leeds.", 
+          correct: "MAY KATAWANG LEYON AT ULO NG TAO",
+          hintAudio: "hint1618_3.mp3" },
+        { question: "ESPIRITISMO -\nAng paniniwalang isinulat ni Ben Zayb tungkol sa palabas ni Mr. leeds matapos niya itong panoorin.", 
+          correct: "PANINIWALA SA ESPIRITU",
+          hintAudio: "hint1618_4.mp3" },
+        { question: "ISIWALAT -\nAng pagsasabi ng sikreto binaon sa hukay gaya nalamang ng kwento ni Imuthus.", 
+          correct: "IBUNYAG O ILANTAD",
+          hintAudio: "hint1618_5.mp3" },
+        { question: "KALAKAL -\nAng mga produktong ibinebenta o binibili ng mga negosyante tulad ng mga alahas ni Simoun at basar ni Quiroga.", 
+          correct: "PRODUKTO O PANINDA",
+          hintAudio: "hint1618_6.mp3" },
+        { question: "KOMISYON -\nAng grupo ng mga opsiyal ng Pilipinas na pinadala sa iba't ibang lugar upang mangalap ng impormasyon.", 
+          correct: "GRUPO NG MGA KAWANI",
+          hintAudio: "hint1618_7.mp3" },
+        { question: "KONSUL -\nAng kinatawan ng bawat bansa sa ibang bansa na ninanais makuha ni Quiroga kaya nakipagtulungan siya kay Simoun.", 
+          correct: "TAGAPAMAGITAN",
+          hintAudio: "hint1618_8.mp3" },
+        { question: "KUBOL -\nAng maliit na bahay mula sa mga lokal na materyal kung saan pinapasok ni Mr. leeds ang mga prayle at si Ben Zayb.", 
+          correct: "BARUNG-BARONG O MALIIT NA SILUNGAN",
+          hintAudio: "hint1618_9.mp3" },
+        { question: "MAGILIW -\nAng masayang paraan ng pagtanggap ni Quiroga sa mga bisita upang makuha ang pabor nila.", 
+          correct: "MAAMO O MAGALANG",
+          hintAudio: "hint1618_10.mp3" },
+        { question: "PAGSIPOT -\nAng inaasahang gagawin ni Simoun na hindi nangyari kahit na siya ang nag-aya sa pagpunta sa perya.", 
+          correct: "PAGDALO",
+          hintAudio: "hint1618_11.mp3" },
+        { question: "PERYA -\nAng lugar na ginamit upang magpakita ng kasiyahan na mapanlait at nakakatakot na katotohanan.", 
+          correct: "LUGAR NG KASIYAHAN NA MAY MGA PALABAS AT KATATAKUTAN",
+          hintAudio: "hint1618_12.mp3" },
+        { question: "PIGING -\nAng marangyang pagsasalo na ginagamit upang makuha ang pabor ng may kapangyarihan.", 
+          correct: "ISANG MARANGYANG HANDAAN",
+          hintAudio: "hint1618_13.mp3" },
+        { question: "REBULTO -\nAng likhang sining na naging kinatawan nila Ben Zayb at Padre Camorra upang ipakita ang sa paningin ng iba sa kanila.", 
+          correct: "ESTATWA",
+          hintAudio: "hint1618_14.mp3" },
+        { question: "PRENSA -\nAng salitang espanyol na ginamit bilang pamagat ng larawan ng marungis at aping babae na hinalintulad sa Pilipinas sa panahon ng espanyol.", 
+          correct: "PAGDIDIIN",
+          hintAudio: "hint1618_15.mp3" }
       ];
 
       let questions = [];
@@ -579,6 +675,142 @@
       let hasSubmitted = false;
       let currentGameScore = 0;
       const currentActivity = 3;
+      
+      // Global variables for hint audio management (ADDED)
+      let introFinished = false;
+      let currentPlayingHint = null;
+      let currentHintAudio = null;
+
+      // Audio and WebAudio fallback
+      let audioCtx = null;
+      let masterGain = null;
+      const bgAudioEl = document.getElementById ? document.getElementById('bgAudio') : null;
+      const correctAudioEl = document.getElementById ? document.getElementById('correctAudio') : null;
+      const wrongAudioEl = document.getElementById ? document.getElementById('wrongAudio') : null;
+      const clickAudioEl = document.getElementById ? document.getElementById('clickAudio') : null;
+      const countdownAudioEl = document.getElementById ? document.getElementById('countdownAudio') : null;
+
+      function initAudio() {
+        if (audioCtx) return;
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.9;
+          masterGain.connect(audioCtx.destination);
+        } catch (e) {}
+      }
+
+      function resumeAudioContext() {
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      }
+
+      function fadeInAudio(el, target = 0.55, duration = 700) {
+        if (!el) return;
+        el.volume = 0;
+        el.play().catch(() => {});
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = t * target;
+          if (t === 1) clearInterval(id);
+        }, 30);
+      }
+
+      function fadeOutAudio(el, duration = 600) {
+        if (!el) return;
+        const startVol = el.volume || 0.55;
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = startVol * (1 - t);
+          if (t === 1) { try { el.pause(); el.currentTime = 0; } catch (e) {} clearInterval(id); }
+        }, 30);
+      }
+
+      function playBackground() {
+        initAudio();
+        resumeAudioContext();
+        if (bgAudioEl && bgAudioEl.src) { try { fadeInAudio(bgAudioEl, 0.45, 800); } catch (e) {} }
+      }
+
+      function stopBackground() {
+        if (bgAudioEl) fadeOutAudio(bgAudioEl, 600);
+      }
+
+      function playCountdownTick() {
+        initAudio();
+        resumeAudioContext();
+        if (countdownAudioEl && countdownAudioEl.src) {
+          return;
+        }
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = 1000;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.15, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+        o.start(now);
+        o.stop(now + 0.07);
+      }
+
+      function playCorrectSound() {
+        if (correctAudioEl && correctAudioEl.src) { try { correctAudioEl.currentTime = 0; correctAudioEl.play().catch(()=>{}); } catch(e) {} }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        o.start(now);
+        o.stop(now + 0.3);
+      }
+
+      function playWrongSound() {
+        if (wrongAudioEl && wrongAudioEl.src) { try { wrongAudioEl.currentTime = 0; wrongAudioEl.play().catch(()=>{}); } catch(e) {} }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.value = 220;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.15, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+        o.start(now);
+        o.stop(now + 0.25);
+      }
+
+      function playClickSound() {
+        if (clickAudioEl && clickAudioEl.src) { try { clickAudioEl.currentTime = 0; clickAudioEl.play().catch(()=>{}); } catch(e) {} }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = 1500;
+        o.connect(g);
+        g.connect(masterGain);
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+        o.start(now);
+        o.stop(now + 0.07);
+      }
 
       // Shuffle function
       function shuffleArray(array) {
@@ -600,15 +832,15 @@
 
         // Start countdown audio once if present
         try {
-          if (audioState.countdownAudio && audioState.countdownAudio.src) {
-            audioState.countdownAudio.currentTime = 0;
-            audioState.countdownAudio.play().catch(() => {});
+          if (countdownAudioEl && countdownAudioEl.src) {
+            countdownAudioEl.currentTime = 0;
+            countdownAudioEl.play().catch(() => {});
           }
         } catch (e) {}
 
         function showNumber(num) {
           overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
-          if (num >= 1) try { if (!(audioState.countdownAudio && audioState.countdownAudio.src)) playCountdownTick(); } catch (e) {}
+          if (num >= 1) try { if (!(countdownAudioEl && countdownAudioEl.src)) playCountdownTick(); } catch (e) {}
 
           if (num === 1) {
             setTimeout(() => {
@@ -652,7 +884,12 @@
           const div = document.createElement("div");
           div.className = "question";
           div.innerHTML = `
-            <div class="question-text">${q.question}</div>
+            <div class="question-header">
+              <button class="question-play-btn" onclick="playHintAudio(${index}, '${q.hintAudio}')" id="hintBtn${index}" disabled>
+                ▶
+              </button>
+              <div class="question-text">${q.question}</div>
+            </div>
             <input id="answer-${index}" class="answer-input" disabled placeholder='Pindutin ang "Magsimula" para magsimula...' data-correct="${q.correct}">
             <div id="feedback-${index}" class="answer-feedback"></div>
           `;
@@ -672,6 +909,10 @@
         if (isStarted) return;
         isStarted = true;
         hasSubmitted = false;
+        
+        introFinished = false;
+        currentPlayingHint = null;
+        currentHintAudio = null;
 
         userAnswers = {};
         playInstructions();
@@ -705,6 +946,7 @@
           input.addEventListener("input", () => {
             input.value = input.value.toUpperCase();
             userAnswers[index] = input.value.trim();
+            updateStats();
             playClickSound();
           });
 
@@ -793,64 +1035,67 @@
       }
 
       function submitQuiz() {
-  clearInterval(timerInterval); // Stop the timer
+        clearInterval(timerInterval); // Stop the timer
+        
+        // Stop all hint audios
+        stopAllHintAudios();
+        
+        // Clear in-progress flags
+        localStorage.removeItem(`activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`activity${currentActivity}_temp_score`);
 
-  // Clear in-progress flags
-  localStorage.removeItem(`activity${currentActivity}_in_progress`);
-  localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        let score = 0; // Initialize score
 
-  let score = 0; // Initialize score
+        questions.forEach((q, index) => {
+          const input = document.getElementById(`answer-${index}`);
+          const feedback = document.getElementById(`feedback-${index}`);
 
-  questions.forEach((q, index) => {
-    const input = document.getElementById(`answer-${index}`);
-    const feedback = document.getElementById(`feedback-${index}`);
+          input.disabled = true; // Disable input after submission
 
-    input.disabled = true; // Disable input after submission
+          // Get the user's answer in uppercase
+          const answer = (userAnswers[index] || "").trim().toUpperCase();
+          const correctAnswer = q.correct.trim().toUpperCase();
+          const isCorrect = answer === correctAnswer;
 
-    // Get the user's answer in uppercase
-    const answer = (userAnswers[index] || "").trim().toUpperCase();
-    const correctAnswer = q.correct.trim().toUpperCase();
-    const isCorrect = answer === correctAnswer;
+          // Increment score only if correct
+          if (isCorrect) score++;
 
-    // Increment score only if correct
-    if (isCorrect) score++;
+          // Add visual feedback
+          if (isCorrect) {
+            input.classList.add("correct");
+            feedback.className = "answer-feedback correct";
+            feedback.textContent = "✓ Tama!";
+            playCorrectSound();
+          } else {
+            input.classList.add("incorrect");
+            feedback.className = "answer-feedback incorrect";
+            feedback.textContent = `✗ Mali. Tamang sagot: ${q.correct}`;
+            playWrongSound();
+          }
 
-    // Add visual feedback
-    if (isCorrect) {
-      input.classList.add("correct");
-      feedback.className = "answer-feedback correct";
-      feedback.textContent = "✓ Tama!";
-      playCorrectSound();
-    } else {
-      input.classList.add("incorrect");
-      feedback.className = "answer-feedback incorrect";
-      feedback.textContent = `✗ Mali. Tamang sagot: ${q.correct}`;
-      playWrongSound();
-    }
+          feedback.style.display = "block"; // Show feedback
+        });
 
-    feedback.style.display = "block"; // Show feedback
-  });
+        currentGameScore = score;
 
-  currentGameScore = score;
+        // Save final score
+        localStorage.setItem(`activity${currentActivity}_last_score`, score);
+        localStorage.setItem(`activity${currentActivity}_completed`, "true");
 
-  // Save final score
-  localStorage.setItem(`activity${currentActivity}_last_score`, score);
-  localStorage.setItem(`activity${currentActivity}_completed`, "true");
+        // Update points display
+        document.getElementById("foundCount").textContent = `${score}/${questions.length}`;
 
-  // Update points display
-  document.getElementById("foundCount").textContent = `${score}/${questions.length}`;
+        // Show answers review
+        showAnswersReview();
 
-  // Show answers review
-  showAnswersReview();
+        // Show game end modal with percentage
+        const percent = ((score / questions.length) * 100).toFixed(1);
+        document.getElementById(
+          "finalScoreDisplay"
+        ).textContent = `Puntos: ${score} / ${questions.length} (${percent}%)`;
 
-  // Show game end modal with percentage
-  const percent = ((score / questions.length) * 100).toFixed(1);
-  document.getElementById(
-    "finalScoreDisplay"
-  ).textContent = `Puntos: ${score} / ${questions.length} (${percent}%)`;
-
-  showModal("gameEndModal");
-}
+        showModal("gameEndModal");
+      }
 
 
       function goToActivitiesWithScore() {
@@ -871,6 +1116,9 @@
       }
 
       function confirmBackToActivities() {
+        // Stop all hint audios
+        stopAllHintAudios();
+        
         // Clear in-progress data
         localStorage.removeItem(`activity${currentActivity}_in_progress`);
         localStorage.removeItem(`activity${currentActivity}_temp_score`);
@@ -882,76 +1130,191 @@
       }
 
       function playInstructions() {
-  const audio = document.getElementById('instructionsAudio');
-  if (audio) {
-    // Reset audio to start
-    audio.currentTime = 0;
-    
-    // Create a promise-based play for better error handling
-    const playPromise = audio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.catch(e => {
-        console.log("Audio play failed:", e);
-        
-        // On mobile, we might need user interaction first
-        if (window.innerWidth <= 768) {
-          // Show a button for mobile users to tap to play audio
-          showMobileAudioPrompt();
-        } else {
-          // Desktop fallback: Show instructions in alert
-          alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+        const audio = document.getElementById('instructionsAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          
+          // Reset intro finished flag
+          introFinished = false;
+          
+          // Disable all hint buttons initially
+          for (let i = 0; i < questions.length; i++) {
+            const btn = document.getElementById(`hintBtn${i}`);
+            if (btn) {
+              btn.disabled = true;
+              btn.innerHTML = "▶";
+              btn.classList.remove("playing");
+            }
+          }
+          
+          const playPromise = audio.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              // When audio finishes playing, enable hint buttons
+              audio.onended = function() {
+                enableHintButtons();
+              };
+            }).catch(e => {
+              console.log("Audio play failed:", e);
+              // If audio fails to play, still enable buttons after a delay
+              setTimeout(enableHintButtons, 1000);
+              
+              if (window.innerWidth <= 768) {
+                showMobileAudioPrompt();
+              } else {
+                alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+              }
+            });
+          }
         }
-      });
-    }
-  }
-}
+      }
 
-// Helper function for mobile audio prompt
-function showMobileAudioPrompt() {
-  const prompt = document.createElement('div');
-  prompt.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 9999;
-    text-align: center;
-  `;
-  prompt.innerHTML = `
-    <p>Pindutin ang pindutan upang marinig ang panuto</p>
-    <button onclick="playInstructionsManual()" style="
-      background: #8b4513;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      margin-top: 10px;
-    ">I-play ang Panuto</button>
-  `;
-  document.body.appendChild(prompt);
-}
+      // Helper function for mobile audio prompt
+      function showMobileAudioPrompt() {
+        const prompt = document.createElement('div');
+        prompt.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(0,0,0,0.8);
+          color: white;
+          padding: 20px;
+          border-radius: 10px;
+          z-index: 9999;
+          text-align: center;
+        `;
+        prompt.innerHTML = `
+          <p>Pindutin ang pindutan upang marinig ang panuto</p>
+          <button onclick="playInstructionsManual()" style="
+            background: #8b4513;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 10px;
+          ">I-play ang Panuto</button>
+        `;
+        document.body.appendChild(prompt);
+      }
 
-function playInstructionsManual() {
-  const audio = document.getElementById('instructionsAudio');
-  if (audio) {
-    audio.currentTime = 0;
-    audio.play().catch(e => {
-      console.log("Manual play also failed");
-    });
-  }
-  
-  // Remove the prompt
-  const prompt = document.querySelector('[style*="position: fixed"]');
-  if (prompt) prompt.remove();
-}
+      function playInstructionsManual() {
+        const audio = document.getElementById('instructionsAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(e => {
+            console.log("Manual play also failed");
+          });
+        }
+        
+        // Remove the prompt
+        const prompt = document.querySelector('[style*="position: fixed"]');
+        if (prompt) prompt.remove();
+      }
 
-// For activity3.html, change the alert message to:
-// alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+      // Function to enable hint buttons after intro finishes
+      function enableHintButtons() {
+        introFinished = true;
+        for (let i = 0; i < questions.length; i++) {
+          const btn = document.getElementById(`hintBtn${i}`);
+          if (btn) {
+            btn.disabled = false;
+          }
+        }
+      }
+
+      // Function to play hint audio
+      function playHintAudio(index, audioFile) {
+        // Don't play if intro hasn't finished or game has submitted
+        if (!introFinished || hasSubmitted) return;
+        
+        // If clicking the same button that's currently playing
+        if (currentPlayingHint === index && currentHintAudio && !currentHintAudio.paused) {
+          // Pause current audio
+          currentHintAudio.pause();
+          const button = document.getElementById(`hintBtn${index}`);
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+          return;
+        }
+        
+        // Stop any currently playing hint audio
+        if (currentPlayingHint !== null && currentPlayingHint !== index) {
+          const prevButton = document.getElementById(`hintBtn${currentPlayingHint}`);
+          if (prevButton) {
+            prevButton.innerHTML = "▶";
+            prevButton.classList.remove("playing");
+          }
+          if (currentHintAudio) {
+            currentHintAudio.pause();
+            currentHintAudio.currentTime = 0;
+          }
+        }
+        
+        // Create and play the hint audio
+        const button = document.getElementById(`hintBtn${index}`);
+        
+        // Create audio element if it doesn't exist
+        let audio = document.getElementById(`hintAudio_${index}`);
+        if (!audio) {
+          audio = new Audio(`audio/${audioFile}`);
+          audio.id = `hintAudio_${index}`;
+          audio.preload = "auto";
+        }
+        
+        // Set up audio event handlers
+        audio.onended = function() {
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+        };
+        
+        audio.onerror = function() {
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+          console.error("Error playing hint audio:", audioFile);
+        };
+        
+        // Play the audio
+        audio.currentTime = 0;
+        audio.play().then(() => {
+          button.innerHTML = "⏸";
+          button.classList.add("playing");
+          currentPlayingHint = index;
+          currentHintAudio = audio;
+        }).catch(error => {
+          console.log("Hint audio play failed:", error);
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+        });
+      }
+
+      // Function to stop all hint audios
+      function stopAllHintAudios() {
+        // Stop the current playing audio
+        if (currentHintAudio) {
+          currentHintAudio.pause();
+          currentHintAudio.currentTime = 0;
+          currentHintAudio = null;
+        }
+        
+        // Reset all buttons
+        for (let i = 0; i < questions.length; i++) {
+          const button = document.getElementById(`hintBtn${i}`);
+          if (button) {
+            button.innerHTML = "▶";
+            button.classList.remove("playing");
+          }
+        }
+        
+        currentPlayingHint = null;
+      }
 
       function showModal(modalId) {
         document.getElementById(modalId).style.display = "flex";
@@ -961,152 +1324,14 @@ function playInstructionsManual() {
         document.getElementById(modalId).style.display = "none";
       }
 
-      /* Audio Elements and Helpers */
-      const audioState = {
-        ctx: null,
-        masterGain: null,
-        bgAudio: null,
-        correctAudio: null,
-        wrongAudio: null,
-        clickAudio: null,
-        countdownAudio: null,
-        bgFadeInterval: null,
-      };
-
-      function initAudio() {
-        if (audioState.bgAudio) return;
-        audioState.bgAudio = document.getElementById('bgAudio');
-        audioState.correctAudio = document.getElementById('correctAudio');
-        audioState.wrongAudio = document.getElementById('wrongAudio');
-        audioState.clickAudio = document.getElementById('clickAudio');
-        audioState.countdownAudio = document.getElementById('countdownAudio');
-
-        try {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          audioState.ctx = new AudioContext();
-          audioState.masterGain = audioState.ctx.createGain();
-          audioState.masterGain.gain.value = 1;
-          audioState.masterGain.connect(audioState.ctx.destination);
-        } catch (e) {
-          audioState.ctx = null;
-          audioState.masterGain = null;
-        }
-      }
-
-      function resumeAudioContext() {
-        if (audioState.ctx && audioState.ctx.state === 'suspended') {
-          audioState.ctx.resume().catch(() => {});
-        }
-      }
-
-      function playAudioElement(el) {
-        if (!el) return false;
-        try {
-          el.currentTime = 0;
-          const p = el.play();
-          if (p && p.catch) p.catch(() => {});
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
-
-      function playClickSound() {
-        if (!audioState.clickAudio) return;
-        playAudioElement(audioState.clickAudio);
-      }
-
-      function playCountdownTick() {
-        // If a countdown audio file exists, it is started once by
-        // showCountdownAnimation; don't restart it per tick.
-        if (audioState.countdownAudio && audioState.countdownAudio.src) {
-          return;
-        }
-        if (audioState.ctx) {
-          const o = audioState.ctx.createOscillator();
-          const g = audioState.ctx.createGain();
-          o.frequency.value = 880;
-          g.gain.value = 0.05;
-          o.connect(g);
-          g.connect(audioState.ctx.destination);
-          o.start();
-          setTimeout(() => { o.stop(); }, 120);
-        }
-      }
-
-      function playCorrectSound() {
-        if (audioState.correctAudio && playAudioElement(audioState.correctAudio)) return;
-        if (audioState.ctx) {
-          const o = audioState.ctx.createOscillator();
-          const g = audioState.ctx.createGain();
-          o.frequency.value = 660;
-          g.gain.value = 0.06;
-          o.connect(g);
-          g.connect(audioState.ctx.destination);
-          o.start();
-          setTimeout(() => { o.stop(); }, 220);
-        }
-      }
-
-      function playWrongSound() {
-        if (audioState.wrongAudio && playAudioElement(audioState.wrongAudio)) return;
-        if (audioState.ctx) {
-          const o = audioState.ctx.createOscillator();
-          const g = audioState.ctx.createGain();
-          o.frequency.value = 220;
-          g.gain.value = 0.06;
-          o.connect(g);
-          g.connect(audioState.ctx.destination);
-          o.start();
-          setTimeout(() => { o.stop(); }, 220);
-        }
-      }
-
-      function playBackground() {
-        if (!audioState.bgAudio) return;
-        try {
-          audioState.bgAudio.volume = 0.0;
-          playAudioElement(audioState.bgAudio);
-          if (audioState.bgFadeInterval) clearInterval(audioState.bgFadeInterval);
-          audioState.bgFadeInterval = setInterval(() => {
-            if (audioState.bgAudio.volume < 0.6) {
-              audioState.bgAudio.volume = Math.min(0.6, audioState.bgAudio.volume + 0.02);
-            } else {
-              clearInterval(audioState.bgFadeInterval);
-              audioState.bgFadeInterval = null;
-            }
-          }, 120);
-        } catch (e) {}
-      }
-
-      function stopBackground() {
-        if (!audioState.bgAudio) return;
-        try {
-          if (audioState.bgFadeInterval) clearInterval(audioState.bgFadeInterval);
-          audioState.bgFadeInterval = setInterval(() => {
-            if (audioState.bgAudio.volume > 0.05) {
-              audioState.bgAudio.volume = Math.max(0, audioState.bgAudio.volume - 0.05);
-            } else {
-              audioState.bgAudio.pause();
-              audioState.bgAudio.currentTime = 0;
-              clearInterval(audioState.bgFadeInterval);
-              audioState.bgFadeInterval = null;
-            }
-          }, 120);
-        } catch (e) {}
-      }
-
-      // Play click sound for any button press (global)
-      document.addEventListener('click', function(e) {
-        if (e.target && e.target.tagName === 'BUTTON') {
-          playClickSound();
-        }
-      });
-
       // Event listener for submit button
-      document
-        .getElementById("submitBtn")
-        .addEventListener("click", showSubmitConfirmation);
+      const _submitBtn = document.getElementById("submitBtn");
+      if (_submitBtn) {
+        _submitBtn.addEventListener("click", (e) => {
+          try { playClickSound(); } catch (err) {}
+          showSubmitConfirmation();
+        });
+      }
         
       // Check for saved in-progress game on load
       document.addEventListener("DOMContentLoaded", function() {
@@ -1117,6 +1342,10 @@ function playInstructionsManual() {
           document.getElementById("foundCount").textContent = `${tempScore}/15`;
           currentGameScore = parseInt(tempScore);
         }
+
+        // Wire modal buttons to play click sound
+        const modalBtns = document.querySelectorAll('.modal-btn');
+        modalBtns.forEach((btn) => btn.addEventListener('click', () => { try { playClickSound(); } catch (e) {} }));
       });
     </script>
   </body>

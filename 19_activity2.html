@@ -24,13 +24,58 @@
       .container {
         max-width: 900px;
         margin: 0 auto;
-        max-width: 900px;
-        margin: 0 auto;
         background-color: #fff8e7;
         border: 3px solid #8b4513;
         border-radius: 10px;
         padding: 30px;
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Add this to the CSS section */
+      .hint-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .hint-play-btn {
+        background-color: #5c2e0f;
+        color: #fff8e7;
+        border: none;
+        border-radius: 20%;
+        width: 15px;
+        height: 15px;
+        min-width: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.3s;
+        flex-shrink: 0;
+      }
+
+      .hint-play-btn:hover {
+        background-color: #3d1f0a;
+        transform: scale(1.1);
+      }
+
+      .hint-play-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .hint-play-btn.playing {
+        background-color: #28a745;
+      }
+
+      .hint-text {
+        flex: 1;
+        color: #8b4513;
+        font-style: italic;
+        line-height: 1.6;
       }
 
       .header {
@@ -685,51 +730,61 @@
           scrambled: "D I C O P L A T E N E T E N I P",
           answer: "PLACIDO PENITENTE",
           hint: "Ang mag-aaral na dumanas ng matinding galit at kahihiyan kaya naisipang magrebelde.",
+          hintAudio: "hint1.mp3"
         },
         {
           scrambled: "G N A D N A G N A S E B A K",
           answer: "KABESANG ANDANG",
           hint: "Ang ina ni Placido na nakiusap na ipagpatuloy niya ang pag-aaral kahit labag sa loob nito.",
+          hintAudio: "hint19_2.mp3"
         },
         {
           scrambled: "N U O M I S",
           answer: "SIMOUN",
           hint: "Ang nag-alok ng tulong kay Placido at nagpakita sa kanya ng lihim na pagawaan ng pulbura.",
+          hintAudio: "hint19_3.mp3"
         },
         {
           scrambled: "S E L A T G N A S E B A K",
           answer: "KABESANG TALES",
           hint: "Ang tauhang nakita ni Placido sa lihim na pagawaan; simbolo ng mga biktima ng kawalang-katarungan.",
+          hintAudio: "hint19_4.mp3"
         },
         {
           scrambled: "O I D O T S U C N O D",
           answer: "DON CUSTODIO",
           hint: "Ang opisyal na muntik nang saktan ni Placido dahil sa tindi ng kanyang poot.",
+          hintAudio: "hint19_5.mp3"
         },
         {
           scrambled: "A R U B L U P",
           answer: "PULBURA",
           hint: "Ang materyales na ginagawa sa lihim na pagawaan na gagamitin para sa paghihimagsik.",
+          hintAudio: "hint19_6.mp3"
         },
         {
           scrambled: "E T E D A K",
           answer: "KADETE",
           hint: "Ang mga sundalong mag-aaral na muntik nang makasagupa ni Placido sa kalsada.",
+          hintAudio: "hint19_7.mp3"
         },
         {
           scrambled: "A T I L U A P Z E M O G",
           answer: "PAULITA GOMEZ",
           hint: "Ang dalagang nakita nina Simoun at Placido sa karwahe na nagpabago sa timpla ng mukha ni Simoun.",
+          hintAudio: "hint19_8.mp3"
         },
         {
           scrambled: "L A Y B I S E R D A P",
           answer: "PADRE SIBYLA",
           hint: "Isa sa mga prayleng nais paghigantian ni Placido dahil sa bulok na sistema ng edukasyon.",
+          hintAudio: "hint19_9.mp3"
         },
         {
           scrambled: "A S T I M",
           answer: "MITSA",
           hint: "Ang pamagat ng kabanata na tumutukoy sa isang bagay na kapag sinilaban ay magpapasabog ng galit.",
+          hintAudio: "hint19_10.mp3"
         },
       ];
 
@@ -740,6 +795,11 @@
       let hasSubmitted = false;
       let currentGameScore = 0;
       const currentActivity = 2;
+      
+      // Global variables for hint audio management
+      let introFinished = false;
+      let currentPlayingHint = null;
+      let currentHintAudio = null;
 
       // Audio / WebAudio helpers
       let audioContext = null;
@@ -964,7 +1024,12 @@
           card.innerHTML = `
             <div class="question-number">Bilang ${index + 1}</div>
             <div class="scrambled-letters">${q.scrambled}</div>
-            <div class="hint">${q.hint}</div>
+            <div class="hint-container">
+              <button class="hint-play-btn" onclick="playHintAudio(${index}, '${q.hintAudio}')" id="hintBtn${index}" disabled>
+                ▶
+              </button>
+              <div class="hint-text">${q.hint}</div>
+            </div>
             <div class="input-container">
                 <input type="text" id="answer${index}" placeholder="Pindutin ang 'Magsimula' para magsimula..." disabled data-correct="${q.answer}">
             </div>
@@ -982,8 +1047,12 @@
         
         isStarted = true;
         hasSubmitted = false;
-        playInstructions();
+        introFinished = false;
+        currentPlayingHint = null;
+        currentHintAudio = null;
         timeRemaining = 900;
+        
+        stopAllHintAudios();
 
         // Disable start button once game starts
         const startButton = document.querySelector(
@@ -1027,6 +1096,9 @@
         localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
         // Start background music
         playBackground();
+        
+        // Play instructions
+        playInstructions();
       }
 
       function updateTimer() {
@@ -1110,6 +1182,7 @@
       }
 
       function checkAllAnswers() {
+        stopAllHintAudios();
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
@@ -1179,6 +1252,8 @@
       }
 
       function confirmBackToActivities() {
+        stopAllHintAudios();
+        
         // Clear in-progress data
         localStorage.removeItem(`activity${currentActivity}_in_progress`);
         localStorage.removeItem(`activity${currentActivity}_temp_score`);
@@ -1190,76 +1265,191 @@
       }
 
       function playInstructions() {
-  const audio = document.getElementById('instructionsAudio');
-  if (audio) {
-    // Reset audio to start
-    audio.currentTime = 0;
-    
-    // Create a promise-based play for better error handling
-    const playPromise = audio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.catch(e => {
-        console.log("Audio play failed:", e);
-        
-        // On mobile, we might need user interaction first
-        if (window.innerWidth <= 768) {
-          // Show a button for mobile users to tap to play audio
-          showMobileAudioPrompt();
-        } else {
-          // Desktop fallback: Show instructions in alert
-          alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+        const audio = document.getElementById('instructionsAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          
+          // Reset intro finished flag
+          introFinished = false;
+          
+          // Disable all hint buttons initially
+          for (let i = 0; i < 10; i++) {
+            const btn = document.getElementById(`hintBtn${i}`);
+            if (btn) {
+              btn.disabled = true;
+              btn.innerHTML = "▶";
+              btn.classList.remove("playing");
+            }
+          }
+          
+          const playPromise = audio.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              // When audio finishes playing, enable hint buttons
+              audio.onended = function() {
+                enableHintButtons();
+              };
+            }).catch(e => {
+              console.log("Audio play failed:", e);
+              // If audio fails to play, still enable buttons after a delay
+              setTimeout(enableHintButtons, 1000);
+              
+              if (window.innerWidth <= 768) {
+                showMobileAudioPrompt();
+              } else {
+                alert("GAWAIN 2 - Panuto: Ayusin ang mga letra upang mabuo ang tamang salita na tumutukoy sa lugar o tagpuan. Gamitin ang analisis ng pahiwatig upang masagot ito at maintindihan ang simbolismo ng lugar.");
+              }
+            });
+          }
         }
-      });
-    }
-  }
-}
+      }
 
-// Helper function for mobile audio prompt
-function showMobileAudioPrompt() {
-  const prompt = document.createElement('div');
-  prompt.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 9999;
-    text-align: center;
-  `;
-  prompt.innerHTML = `
-    <p>Pindutin ang pindutan upang marinig ang panuto</p>
-    <button onclick="playInstructionsManual()" style="
-      background: #8b4513;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      margin-top: 10px;
-    ">I-play ang Panuto</button>
-  `;
-  document.body.appendChild(prompt);
-}
+      // Helper function for mobile audio prompt
+      function showMobileAudioPrompt() {
+        const prompt = document.createElement('div');
+        prompt.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(0,0,0,0.8);
+          color: white;
+          padding: 20px;
+          border-radius: 10px;
+          z-index: 9999;
+          text-align: center;
+        `;
+        prompt.innerHTML = `
+          <p>Pindutin ang pindutan upang marinig ang panuto</p>
+          <button onclick="playInstructionsManual()" style="
+            background: #8b4513;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 10px;
+          ">I-play ang Panuto</button>
+        `;
+        document.body.appendChild(prompt);
+      }
 
-function playInstructionsManual() {
-  const audio = document.getElementById('instructionsAudio');
-  if (audio) {
-    audio.currentTime = 0;
-    audio.play().catch(e => {
-      console.log("Manual play also failed");
-    });
-  }
-  
-  // Remove the prompt
-  const prompt = document.querySelector('[style*="position: fixed"]');
-  if (prompt) prompt.remove();
-}
+      function playInstructionsManual() {
+        const audio = document.getElementById('instructionsAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(e => {
+            console.log("Manual play also failed");
+          });
+        }
+        
+        // Remove the prompt
+        const prompt = document.querySelector('[style*="position: fixed"]');
+        if (prompt) prompt.remove();
+      }
 
-// For activity3.html, change the alert message to:
-// alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+      // Function to enable hint buttons after intro finishes
+      function enableHintButtons() {
+        introFinished = true;
+        for (let i = 0; i < 10; i++) {
+          const btn = document.getElementById(`hintBtn${i}`);
+          if (btn) {
+            btn.disabled = false;
+          }
+        }
+      }
+
+      // Function to play hint audio
+      function playHintAudio(index, audioFile) {
+        // Don't play if intro hasn't finished or game has submitted
+        if (!introFinished || hasSubmitted) return;
+        
+        // If clicking the same button that's currently playing
+        if (currentPlayingHint === index && currentHintAudio && !currentHintAudio.paused) {
+          // Pause current audio
+          currentHintAudio.pause();
+          const button = document.getElementById(`hintBtn${index}`);
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+          return;
+        }
+        
+        // Stop any currently playing hint audio
+        if (currentPlayingHint !== null && currentPlayingHint !== index) {
+          const prevButton = document.getElementById(`hintBtn${currentPlayingHint}`);
+          if (prevButton) {
+            prevButton.innerHTML = "▶";
+            prevButton.classList.remove("playing");
+          }
+          if (currentHintAudio) {
+            currentHintAudio.pause();
+            currentHintAudio.currentTime = 0;
+          }
+        }
+        
+        // Create and play the hint audio
+        const button = document.getElementById(`hintBtn${index}`);
+        
+        // Create audio element if it doesn't exist
+        let audio = document.getElementById(`hintAudio_${index}`);
+        if (!audio) {
+          audio = new Audio(`audio/${audioFile}`);
+          audio.id = `hintAudio_${index}`;
+          audio.preload = "auto";
+        }
+        
+        // Set up audio event handlers
+        audio.onended = function() {
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+        };
+        
+        audio.onerror = function() {
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+          console.error("Error playing hint audio:", audioFile);
+        };
+        
+        // Play the audio
+        audio.currentTime = 0;
+        audio.play().then(() => {
+          button.innerHTML = "⏸";
+          button.classList.add("playing");
+          currentPlayingHint = index;
+          currentHintAudio = audio;
+        }).catch(error => {
+          console.log("Hint audio play failed:", error);
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+        });
+      }
+
+      // Function to stop all hint audios
+      function stopAllHintAudios() {
+        // Stop the current playing audio
+        if (currentHintAudio) {
+          currentHintAudio.pause();
+          currentHintAudio.currentTime = 0;
+          currentHintAudio = null;
+        }
+        
+        // Reset all buttons
+        for (let i = 0; i < 10; i++) {
+          const button = document.getElementById(`hintBtn${i}`);
+          if (button) {
+            button.innerHTML = "▶";
+            button.classList.remove("playing");
+          }
+        }
+        
+        currentPlayingHint = null;
+      }
 
       function showModal(modalId) {
         document.getElementById(modalId).style.display = "flex";
@@ -1278,7 +1468,8 @@ function playInstructionsManual() {
           '#questionsContainer input[type="text"]'
         );
         inputs.forEach((input) => {
-          input.addEventListener("input", () => { updateStats(); playClickSound(); });
+          input.addEventListener("input", updateStats);
+          input.addEventListener("input", () => { try { playClickSound(); } catch (e) {} });
         });
         const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) submitBtn.addEventListener('click', () => { try { playClickSound(); } catch (e) {} });

@@ -31,6 +31,53 @@
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
       }
 
+      /* Add hint container styles */
+      .hint-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .hint-play-btn {
+        background-color: #5c2e0f;
+        color: #fff8e7;
+        border: none;
+        border-radius: 20%;
+        width: 15px;
+        height: 15px;
+        min-width: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.3s;
+        flex-shrink: 0;
+      }
+
+      .hint-play-btn:hover {
+        background-color: #3d1f0a;
+        transform: scale(1.1);
+      }
+
+      .hint-play-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .hint-play-btn.playing {
+        background-color: #28a745;
+      }
+
+      .hint-text {
+        flex: 1;
+        color: #8b4513;
+        font-style: italic;
+        line-height: 1.6;
+      }
+
       .header {
         background-color: #fff8e7;
         border: 3px solid #8b4513;
@@ -649,7 +696,7 @@
       <div class="stats-score-container">
         <div class="stat-box">
           <div class="stat-label">Mga Nasagutan</div>
-          <div class="stat-value" id="foundCount">0/15</div>
+          <div class="stat-value" id="foundCount">0/10</div>
         </div>
         <div class="timer-box">
           <div class="timer-label">Oras na Natitira</div>
@@ -684,55 +731,63 @@
       scrambled: "O T N E M A T S E T",
       answer: "TESTAMENTO",
       hint: "Ang dokumentong naghahati ng yaman; simbolo ng huling kontrol ng simbahan sa kayamanan ng isang tao bago mamatay.",
+      hintAudio: "hint1.mp3"
     },
     {
       scrambled: "K A I L A N D",
       answer: "KANDILA",
       hint: "Ang mga bagay na sinindihan nang marami sa burol; sumasagisag sa 'liwanag' na binibili ng salapi para sa kaligtasan ng kaluluwa.",
+      hintAudio: "hint2.mp3"
     },
     {
       scrambled: "N O B G A S",
       answer: "SABONG",
       hint: "Ang bisyong dinala hanggang sa langit sa usap-usapan ng mga tao; simbolo ng kawalan ng pagbabago sa pagkatao ni Tiyago.",
+      hintAudio: "hint3.mp3"
     },
     {
       scrambled: "I N B G I L",
       answer: "LIBING",
       hint: "Isang maringal na seremonya na naging entablado ng pagpapakitang-gilas ng yaman at 'kabanalan' sa lipunan.",
+      hintAudio: "hint4.mp3"
     },
     {
       scrambled: "M T K U R I A L A",
       answer: "MATRIKULA",
       hint: "Ang halagang P20.00 na inilaan para sa mga estudyante; simbolo ng tila 'limos' o pampalubag-loob ni Padre Irene.",
+      hintAudio: "hint5.mp3"
     },
     {
       scrambled: "A G U D I T A B E N A",
       answer: "AGUA BENDITA",
       hint: "Ang banal na tubig na labis na iwinisik sa kabaong; sumisimbolo sa pilit na paglilinis sa kasalanan ng isang makasalanang mayaman.",
+      hintAudio: "hint6.mp3"
     },
     {
       scrambled: "T A A K B O",
       answer: "TABAKO",
       hint: "Ang gamit na ibinigay ni Quiroga kay Don Primitivo habang pinag-uusapan ang kaluluwa ng yumao.",
+      hintAudio: "hint7.mp3"
     },
     {
       scrambled: "L G I A N T",
       answer: "LANGIT",
       hint: "Ang lunan na ayon kay Don Primitivo ay walang puwang para sa sama ng loob, kaya't walang talo sa sabong doon.",
+      hintAudio: "hint8.mp3"
     },
     {
       scrambled: "C L A S T A R A",
       answer: "STA. CLARA",
       hint: "Ang kumbentong nakatanggap ng malaking bahagi ng pamana; ang naging piitan din ng anak ni Tiyago na si Maria Clara.",
+      hintAudio: "hint9.mp3"
     },
     {
       scrambled: "K A N A A B L A N",
       answer: "KABANALAN",
       hint: "Ang katangiang pinagpapataasan ng ihi nina Kapitan Tiyago at Doña Patrocinio, kahit ito ay pakitang-tao lamang.",
+      hintAudio: "hint10.mp3"
     },
   ];
-
-
 
       let questions = [];
       let isStarted = false;
@@ -741,152 +796,157 @@
       let hasSubmitted = false;
       let currentGameScore = 0;
       const currentActivity = 2;
+      
+      // Global variables for hint audio management
+      let introFinished = false;
+      let currentPlayingHint = null;
+      let currentHintAudio = null;
 
-      // Audio / WebAudio helpers
-      let audioContext = null;
+      // Audio and WebAudio fallback
+      let audioCtx = null;
       let masterGain = null;
+      let countdownStarted = false;
+      const bgAudioEl = document.getElementById ? document.getElementById('bgAudio') : null;
+      const correctAudioEl = document.getElementById ? document.getElementById('correctAudio') : null;
+      const wrongAudioEl = document.getElementById ? document.getElementById('wrongAudio') : null;
+      const clickAudioEl = document.getElementById ? document.getElementById('clickAudio') : null;
+      const countdownAudioEl = document.getElementById ? document.getElementById('countdownAudio') : null;
 
       function initAudio() {
-        if (audioContext) return;
+        if (audioCtx) return;
         try {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          masterGain = audioContext.createGain();
-          masterGain.gain.value = 1;
-          masterGain.connect(audioContext.destination);
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.9;
+          masterGain.connect(audioCtx.destination);
         } catch (e) {
-          audioContext = null;
-          masterGain = null;
+          audioCtx = null;
         }
       }
 
       function resumeAudioContext() {
-        initAudio();
-        if (audioContext && audioContext.state === 'suspended') {
-          audioContext.resume().catch(() => {});
-        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       }
 
-      function fadeInAudio(el, duration = 500) {
-        try {
-          el.volume = 0;
-          el.play();
-          const step = 50;
-          const inc = step / duration;
-          let vol = 0;
-          const iv = setInterval(() => {
-            vol += inc;
-            if (vol >= 1) {
-              el.volume = 1;
-              clearInterval(iv);
-            } else {
-              el.volume = vol;
-            }
-          }, step);
-        } catch (e) {}
+      function fadeInAudio(el, target = 0.55, duration = 700) {
+        if (!el) return;
+        el.volume = 0;
+        el.play().catch(() => {});
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = t * target;
+          if (t === 1) clearInterval(id);
+        }, 30);
       }
 
-      function fadeOutAudio(el, duration = 300) {
-        try {
-          const step = 50;
-          const dec = step / duration;
-          let vol = el.volume || 1;
-          const iv = setInterval(() => {
-            vol -= dec;
-            if (vol <= 0) {
-              el.pause();
-              el.currentTime = 0;
-              el.volume = 1;
-              clearInterval(iv);
-            } else {
-              el.volume = vol;
-            }
-          }, step);
-        } catch (e) {}
+      function fadeOutAudio(el, duration = 600) {
+        if (!el) return;
+        const startVol = el.volume || 0.55;
+        const start = Date.now();
+        const id = setInterval(() => {
+          const t = Math.min(1, (Date.now() - start) / duration);
+          el.volume = Math.max(0, startVol * (1 - t));
+          if (t === 1) { try { el.pause(); el.currentTime = 0; } catch (e) {} clearInterval(id); }
+        }, 30);
       }
 
       function playBackground() {
-        const el = document.getElementById('bgAudio');
-        if (!el) return;
-        try {
-          fadeInAudio(el, 800);
-        } catch (e) {
-          try { el.play(); } catch (e) {}
+        initAudio();
+        resumeAudioContext();
+        if (bgAudioEl && bgAudioEl.src) {
+          fadeInAudio(bgAudioEl, 0.45, 800);
         }
       }
 
       function stopBackground() {
-        const el = document.getElementById('bgAudio');
-        if (!el) return;
-        try {
-          fadeOutAudio(el, 300);
-        } catch (e) {
-          try { el.pause(); el.currentTime = 0; } catch (e) {}
-        }
+        if (bgAudioEl) fadeOutAudio(bgAudioEl, 600);
       }
 
       function playCountdownTick() {
-        const el = document.getElementById('countdownAudio');
-        // If countdown audio file exists, don't restart it per-tick
-        if (el && el.play) {
+        initAudio();
+        resumeAudioContext();
+        // If a countdown audio file exists, it is started once at the
+        // beginning of the visual countdown; do not restart it per tick.
+        if (countdownAudioEl && countdownAudioEl.src) {
           return;
-        } else if (audioContext) {
-          const o = audioContext.createOscillator();
-          const g = audioContext.createGain();
-          o.frequency.value = 800;
-          g.gain.value = 0.05;
-          o.connect(g);
-          g.connect(masterGain);
-          o.start();
-          setTimeout(() => { o.stop(); }, 120);
         }
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = 1000;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.15, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+        o.start(now);
+        o.stop(now + 0.07);
       }
 
       function playCorrectSound() {
-        const el = document.getElementById('correctAudio');
-        if (el && el.play) {
-          try { el.currentTime = 0; el.play(); } catch (e) {}
-        } else if (audioContext) {
-          const o = audioContext.createOscillator();
-          const g = audioContext.createGain();
-          o.frequency.value = 1200;
-          g.gain.value = 0.06;
-          o.connect(g);
-          g.connect(masterGain);
-          o.start();
-          setTimeout(() => { o.stop(); }, 300);
+        if (correctAudioEl && correctAudioEl.src) {
+          try { correctAudioEl.currentTime = 0; correctAudioEl.play().catch(() => {}); } catch (e) {}
+          return;
         }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        o.start(now);
+        o.stop(now + 0.3);
       }
 
       function playWrongSound() {
-        const el = document.getElementById('wrongAudio');
-        if (el && el.play) {
-          try { el.currentTime = 0; el.play(); } catch (e) {}
-        } else if (audioContext) {
-          const o = audioContext.createOscillator();
-          const g = audioContext.createGain();
-          o.frequency.value = 300;
-          g.gain.value = 0.06;
-          o.connect(g);
-          g.connect(masterGain);
-          o.start();
-          setTimeout(() => { o.stop(); }, 300);
+        if (wrongAudioEl && wrongAudioEl.src) {
+          try { wrongAudioEl.currentTime = 0; wrongAudioEl.play().catch(() => {}); } catch (e) {}
+          return;
         }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.value = 220;
+        o.connect(g);
+        g.connect(masterGain);
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.15, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+        o.start(now);
+        o.stop(now + 0.25);
       }
 
       function playClickSound() {
-        const el = document.getElementById('clickAudio');
-        if (el && el.play) {
-          try { el.currentTime = 0; el.play(); } catch (e) {}
-        } else if (audioContext) {
-          const o = audioContext.createOscillator();
-          const g = audioContext.createGain();
-          o.frequency.value = 1000;
-          g.gain.value = 0.04;
-          o.connect(g);
-          g.connect(masterGain);
-          o.start();
-          setTimeout(() => { o.stop(); }, 80);
+        if (clickAudioEl && clickAudioEl.src) {
+          try { clickAudioEl.currentTime = 0; clickAudioEl.play().catch(() => {}); } catch (e) {}
+          return;
         }
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = 1500;
+        o.connect(g);
+        g.connect(masterGain);
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+        o.start(now);
+        o.stop(now + 0.07);
       }
 
       // Shuffle function - UPDATED to use Fisher-Yates algorithm
@@ -905,22 +965,26 @@
         overlay.style.display = "flex";
         overlay.innerHTML = "";
 
+        // play ticking for each number and show 3 -> 2 -> 1 -> MAGSIMULA
         let count = 3;
 
-        // If a countdown audio file is present, start it once here
-        try {
-          const fileEl = document.getElementById('countdownAudio');
-          if (fileEl && fileEl.play) {
-            fileEl.currentTime = 0;
-            fileEl.play().catch(() => {});
-          }
-        } catch (e) {}
+        // Reset countdown flag for this animation run
+        countdownStarted = false;
+
+        // If an audio file for the countdown exists, start it once here
+        if (countdownAudioEl && countdownAudioEl.src) {
+          try {
+            countdownAudioEl.currentTime = 0;
+            countdownAudioEl.play().catch(() => {});
+          } catch (e) {}
+          countdownStarted = true;
+        }
 
         function showNumber(num) {
           overlay.innerHTML = `<div class="countdown-number">${num}</div>`;
           try {
-            const fileEl = document.getElementById('countdownAudio');
-            if (!(fileEl && fileEl.play)) playCountdownTick();
+            // Only play a synthetic tick if there is no countdown audio file
+            if (!(countdownAudioEl && countdownAudioEl.src)) playCountdownTick();
           } catch (e) {}
 
           if (num === 1) {
@@ -929,7 +993,7 @@
               setTimeout(() => {
                 overlay.style.display = "none";
                 overlay.innerHTML = "";
-                if (callback) callback();
+                if (typeof callback === 'function') callback();
               }, 1000);
             }, 1000);
           } else {
@@ -939,10 +1003,13 @@
           }
         }
 
+        // Start the countdown
         showNumber(count);
       }
 
       function startWithCountdown() {
+        // initialize audio from user gesture then start countdown
+        initAudio();
         resumeAudioContext();
         showCountdownAnimation(() => {
           startGame();
@@ -954,27 +1021,32 @@
       }
 
       function createQuestions() {
-        const container = document.getElementById("questionsContainer");
-        container.innerHTML = "";
+  const container = document.getElementById("questionsContainer");
+  container.innerHTML = "";
 
-        // Shuffle questions each time createQuestions is called
-        questions = shuffleArray(originalQuestions);
-        
-        questions.forEach((q, index) => {
-          const card = document.createElement("div");
-          card.className = "question-card";
-          card.innerHTML = `
-            <div class="question-number">Bilang ${index + 1}</div>
-            <div class="scrambled-letters">${q.scrambled}</div>
-            <div class="hint">${q.hint}</div>
-            <div class="input-container">
-                <input type="text" id="answer${index}" placeholder="Pindutin ang 'Magsimula' para magsimula..." disabled data-correct="${q.answer}">
-            </div>
-            <div class="feedback" id="feedback${index}"></div>
-          `;
-          container.appendChild(card);
-        });
-      }
+  // Shuffle questions each time createQuestions is called
+  questions = shuffleArray(originalQuestions);
+  
+  questions.forEach((q, index) => {
+    const card = document.createElement("div");
+    card.className = "question-card";
+    card.innerHTML = `
+      <div class="question-number">Bilang ${index + 1}</div>
+      <div class="scrambled-letters">${q.scrambled}</div>
+      <div class="hint-container">
+        <button class="hint-play-btn" onclick="playHintAudio(${index}, '${q.hintAudio}')" id="hintBtn${index}" disabled>
+          ▶
+        </button>
+        <div class="hint-text">${q.hint}</div>
+      </div>
+      <div class="input-container">
+          <input type="text" id="answer${index}" placeholder="Pindutin ang 'Magsimula' para magsimula..." disabled data-correct="${q.answer}">
+      </div>
+      <div class="feedback" id="feedback${index}"></div>
+    `;
+    container.appendChild(card);
+  });
+}
 
       function startGame() {
         // Clear any in-progress data
@@ -984,8 +1056,12 @@
         
         isStarted = true;
         hasSubmitted = false;
-        playInstructions();
+        introFinished = false;
+        currentPlayingHint = null;
+        currentHintAudio = null;
         timeRemaining = 900;
+        
+        stopAllHintAudios();
 
         // Disable start button once game starts
         const startButton = document.querySelector(
@@ -1027,8 +1103,11 @@
         
         // Mark as in progress
         localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
-        // Start background music
-        playBackground();
+        // start background music
+        try { playBackground(); } catch (e) {}
+        
+        // Play instructions
+        playInstructions();
       }
 
       function updateTimer() {
@@ -1112,6 +1191,7 @@
       }
 
       function checkAllAnswers() {
+        stopAllHintAudios();
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
@@ -1136,8 +1216,8 @@
             input.className = "correct";
             feedback.className = "feedback correct";
             feedback.textContent = "✓ Tama! " + correctAnswer;
-            correct++;
             try { playCorrectSound(); } catch (e) {}
+            correct++;
           } else {
             input.className = "incorrect";
             feedback.className = "feedback incorrect";
@@ -1164,7 +1244,8 @@
       }
 
       function goToActivitiesWithScore() {
-        stopBackground();
+        // stop background before leaving
+        try { stopBackground(); } catch (e) {}
         window.location.href = `29_activities.html?score2=${currentGameScore}`;
       }
 
@@ -1181,87 +1262,205 @@
       }
 
       function confirmBackToActivities() {
+        stopAllHintAudios();
+        
         // Clear in-progress data
         localStorage.removeItem(`activity${currentActivity}_in_progress`);
         localStorage.removeItem(`activity${currentActivity}_temp_score`);
         localStorage.removeItem(`activity${currentActivity}_last_score`);
         
+        // stop background before leaving
+        try { stopBackground(); } catch (e) {}
         closeModal("backToActivitiesModal");
-        stopBackground();
         window.location.href = "29_activities.html";
       }
 
       function playInstructions() {
-  const audio = document.getElementById('instructionsAudio');
-  if (audio) {
-    // Reset audio to start
-    audio.currentTime = 0;
-    
-    // Create a promise-based play for better error handling
-    const playPromise = audio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.catch(e => {
-        console.log("Audio play failed:", e);
-        
-        // On mobile, we might need user interaction first
-        if (window.innerWidth <= 768) {
-          // Show a button for mobile users to tap to play audio
-          showMobileAudioPrompt();
-        } else {
-          // Desktop fallback: Show instructions in alert
-          alert("GAWAIN 2 - Panuto: Ayusin ang mga letra upang mabuo ang tamang salita na tumutukoy sa lugar o tagpuan. Gamitin ang analisis ng pahiwatig upang masagot ito at maintindihan ang simbolismo ng lugar.");
+        const audio = document.getElementById('instructionsAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          
+          // Reset intro finished flag
+          introFinished = false;
+          
+          // Disable all hint buttons initially
+          for (let i = 0; i < questions.length; i++) {
+            const btn = document.getElementById(`hintBtn${i}`);
+            if (btn) {
+              btn.disabled = true;
+              btn.innerHTML = "▶";
+              btn.classList.remove("playing");
+            }
+          }
+          
+          const playPromise = audio.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              // When audio finishes playing, enable hint buttons
+              audio.onended = function() {
+                enableHintButtons();
+              };
+            }).catch(e => {
+              console.log("Audio play failed:", e);
+              // If audio fails to play, still enable buttons after a delay
+              setTimeout(enableHintButtons, 1000);
+              
+              if (window.innerWidth <= 768) {
+                showMobileAudioPrompt();
+              } else {
+                alert("GAWAIN 2 - Panuto: Ayusin ang mga letra upang mabuo ang tamang salita na tumutukoy sa lugar o tagpuan. Gamitin ang analisis ng pahiwatig upang masagot ito at maintindihan ang simbolismo ng lugar.");
+              }
+            });
+          }
         }
-      });
-    }
-  }
-}
+      }
 
-// For activity3.html, change the alert message to:
-// alert("GAWAIN 3 - Panuto: Piliin ang pinakaangkop na kasingkahulugan o kontekstuwal na ibig sabihin ng salita sa Hanay A.");
+      // Helper function for mobile audio prompt
+      function showMobileAudioPrompt() {
+        const prompt = document.createElement('div');
+        prompt.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(0,0,0,0.8);
+          color: white;
+          padding: 20px;
+          border-radius: 10px;
+          z-index: 9999;
+          text-align: center;
+        `;
+        prompt.innerHTML = `
+          <p>Pindutin ang pindutan upang marinig ang panuto</p>
+          <button onclick="playInstructionsManual()" style="
+            background: #8b4513;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 10px;
+          ">I-play ang Panuto</button>
+        `;
+        document.body.appendChild(prompt);
+      }
 
-// Helper function for mobile audio prompt
-function showMobileAudioPrompt() {
-  const prompt = document.createElement('div');
-  prompt.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 9999;
-    text-align: center;
-  `;
-  prompt.innerHTML = `
-    <p>Pindutin ang pindutan upang marinig ang panuto</p>
-    <button onclick="playInstructionsManual()" style="
-      background: #8b4513;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      margin-top: 10px;
-    ">I-play ang Panuto</button>
-  `;
-  document.body.appendChild(prompt);
-}
+      function playInstructionsManual() {
+        const audio = document.getElementById('instructionsAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(e => {
+            console.log("Manual play also failed");
+          });
+        }
+        
+        // Remove the prompt
+        const prompt = document.querySelector('[style*="position: fixed"]');
+        if (prompt) prompt.remove();
+      }
 
-function playInstructionsManual() {
-  const audio = document.getElementById('instructionsAudio');
-  if (audio) {
-    audio.currentTime = 0;
-    audio.play().catch(e => {
-      console.log("Manual play also failed");
-    });
-  }
-  
-  // Remove the prompt
-  const prompt = document.querySelector('[style*="position: fixed"]');
-  if (prompt) prompt.remove();
-}
+      // Function to enable hint buttons after intro finishes
+      function enableHintButtons() {
+        introFinished = true;
+        for (let i = 0; i < questions.length; i++) {
+          const btn = document.getElementById(`hintBtn${i}`);
+          if (btn) {
+            btn.disabled = false;
+          }
+        }
+      }
+
+      // Function to play hint audio
+      function playHintAudio(index, audioFile) {
+        // Don't play if intro hasn't finished or game has submitted
+        if (!introFinished || hasSubmitted) return;
+        
+        // If clicking the same button that's currently playing
+        if (currentPlayingHint === index && currentHintAudio && !currentHintAudio.paused) {
+          // Pause current audio
+          currentHintAudio.pause();
+          const button = document.getElementById(`hintBtn${index}`);
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+          return;
+        }
+        
+        // Stop any currently playing hint audio
+        if (currentPlayingHint !== null && currentPlayingHint !== index) {
+          const prevButton = document.getElementById(`hintBtn${currentPlayingHint}`);
+          if (prevButton) {
+            prevButton.innerHTML = "▶";
+            prevButton.classList.remove("playing");
+          }
+          if (currentHintAudio) {
+            currentHintAudio.pause();
+            currentHintAudio.currentTime = 0;
+          }
+        }
+        
+        // Create and play the hint audio
+        const button = document.getElementById(`hintBtn${index}`);
+        
+        // Create audio element if it doesn't exist
+        let audio = document.getElementById(`hintAudio_${index}`);
+        if (!audio) {
+          audio = new Audio(`audio/${audioFile}`);
+          audio.id = `hintAudio_${index}`;
+          audio.preload = "auto";
+        }
+        
+        // Set up audio event handlers
+        audio.onended = function() {
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+        };
+        
+        audio.onerror = function() {
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+          currentPlayingHint = null;
+          currentHintAudio = null;
+          console.error("Error playing hint audio:", audioFile);
+        };
+        
+        // Play the audio
+        audio.currentTime = 0;
+        audio.play().then(() => {
+          button.innerHTML = "⏸";
+          button.classList.add("playing");
+          currentPlayingHint = index;
+          currentHintAudio = audio;
+        }).catch(error => {
+          console.log("Hint audio play failed:", error);
+          button.innerHTML = "▶";
+          button.classList.remove("playing");
+        });
+      }
+
+      // Function to stop all hint audios
+      function stopAllHintAudios() {
+        // Stop the current playing audio
+        if (currentHintAudio) {
+          currentHintAudio.pause();
+          currentHintAudio.currentTime = 0;
+          currentHintAudio = null;
+        }
+        
+        // Reset all buttons
+        for (let i = 0; i < questions.length; i++) {
+          const button = document.getElementById(`hintBtn${i}`);
+          if (button) {
+            button.innerHTML = "▶";
+            button.classList.remove("playing");
+          }
+        }
+        
+        currentPlayingHint = null;
+      }
 
       function showModal(modalId) {
         document.getElementById(modalId).style.display = "flex";
@@ -1276,22 +1475,22 @@ function playInstructionsManual() {
         questions = shuffleArray(originalQuestions);
         createQuestions();
 
-        // Initialize found count display dynamically
-        document.getElementById("foundCount").textContent = `0/${questions.length}`;
-
         const inputs = document.querySelectorAll(
           '#questionsContainer input[type="text"]'
         );
         inputs.forEach((input) => {
-          input.addEventListener("input", () => { updateStats(); playClickSound(); });
+          input.addEventListener("input", updateStats);
+          input.addEventListener("input", () => { try { playClickSound(); } catch (e) {} });
         });
+
+        // Play click when submit button is clicked
         const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) submitBtn.addEventListener('click', () => { try { playClickSound(); } catch (e) {} });
-
+        
         // Check for saved in-progress game
         const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
         const tempScore = localStorage.getItem(`activity${currentActivity}_temp_score`);
-
+        
         if (isInProgress && tempScore) {
           document.getElementById("foundCount").textContent = `${tempScore}/${questions.length}`;
           currentGameScore = parseInt(tempScore);
