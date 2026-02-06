@@ -7,6 +7,15 @@ class AudioAutoplayManager {
     }
 
     init() {
+        // Wait for DOM to be ready before accessing document.body
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this._initialize());
+        } else {
+            this._initialize();
+        }
+    }
+
+    _initialize() {
         // Listen for ANY user interaction on the site
         this.setupInteractionListeners();
         
@@ -18,8 +27,8 @@ class AudioAutoplayManager {
             this.saveInteractionState();
         });
 
-        // Call this on chapter pages
-        if (document.body.dataset.page === 'chapters') {
+        // Call this on chapter pages - SAFELY check for dataset
+        if (document.body && document.body.dataset && document.body.dataset.page === 'chapters') {
             setTimeout(() => {
                 if (!this.hasUserInteracted) {
                     this.forceUserInteraction();
@@ -64,7 +73,7 @@ class AudioAutoplayManager {
         }
     }
 
-        // In the AudioAutoplayManager class, add this method:
+    // In the AudioAutoplayManager class, add this method:
     forceUserInteraction() {
         // Create a transparent overlay that captures clicks
         const overlay = document.createElement('div');
@@ -93,8 +102,6 @@ class AudioAutoplayManager {
             }
         }, 10000);
     }
-
-
 
     checkStoredInteraction() {
         const stored = localStorage.getItem('userHasInteracted');
@@ -125,7 +132,7 @@ class AudioAutoplayManager {
         return this.hasUserInteracted;
     }
 
-        // Add to AudioAutoplayManager class
+    // Add to AudioAutoplayManager class
     async playIntroIfAllowed() {
         if (!this.canAutoplay()) {
             // Try silent audio unlock
