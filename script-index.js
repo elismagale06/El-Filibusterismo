@@ -27,7 +27,7 @@ const characters = [
         name: "Donya Victorina",
         description: "Matapobreng babae, mestisahin, at naghahanap palagi ng atensyon; kasama sa biyahe sa bapor.",
         image: "images/Donya Victorina.png",
-        audio: "audio/DonyaVictorina.mp3"
+        audio: "audio/DonyaVictorina.MP3"
     },
     {
         name: "Huli (Juli)",
