@@ -1328,7 +1328,7 @@
 
           <div class="hint-container">
             <div class="hint-info">
-              Mga Hint: <span id="hintsRemaining">15</span>
+              Mga Hint: <span id="hintsRemaining">3</span>
             </div>
             <button onclick="useHint()" id="hintButton">Gumamit ng Hint</button>
           </div>
@@ -1387,7 +1387,7 @@
       let timeRemaining = TOTAL_TIME;
       let timerInterval = null;
       let isSelecting = false;
-      let hintsRemaining = 15;
+      let hintsRemaining = 3;
       let gameStarted = false;
       let currentGameScore = 0;
       let isShowingSuccessMessage = false;
@@ -2670,7 +2670,7 @@ function autoPlayInstructionsOnLoad() {
   gameStarted = true;
   foundWords.clear();
   selectedCells = [];
-  hintsRemaining = 15; // Changed from 2
+  hintsRemaining = 3; // Changed from 2
   currentGameScore = 0;
   isShowingSuccessMessage = false;
   startCell = null;
