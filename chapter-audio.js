@@ -219,35 +219,48 @@ function getCurrentChapterNumber() {
         return urlChapter;
     }
     
-    // 2. Extract from page title
+    // 2. Extract from page title - UPDATED REGEX
     const pageTitle = document.querySelector('h1')?.textContent || '';
     console.log('Page title:', pageTitle);
     
-    const chapterMatch = pageTitle.match(/Kabanata\s+(\d+[-]?\d*)/i);
+    // UPDATED: Match numbers with either en dash (–), hyphen (-), OR "at"
+    const chapterMatch = pageTitle.match(/Kabanata\s+(\d+)(?:\s*(?:[–\-]|at)\s*(\d+))?/i);
     if (chapterMatch) {
+        // If we have two numbers (like "30 at 31"), combine them with hyphen
+        if (chapterMatch[2]) {
+            const combined = `${chapterMatch[1]}-${chapterMatch[2]}`;
+            console.log('Got chapter from page title match (combined):', combined);
+            return combined;
+        }
+        // If only one number
         console.log('Got chapter from page title match:', chapterMatch[1]);
         return chapterMatch[1];
     }
     
     // 3. Try to match just numbers in title
-    const numberMatch = pageTitle.match(/(\d+[-]?\d*)/);
+    const numberMatch = pageTitle.match(/(\d+)(?:\s*(?:[–\-]|at)\s*(\d+))?/);
     if (numberMatch) {
+        if (numberMatch[2]) {
+            const combined = `${numberMatch[1]}-${numberMatch[2]}`;
+            console.log('Got chapter from number match (combined):', combined);
+            return combined;
+        }
         console.log('Got chapter from number match:', numberMatch[1]);
         return numberMatch[1];
     }
     
     // 4. Try to extract from URL path
-    const pathMatch = window.location.pathname.match(/chapter(\d+[-]?\d*)/i);
+    const pathMatch = window.location.pathname.match(/chapter(\d+[–\-]?\d*)/i);
     if (pathMatch) {
         console.log('Got chapter from path match:', pathMatch[1]);
-        return pathMatch[1];
+        return pathMatch[1].replace(/–/g, '-');
     }
     
     // 5. Check for chapter in the URL without "chapter" prefix
-    const altPathMatch = window.location.pathname.match(/(\d+[-]?\d*)\.html$/);
+    const altPathMatch = window.location.pathname.match(/(\d+[–\-]?\d*)\.html$/);
     if (altPathMatch) {
         console.log('Got chapter from alt path match:', altPathMatch[1]);
-        return altPathMatch[1];
+        return altPathMatch[1].replace(/–/g, '-');
     }
     
     console.log('Could not determine chapter number');
@@ -547,23 +560,23 @@ function showIntroNotification(title, icon = '📖', message = '') {
 function getChapterIntroAudio(chapterNumber) {
     // Audio file paths - make sure these are correct
     const introMap = {
-        '1-3': 'audio/intro13.mp3',
-        '4': 'audio/intro_chapter_4.mp3',
-        '5-7': 'audio/intro_chapter_5-7.mp3',
-        '8-10': 'audio/intro_chapter_8-10.mp3',
-        '11': 'audio/intro_chapter_11.mp3',
-        '12-15': 'audio/intro_chapter_12-15.mp3',
-        '16-18': 'audio/intro_chapter_16-18.mp3',
-        '19': 'audio/intro_chapter_19.mp3',
-        '20-22': 'audio/intro_chapter_20-22.mp3',
-        '23': 'audio/intro_chapter_23.mp3',
-        '24-28': 'audio/intro_chapter_24-28.mp3',
-        '29': 'audio/intro_chapter_29.mp3',
-        '30-31': 'audio/intro_chapter_30-31.mp3',
-        '32': 'audio/intro_chapter_32.mp3',
-        '33-35': 'audio/intro_chapter_33-35.mp3',
-        '36-37': 'audio/intro_chapter_36-37.mp3',
-        '38-39': 'audio/intro_chapter_38-39.mp3'
+        '1-3': 'audio/intro1-3.mp3',
+        '4': 'audio/intro4.mp3',
+        '5-7': 'audio/intro5-7.mp3',
+        '8-10': 'audio/intro8-10.mp3',
+        '11': 'audio/intro11.mp3',
+        '12-15': 'audio/intro12-15.mp3',
+        '16-18': 'audio/intro16-18.mp3',
+        '19': 'audio/intro19.mp3',
+        '20-22': 'audio/intro20-22.mp3',
+        '23': 'audio/intro23.mp3',
+        '24-28': 'audio/intro24-28.mp3',
+        '29': 'audio/intro29.mp3',
+        '30-31': 'audio/intro30-31.mp3',
+        '32': 'audio/intro32.mp3',
+        '33-35': 'audio/intro33-35.mp3',
+        '36-37': 'audio/intro36-37.mp3',
+        '38-39': 'audio/intro38-39.mp3'
     };
     
     const path = introMap[chapterNumber];
