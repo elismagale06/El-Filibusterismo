@@ -226,28 +226,28 @@
     const score3FromActivity = urlParams.get("score3");
 
     // Get saved scores from localStorage
-    const savedScore1 = localStorage.getItem("activity1_score");
-    const savedScore2 = localStorage.getItem("activity2_score");
-    const savedScore3 = localStorage.getItem("activity3_score");
+    const savedScore1 = localStorage.getItem("ch8_activity1_score");
+    const savedScore2 = localStorage.getItem("ch8_activity2_score");
+    const savedScore3 = localStorage.getItem("ch8_activity3_score");
 
     // Get completion status
-    const isCompleted1 = localStorage.getItem("activity1_completed");
-    const isCompleted2 = localStorage.getItem("activity2_completed");
-    const isCompleted3 = localStorage.getItem("activity3_completed");
+    const isCompleted1 = localStorage.getItem("ch8_activity1_completed");
+    const isCompleted2 = localStorage.getItem("ch8_activity2_completed");
+    const isCompleted3 = localStorage.getItem("ch8_activity3_completed");
 
     // Save scores from URL to localStorage if provided
     if (score1FromActivity !== null) {
-      localStorage.setItem("activity1_score", score1FromActivity);
-      localStorage.setItem("activity1_completed", "true");
+      localStorage.setItem("ch8_activity1_score", score1FromActivity);
+      localStorage.setItem("ch8_activity1_completed", "true");
       // Clear in-progress flag when coming back with a score
-      localStorage.removeItem("activity1_in_progress");
+      localStorage.removeItem("ch8_activity1_in_progress");
     }
 
     if (score2FromActivity !== null) {
-      localStorage.setItem("activity2_score", score2FromActivity);
-      localStorage.setItem("activity2_completed", "true");
+      localStorage.setItem("ch8_activity2_score", score2FromActivity);
+      localStorage.setItem("ch8_activity2_completed", "true");
       // Clear in-progress flag when coming back with a score
-      localStorage.removeItem("activity2_in_progress");
+      localStorage.removeItem("ch8_activity2_in_progress");
       
       // Show confetti for Activity 2 if perfect score (15/15)
       if (parseInt(score2FromActivity) === 15) {
@@ -256,10 +256,10 @@
     }
 
     if (score3FromActivity !== null) {
-      localStorage.setItem("activity3_score", score3FromActivity);
-      localStorage.setItem("activity3_completed", "true");
+      localStorage.setItem("ch8_activity3_score", score3FromActivity);
+      localStorage.setItem("ch8_activity3_completed", "true");
       // Clear in-progress flag when coming back with a score
-      localStorage.removeItem("activity3_in_progress");
+      localStorage.removeItem("ch8_activity3_in_progress");
       
       // Show confetti for Activity 3 if perfect score (15/15)
       if (parseInt(score3FromActivity) === 15) {
@@ -273,9 +273,9 @@
     const finalScore3 = savedScore3 || score3FromActivity || "0";
 
     // Get current completion status (may have been updated by URL params)
-    const currentCompleted1 = localStorage.getItem("activity1_completed") === "true";
-    const currentCompleted2 = localStorage.getItem("activity2_completed") === "true";
-    const currentCompleted3 = localStorage.getItem("activity3_completed") === "true";
+    const currentCompleted1 = localStorage.getItem("ch8_activity1_completed") === "true";
+    const currentCompleted2 = localStorage.getItem("ch8_activity2_completed") === "true";
+    const currentCompleted3 = localStorage.getItem("ch8_activity3_completed") === "true";
 
     // Create activity cards
     activitiesGrid.innerHTML = `
@@ -324,9 +324,9 @@
   event.preventDefault();
   currentActivity = activityNumber;
 
-  const isCompleted = localStorage.getItem(`activity${activityNumber}_completed`) === "true";
-  const savedScore = localStorage.getItem(`activity${activityNumber}_score`);
-  const isInProgress = localStorage.getItem(`activity${activityNumber}_in_progress`) === "true";
+  const isCompleted = localStorage.getItem(`ch8_activity${activityNumber}_completed`) === "true";
+  const savedScore = localStorage.getItem(`ch8_activity${activityNumber}_score`);
+  const isInProgress = localStorage.getItem(`ch8_activity${activityNumber}_in_progress`) === "true";
 
   console.log(`Activity ${activityNumber} clicked:`, {
     isCompleted,
@@ -360,9 +360,9 @@
   } else {
     console.log(`Direct start for activity ${activityNumber} - first time`);
     // Clear any existing in-progress data before starting
-    localStorage.removeItem(`activity${currentActivity}_in_progress`);
-    localStorage.removeItem(`activity${currentActivity}_temp_score`);
-    localStorage.removeItem(`activity${currentActivity}_last_score`);
+    localStorage.removeItem(`ch8_activity${currentActivity}_in_progress`);
+    localStorage.removeItem(`ch8_activity${currentActivity}_temp_score`);
+    localStorage.removeItem(`ch8_activity${currentActivity}_last_score`);
     
     // Go directly to the activity (first time playing)
     window.location.href = `8-10_activity${activityNumber}.html`;
@@ -379,11 +379,11 @@ function closeResetModal() {
 
 function confirmReset() {
   // Clear localStorage for the specific activity
-  localStorage.removeItem(`activity${currentActivity}_score`);
-  localStorage.removeItem(`activity${currentActivity}_completed`);
-  localStorage.removeItem(`activity${currentActivity}_in_progress`);
-  localStorage.removeItem(`activity${currentActivity}_temp_score`);
-  localStorage.removeItem(`activity${currentActivity}_last_score`);
+  localStorage.removeItem(`ch8_activity${currentActivity}_score`);
+  localStorage.removeItem(`ch8_activity${currentActivity}_completed`);
+  localStorage.removeItem(`ch8_activity${currentActivity}_in_progress`);
+  localStorage.removeItem(`ch8_activity${currentActivity}_temp_score`);
+  localStorage.removeItem(`ch8_activity${currentActivity}_last_score`);
   
   // Hide modal first
   closeResetModal();

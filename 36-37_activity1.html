@@ -1403,9 +1403,9 @@
       const TOUCH_DEBOUNCE = 50; // ms
 
       // Local storage keys
-      const SCORE_KEY = "activity1_score";
-      const COMPLETED_KEY = "activity1_completed";
-      const LAST_SCORE_KEY = "activity1_last_score";
+      const SCORE_KEY = "ch36_activity1_score";
+      const COMPLETED_KEY = "ch36_activity1_completed";
+      const LAST_SCORE_KEY = "ch36_activity1_last_score";
 
       // Audio and WebAudio fallback
       let audioCtx = null;
@@ -2733,8 +2733,8 @@ function autoPlayInstructionsOnLoad() {
         localStorage.removeItem(SCORE_KEY);
         localStorage.removeItem(COMPLETED_KEY);
         localStorage.removeItem(LAST_SCORE_KEY);
-        localStorage.removeItem("activity1_in_progress");
-        localStorage.removeItem("activity1_temp_score");
+        localStorage.removeItem("ch36_activity1_in_progress");
+        localStorage.removeItem("ch36_activity1_temp_score");
         
         closeModal("retryModal");
         try { stopBackground(); } catch (e) {}
@@ -2857,7 +2857,7 @@ function autoPlayInstructionsOnLoad() {
   const savedScore = localStorage.getItem(SCORE_KEY);
   const isCompleted = localStorage.getItem(COMPLETED_KEY);
   const lastScore = localStorage.getItem(LAST_SCORE_KEY);
-  const isInProgress = localStorage.getItem("activity1_in_progress") === "true";
+  const isInProgress = localStorage.getItem("ch36_activity1_in_progress") === "true";
 
   // If coming back from activities page with modal confirmation, clear all data
   const urlParams = new URLSearchParams(window.location.search);
@@ -2868,8 +2868,8 @@ function autoPlayInstructionsOnLoad() {
     localStorage.removeItem(SCORE_KEY);
     localStorage.removeItem(COMPLETED_KEY);
     localStorage.removeItem(LAST_SCORE_KEY);
-    localStorage.removeItem("activity1_in_progress");
-    localStorage.removeItem("activity1_temp_score");
+    localStorage.removeItem("ch36_activity1_in_progress");
+    localStorage.removeItem("ch36_activity1_temp_score");
     
     // Reset button to start
     document.getElementById("startButton").textContent = "Magsimula";

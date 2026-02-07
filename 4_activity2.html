@@ -1039,9 +1039,9 @@
       }
 
       function startGame() {
-        localStorage.removeItem(`activity${currentActivity}_in_progress`);
-        localStorage.removeItem(`activity${currentActivity}_temp_score`);
-        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_last_score`);
         
         isStarted = true;
         hasSubmitted = false;
@@ -1088,7 +1088,7 @@
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(updateTimer, 1000);
         
-        localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
+        localStorage.setItem(`ch4_activity${currentActivity}_in_progress`, "true");
         try { playBackground(); } catch (e) {}
         
         playInstructions();
@@ -1113,7 +1113,7 @@
         progressFill.style.width = percentageRemaining + "%";
         
         if (isStarted && !hasSubmitted) {
-          localStorage.setItem(`activity${currentActivity}_temp_score`, currentGameScore);
+          localStorage.setItem(`ch4_activity${currentActivity}_temp_score`, currentGameScore);
         }
       }
 
@@ -1180,8 +1180,8 @@
           timerInterval = null;
         }
 
-        localStorage.removeItem(`activity${currentActivity}_in_progress`);
-        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_temp_score`);
 
         let correct = 0;
         let total = questions.length;
@@ -1211,8 +1211,8 @@
 
         currentGameScore = correct;
 
-        localStorage.setItem("activity2_score", correct);
-        localStorage.setItem("activity2_completed", "true");
+        localStorage.setItem("ch4_activity2_score", correct);
+        localStorage.setItem("ch4_activity2_completed", "true");
 
         showAnswersReview();
         
@@ -1228,7 +1228,7 @@
       }
 
       function showBackToActivitiesModal() {
-        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        const isInProgress = localStorage.getItem(`ch4_activity${currentActivity}_in_progress`) === "true";
         
         if (isStarted && !hasSubmitted || isInProgress) {
           document.getElementById("backToActivitiesText").textContent = 
@@ -1242,9 +1242,9 @@
       function confirmBackToActivities() {
         stopAllHintAudios();
         
-        localStorage.removeItem(`activity${currentActivity}_in_progress`);
-        localStorage.removeItem(`activity${currentActivity}_temp_score`);
-        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`ch4_activity${currentActivity}_last_score`);
         
         try { stopBackground(); } catch (e) {}
         closeModal("backToActivitiesModal");
@@ -1442,8 +1442,8 @@
         const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) submitBtn.addEventListener('click', () => { try { playClickSound(); } catch (e) {} });
         
-        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
-        const tempScore = localStorage.getItem(`activity${currentActivity}_temp_score`);
+        const isInProgress = localStorage.getItem(`ch4_activity${currentActivity}_in_progress`) === "true";
+        const tempScore = localStorage.getItem(`ch4_activity${currentActivity}_temp_score`);
         
         if (isInProgress && tempScore) {
           document.getElementById("foundCount").textContent = `${tempScore}/10`;

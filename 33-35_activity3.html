@@ -909,9 +909,9 @@
 
       function startGame() {
         // Clear any in-progress data
-        localStorage.removeItem(`activity${currentActivity}_in_progress`);
-        localStorage.removeItem(`activity${currentActivity}_temp_score`);
-        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_last_score`);
         
         // Shuffle questions each time game starts
         questions = shuffleArray(originalQuestions);
@@ -964,7 +964,7 @@
         startTimer();
         
         // Mark as in progress
-        localStorage.setItem(`activity${currentActivity}_in_progress`, "true");
+        localStorage.setItem(`ch33_activity${currentActivity}_in_progress`, "true");
         // start background music
         try { playBackground(); } catch (e) {}
       }
@@ -993,7 +993,7 @@
         
         // Save temp score
         if (isStarted && !hasSubmitted) {
-          localStorage.setItem(`activity${currentActivity}_temp_score`, currentGameScore);
+          localStorage.setItem(`ch33_activity${currentActivity}_temp_score`, currentGameScore);
         }
       }
 
@@ -1051,8 +1051,8 @@
         stopAllHintAudios();
         
         // Clear in-progress flags
-        localStorage.removeItem(`activity${currentActivity}_in_progress`);
-        localStorage.removeItem(`activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_temp_score`);
 
         let score = 0; // Initialize score
 
@@ -1089,8 +1089,8 @@
         currentGameScore = score;
 
         // Save final score
-        localStorage.setItem(`activity${currentActivity}_last_score`, score);
-        localStorage.setItem(`activity${currentActivity}_completed`, "true");
+        localStorage.setItem(`ch33_activity${currentActivity}_last_score`, score);
+        localStorage.setItem(`ch33_activity${currentActivity}_completed`, "true");
 
         // Update points display
         document.getElementById("foundCount").textContent = `${score}/${questions.length}`;
@@ -1114,7 +1114,7 @@
       }
 
       function showBackToActivitiesModal() {
-        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
+        const isInProgress = localStorage.getItem(`ch33_activity${currentActivity}_in_progress`) === "true";
         
         if (isStarted && !hasSubmitted || isInProgress) {
           document.getElementById("backToActivitiesText").textContent = 
@@ -1130,9 +1130,9 @@
         stopAllHintAudios();
         
         // Clear in-progress data
-        localStorage.removeItem(`activity${currentActivity}_in_progress`);
-        localStorage.removeItem(`activity${currentActivity}_temp_score`);
-        localStorage.removeItem(`activity${currentActivity}_last_score`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_in_progress`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_temp_score`);
+        localStorage.removeItem(`ch33_activity${currentActivity}_last_score`);
         
         // stop background before leaving
         try { stopBackground(); } catch (e) {}
@@ -1346,8 +1346,8 @@
 
       // Check for saved in-progress game on load and wire modal button clicks to click sound
       document.addEventListener("DOMContentLoaded", function() {
-        const isInProgress = localStorage.getItem(`activity${currentActivity}_in_progress`) === "true";
-        const tempScore = localStorage.getItem(`activity${currentActivity}_temp_score`);
+        const isInProgress = localStorage.getItem(`ch33_activity${currentActivity}_in_progress`) === "true";
+        const tempScore = localStorage.getItem(`ch33_activity${currentActivity}_temp_score`);
         
         if (isInProgress && tempScore) {
           document.getElementById("foundCount").textContent = `${tempScore}/10`;
