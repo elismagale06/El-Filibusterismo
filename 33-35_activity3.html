@@ -563,20 +563,25 @@
       </header>
 
       <div class="word-box">
-        <h3>Pagpipilian ng Sagot (Hanay A)</h3>
-        <div class="words">
-          <span>IPAKULONG SA MALAYONG LUGAR</span>
-          <span>MAGTANIM NG IDEA</span>
-          <span>PINILI SA POSISYON</span>
-          <span>PAG-ALIS SA POSISYON</span>
-          <span>MAAWAIN</span>
-          <span>WALANG PAKIALAM</span>
-          <span>KALUNGKUTAN</span>
-          <span>PAGKAMATAY PARA SA PANANAMPALATAYA O ADHIKAIN</span>
-          <span>MAMAMATAY SA KULUNGAN</span>
-          <span>PANGHAHALAY</span>
-        </div>
-      </div>
+  <h3>Pagpipilian ng Sagot (Hanay A)</h3>
+  <div class="words">
+    <span>MAPAYAPA</span>
+    <span>NAKAPATONG</span>
+    <span>NAANTIG</span>
+    <span>MALUPIT</span>
+    <span>MAGSISINDI NG BOMBA</span>
+    <span>IMBITAHIN</span>
+    <span>KARANGAL</span>
+    <span>PAGKAMATAY</span>
+    <span>NAGTAGUMPAY</span>
+    <span>IPINASOK</span>
+    <span>LAMPARA</span>
+    <span>MADUNGIS</span>
+    <span>HABULIN</span>
+    <span>MALAKING RESPONSIBILIDAD</span>
+    <span>PANANAIG SAGLIT NG KABUTIHAN</span>
+  </div>
+</div>
 
       <div class="controls-wrapper">
         <div class="controls">
@@ -620,57 +625,82 @@
 
     <script>
       const originalQuestions = [
-        {
-          question: "HINAGPIS - Ang matinding damdamin nadama ni Huli ng rinig niya ang balita kay Basilio at naging rason ng kanyang pagkahimatay.",
-          correct: "KALUNGKUTAN",
-          hintAudio: "hint1.mp3"
-        },
-        {
-          question: "INIHALAL - Ang pagluklok o pagtalaga ng Espanya sa Kapitan Heneral bilang maging pinuno ng bayan.",
-          correct: "PINILI SA POSISYON",
-          hintAudio: "hint33_2.mp3"
-        },
-        {
-          question: "IPATAPON - Ang maaring parusa kay Basilio pagkatapos dakpin dahil sa pagsuporta sa paghihimagsik.",
-          correct: "IPAKULONG SA MALAYONG LUGAR",
-          hintAudio: "hint33_3.mp3"
-        },
-        {
-          question: "MABUBULOK - Ang kawalang supprta ni Basilio pagkamatay ni Kapitang Tiyago ay maaring magresulta sa matagal na pagkakakulong.",
-          correct: "MAMAMATAY SA KULUNGAN",
-          hintAudio: "hint33_4.mp3"
-        },
-        {
-          question: "MAHABAGIN - Ang karakter ng Kapitan Heneral na naging balita dahil sa pagpapalaya niya sa mga estudyanteng nakulong.",
-          correct: "MAAWAIN",
-          hintAudio: "hint33_5.mp3"
-        },
-        {
-          question: "MAGHASIK - Ang nais ng Kapitan Heneral ay kumalat ang takot na magmunula sa pagpapakulong kay Basilio bilang halimbawa sa mga estudyante.",
-          correct: "MAGTANIM NG IDEYA",
-          hintAudio: "hint33_6.mp3"
-        },
-        {
-          question: "MALAMIG - Ang pagsagot ng Kapitan Heneral sa mataas na kawani ay walang bahid ng kabutihan at konsesya.",
-          correct: "WALANG PAKIALAM",
-          hintAudio: "hint33_7.mp3"
-        },
-        {
-          question: "MARTIR - Ang tawag sa pagkamatay ng tatlong paring Gombursa na siyang nangyari sa akda ng Noli Me Tangere.",
-          correct: "PAGKAMATAY PARA SA PANANAMPALATAYA O ADHIKAIN",
-          hintAudio: "hint33_8.mp3"
-        },
-        {
-          question: "NAGBITIW - Ang pag-uusap ng mataas na kawani sa Kapitan Heneral ay naging dahilan kung bakit siya bumitaw sa pagiging kawani at bumalik sa espanya.",
-          correct: "PAG-ALIS SA POSISYON",
-          hintAudio: "hint33_9.mp3"
-        },
-        {
-          question: "PAGPAPAKASAKIT - Ang kahindik-hindik na hinihinging kapalit ni Padre Camorra kay Huli sa pagpapalaya kay Basilio.",
-          correct: "PANGHAHALAY",
-          hintAudio: "hint33_10.mp3"
-        }
-      ];
+    {
+      question: "DADANAK – Ang himagsikang ipaplano nila Simoun at Basilio ay magdudulot ng maraming biktima at pagtagas ng dugo.",
+      correct: "PAGKAMATAY",
+      hintAudio: "p15-dadanak.mp3"
+    },
+    {
+      question: "ILAWAN – Ang gagamitin bilang hudyat ng pagsisimula ng himagsikan at sandata ng mga inaapi ayon kay Simoun.",
+      correct: "LAMPARA",
+      hintAudio: "p15-ilawan.mp3"
+    },
+    {
+      question: "ISINALAT – Ang aksyon na pagtatago sa rebolber at bala binigay ni Simoun kay Basilio pagkaalala niya sa dadanak na dugo.",
+      correct: "IPINASOK",
+      hintAudio: "p15-isinalat.mp3"
+    },
+    {
+      question: "KADINGAL – Ang diskripsyon ng mga taong dumalo na nangyari dahil sa pautang na pera ni Simoun.",
+      correct: "KARANGAL",
+      hintAudio: "p15-kadingal.mp3"
+    },
+    {
+      question: "MABIGAT – Ang pananaw ni Simoun sa pagdesisyon niyang gumamit ng marahas na plano sa paghihimagsik.",
+      correct: "MALAKING RESPONSIBILIDAD",
+      hintAudio: "p15-mabigat.mp3"
+    },
+    {
+      question: "MAKATAO – Ang paraan ng himagsikan nais sana ni Simoun gawin dahil nais lamang niyang iligtas si Maria Clara.",
+      correct: "MAPAYAPA",
+      hintAudio: "p15-makatao.mp3"
+    },
+    {
+      question: "MARAHAS – Ang huling piniling paraan ng paghihimagsik na pinili ni Simoun upang maghiganti sa mga prayle at pamahalaan.",
+      correct: "MALUPIT",
+      hintAudio: "p15-marahas.mp3"
+    },
+    {
+      question: "MARUSING – Ang kaanyuan ni Basilio matapos nitong makalaya sa kulungan at makipagkita kay Simoun.",
+      correct: "MADUNGIS",
+      hintAudio: "p15-marusing.mp3"
+    },
+    {
+      question: "MITSA – Ang hudyat ng nalalabing oras bago magsimula ang himagsikan at ang nalalabing oras ng mga dumalo sa kasalan.",
+      correct: "MAGSISINDI NG BOMBA",
+      hintAudio: "p15-mitsa.mp3"
+    },
+    {
+      question: "NABAGBAG – Ang malungkot na emosyon nadama ni Basilio para kay Isagani matapos niyang makita ang sasakyan ng bagong kasal.",
+      correct: "NAANTIG",
+      hintAudio: "p15-nabagbag.mp3"
+    },
+    {
+      question: "NAGHARI – Ang simbolismo ng pagwawagi ng kabutihang tao ni Basilio laban sa kanyang pagnanais maghiganti.",
+      correct: "NAGTAGUMPAY",
+      hintAudio: "p15-naghari.mp3"
+    },
+    {
+      question: "NAKALUKLOK – Ang paraan ng pagpapakita ng mga diyos-diyosan upang makita ng mga taong dadalo ang mga ito.",
+      correct: "NAKAPATONG",
+      hintAudio: "p15-nakaluklok.mp3"
+    },
+    {
+      question: "NAG-ALINLANGAN – Ang ideya na marahas na paghihimagsik ang nagdulot ng ganitong emosyon kay Simoun.",
+      correct: "PANANAIG SAGLIT NG KABUTIHAN",
+      hintAudio: "p15-nagalinlangan.mp3"
+    },
+    {
+      question: "USIGIN – Ang maaaring gawin sa kanya ng mga taong may galit kay Simoun kapag nawala na ang Kapitan Heneral sa Pilipinas.",
+      correct: "HABULIN",
+      hintAudio: "p15-usigin.mp3"
+    },
+    {
+      question: "YAKAGIN – Ang naisip na pampalubag-loob ni Basilio kay Isagani dahil sa alam niyang masasaktan ang kanyang kaibigan.",
+      correct: "IMBITAHAN",
+      hintAudio: "p15-yakagin.mp3"
+    }
+  ];
 
       let questions = [];
       let userAnswers = {};
@@ -998,10 +1028,10 @@
       }
 
       function updateStats() {
-        const count = Object.keys(userAnswers).length;
-        document.getElementById("foundCount").textContent = `${count}/10`;
-        currentGameScore = count;
-      }
+  const count = Object.keys(userAnswers).length;
+  document.getElementById("foundCount").textContent = `${count}/15`;  // Changed from 10 to 15
+  currentGameScore = count;
+}
 
       function showAnswersReview() {
         const reviewContainer = document.getElementById("answersReview");
@@ -1149,7 +1179,7 @@
           introFinished = false;
           
           // Disable all hint buttons initially
-          for (let i = 0; i < 10; i++) {
+          for (let i = 0; i < 15; i++) {
             const btn = document.getElementById(`hintBtn${i}`);
             if (btn) {
               btn.disabled = true;
@@ -1226,14 +1256,15 @@
 
       // Function to enable hint buttons after intro finishes
       function enableHintButtons() {
-        introFinished = true;
-        for (let i = 0; i < 10; i++) {
-          const btn = document.getElementById(`hintBtn${i}`);
-          if (btn) {
-            btn.disabled = false;
-          }
-        }
-      }
+  introFinished = true;
+  // Change from 10 to 15 to enable all hint buttons
+  for (let i = 0; i < 15; i++) {
+    const btn = document.getElementById(`hintBtn${i}`);
+    if (btn) {
+      btn.disabled = false;
+    }
+  }
+}
 
       // Function to play hint audio
       function playHintAudio(index, audioFile) {
@@ -1306,26 +1337,26 @@
         });
       }
 
-      // Function to stop all hint audios
-      function stopAllHintAudios() {
-        // Stop the current playing audio
-        if (currentHintAudio) {
-          currentHintAudio.pause();
-          currentHintAudio.currentTime = 0;
-          currentHintAudio = null;
-        }
-        
-        // Reset all buttons
-        for (let i = 0; i < 10; i++) {
-          const button = document.getElementById(`hintBtn${i}`);
-          if (button) {
-            button.innerHTML = "▶";
-            button.classList.remove("playing");
-          }
-        }
-        
-        currentPlayingHint = null;
-      }
+      // Update the stopAllHintAudios function to handle 15 items:
+function stopAllHintAudios() {
+  // Stop the current playing audio
+  if (currentHintAudio) {
+    currentHintAudio.pause();
+    currentHintAudio.currentTime = 0;
+    currentHintAudio = null;
+  }
+  
+  // Reset all buttons - change from 10 to 15
+  for (let i = 0; i < 15; i++) {
+    const button = document.getElementById(`hintBtn${i}`);
+    if (button) {
+      button.innerHTML = "▶";
+      button.classList.remove("playing");
+    }
+  }
+  
+  currentPlayingHint = null;
+}
 
       function showModal(modalId) {
         document.getElementById(modalId).style.display = "flex";
