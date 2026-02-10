@@ -131,5 +131,38 @@ body {
     <script src="chapter-intro-map.js"></script>
     <script src="chapter-audio.js"></script>
     <script src="script-chapters.js"></script>
+    <script>
+// Direct URL audio handling for chapter pages
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDirectAccess = urlParams.get('nav') === 'direct' || 
+                          (!document.referrer && !sessionStorage.getItem('lastClickedChapter'));
+    
+    if (isDirectAccess) {
+        console.log('Direct URL access detected for chapter audio');
+        
+        // Wait a bit for page to load, then try to play audio
+        setTimeout(() => {
+            const audioElement = document.querySelector('#chapterAudio');
+            if (audioElement) {
+                // Check if user has interacted
+                const hasInteraction = window.audioAutoplay?.getUserInteractionStatus();
+                
+                if (hasInteraction) {
+                    console.log('Attempting to play audio for direct access');
+                    attemptToPlayEndAudio(audioElement);
+                } else {
+                    // Show a more helpful message
+                    showIntroNotification(
+                        'Kabanata 1-3', 
+                        '👆', 
+                        'Mag-click sa kahit saan sa pahina para paganahin ang audio, tapos pindutin ang play button.'
+                    );
+                }
+            }
+        }, 1500);
+    }
+});
+</script>
 </body>
 </html>
