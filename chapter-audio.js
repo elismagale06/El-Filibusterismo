@@ -33,6 +33,12 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 // ===========================================
+// INTRO AUDIO STATE TRACKING
+// ===========================================
+let isIntroPlaying = false;
+let currentIntroAudio = null;
+
+// ===========================================
 // MAIN CHAPTER AUDIO LOGIC
 // ===========================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -48,6 +54,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Clean up URL but preserve state for refreshes
     cleanupUrlPreservingState();
+    
+    // Setup cleanup on page unload
+    window.addEventListener('beforeunload', cleanupIntroAudio);
 });
 
 function initializeChapterAudioSystem() {
@@ -205,6 +214,173 @@ function shouldPlayChapterIntro() {
     return false; 
 }
 
+function playChapterIntroAudio(endAudio) {
+    const chapterData = getChapterData();
+    
+    if (!chapterData.number) {
+        console.log('No chapter number found for intro audio');
+        showIntroNotification('Kabanata', '📖', 'Ang kabanata ay handa na.');
+        return;
+    }
+    
+    console.log('Playing intro for chapter:', chapterData.number);
+    
+    // Get intro audio file for this chapter
+    const introAudioPath = getChapterIntroAudio(chapterData.number);
+    
+    if (!introAudioPath) {
+        console.log(`No intro audio found for chapter ${chapterData.number}`);
+        showIntroNotification(chapterData.title, '📖', 'Ang kabanata ay handa na.');
+        
+        // Check if we can play main audio
+        setTimeout(() => {
+            attemptToPlayEndAudio(endAudio);
+        }, 1000);
+        return;
+    }
+    
+    console.log('Intro audio path:', introAudioPath);
+    
+    // Check if user has interacted
+    const canAutoplay = window.audioAutoplay?.canAutoplay();
+    console.log('Can autoplay?', canAutoplay);
+    
+    if (!canAutoplay) {
+        console.log('Cannot autoplay - no user interaction');
+        
+        // For direct URL navigation, show different message
+        if (!document.referrer) {
+            showIntroNotification(chapterData.title, '🌐', 'Maligayang pagdating! Pindutin ang play button upang simulan.');
+        } else {
+            showIntroNotification(chapterData.title, '📖', 'Pindutin ang play button upang pakinggan.');
+        }
+        
+        // Try to unlock audio
+        window.audioAutoplay?.unlockWithSilentAudio();
+        
+        // Don't play anything, just show the notification
+        return;
+    }
+    
+    // User has interacted, proceed with intro
+    console.log('User has interacted, playing intro');
+    
+    // Create and play intro audio
+    const introAudio = new Audio(introAudioPath);
+    currentIntroAudio = introAudio;
+    introAudio.volume = 0.7;
+    
+    // Set intro playing state
+    isIntroPlaying = true;
+    
+    // Hide floating button while intro is playing
+    const floatingBtn = document.getElementById('floatingAudioBtn');
+    if (floatingBtn) {
+        floatingBtn.style.display = 'none';
+        console.log('Floating button hidden during intro playback');
+    }
+    
+    // Add loaded handler
+    introAudio.addEventListener('loadeddata', function() {
+        console.log('Intro audio loaded successfully');
+    });
+    
+    // Add error handler
+    introAudio.addEventListener('error', function(e) {
+        console.warn('Intro audio loading error:', e);
+        console.warn('Error details:', e.target.error);
+        
+        // Reset intro playing state
+        isIntroPlaying = false;
+        currentIntroAudio = null;
+        
+        showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang intro audio.');
+        
+        // Show floating button as fallback
+        if (floatingBtn) {
+            floatingBtn.style.display = 'flex';
+            console.log('Floating button shown as fallback (intro error)');
+        }
+        
+        // Try to play main audio anyway
+        setTimeout(() => {
+            attemptToPlayEndAudio(endAudio);
+        }, 500);
+    });
+    
+    // When intro ends, play the main chapter audio
+    introAudio.addEventListener('ended', function() {
+        console.log('Intro audio ended, now playing main chapter audio');
+        
+        // Reset intro playing state
+        isIntroPlaying = false;
+        currentIntroAudio = null;
+        
+        // Don't show floating button here - it will be hidden when main audio plays
+        // The attemptToPlayEndAudio function will handle floating button visibility
+        
+        // Auto-play the main chapter audio
+        attemptToPlayEndAudio(endAudio);
+    });
+    
+    // If intro audio is paused (user interaction or browser policy)
+    introAudio.addEventListener('pause', function() {
+        // Check if this was due to an error or user action
+        if (!introAudio.error) {
+            console.log('Intro audio paused');
+            isIntroPlaying = false;
+            
+            // Show floating button as fallback
+            if (floatingBtn) {
+                floatingBtn.style.display = 'flex';
+                console.log('Floating button shown (intro paused)');
+            }
+        }
+    });
+    
+    // Try to play intro
+    const playPromise = introAudio.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log(`Playing intro audio for chapter ${chapterData.number}`);
+                showIntroNotification(chapterData.title, '🔊', 'Pinapakinggan ang intro...');
+            })
+            .catch(error => {
+                console.warn('Intro audio play failed:', error);
+                
+                // Reset intro playing state
+                isIntroPlaying = false;
+                currentIntroAudio = null;
+                
+                // Check error type
+                if (error.name === 'NotAllowedError') {
+                    showIntroNotification(chapterData.title, '🔇', 'Pindutin ang play button upang pakinggan.');
+                    
+                    // Show floating button as fallback
+                    if (floatingBtn) {
+                        floatingBtn.style.display = 'flex';
+                        console.log('Floating button shown as fallback (play not allowed)');
+                    }
+                } else {
+                    showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang audio.');
+                    
+                    // Show floating button as fallback
+                    if (floatingBtn) {
+                        floatingBtn.style.display = 'flex';
+                        console.log('Floating button shown as fallback (play error)');
+                    }
+                }
+                
+                // Try to play main audio as fallback
+                setTimeout(() => {
+                    attemptToPlayEndAudio(endAudio);
+                }, 1000);
+            });
+    }
+}
+
 function attemptToPlayEndAudio(endAudio) {
     if (!endAudio) {
         console.error('No end audio element found');
@@ -219,6 +395,12 @@ function attemptToPlayEndAudio(endAudio) {
     if (isMobile && !window.audioAutoplay?.canAutoplay()) {
         console.log('Mobile: Waiting for user interaction');
         showIntroNotification('Kabanata', '📱', 'Pindutin ang play button upang simulan.');
+        
+        // Show floating button if intro didn't show it
+        const floatingBtn = document.getElementById('floatingAudioBtn');
+        if (floatingBtn && floatingBtn.style.display === 'none') {
+            floatingBtn.style.display = 'flex';
+        }
         return;
     }
     
@@ -226,6 +408,12 @@ function attemptToPlayEndAudio(endAudio) {
     if (!window.audioAutoplay?.canAutoplay()) {
         console.log('Cannot autoplay - no user interaction');
         showIntroNotification('Kabanata', '▶', 'Pindutin ang play button upang simulan.');
+        
+        // Show floating button if intro didn't show it
+        const floatingBtn = document.getElementById('floatingAudioBtn');
+        if (floatingBtn && floatingBtn.style.display === 'none') {
+            floatingBtn.style.display = 'flex';
+        }
         return;
     }
     
@@ -240,7 +428,7 @@ function attemptToPlayEndAudio(endAudio) {
             .then(() => {
                 console.log('Main chapter audio playing automatically');
                 
-                // Hide floating button
+                // Keep floating button hidden (it should already be hidden from intro)
                 const floatingBtn = document.getElementById('floatingAudioBtn');
                 if (floatingBtn) {
                     floatingBtn.style.display = 'none';
@@ -250,6 +438,13 @@ function attemptToPlayEndAudio(endAudio) {
             })
             .catch(error => {
                 console.error('Main audio autoplay failed:', error);
+                
+                // Show floating button as fallback since main audio failed
+                const floatingBtn = document.getElementById('floatingAudioBtn');
+                if (floatingBtn) {
+                    floatingBtn.style.display = 'flex';
+                    console.log('Floating button shown as fallback (main audio failed)');
+                }
                 
                 // Fallback for mobile
                 if (isMobile) {
@@ -410,8 +605,15 @@ function createFloatingAudioButton(audioElement) {
         this.style.background = 'linear-gradient(135deg, #8b4513, #5c2e0f)';
     });
     
-    // Click handler
+    // Click handler - disable if intro is playing
     btn.addEventListener('click', function() {
+        // If intro is currently playing, don't allow button interaction
+        if (isIntroPlaying && currentIntroAudio) {
+            console.log('Floating button disabled while intro is playing');
+            showIntroNotification('Pakiusap', '⏸', 'Tapusin muna ang intro bago mag-play ng kabanata.');
+            return;
+        }
+        
         toggleAudioPlayback(audioElement, this);
     });
     
@@ -466,117 +668,20 @@ function showPlayError(button) {
     }, 2000);
 }
 
-function playChapterIntroAudio(endAudio) {
-    const chapterData = getChapterData();
-    
-    if (!chapterData.number) {
-        console.log('No chapter number found for intro audio');
-        showIntroNotification('Kabanata', '📖', 'Ang kabanata ay handa na.');
-        return;
+function cleanupIntroAudio() {
+    console.log('Cleaning up intro audio');
+    if (currentIntroAudio) {
+        currentIntroAudio.pause();
+        currentIntroAudio.src = '';
+        currentIntroAudio = null;
     }
+    isIntroPlaying = false;
     
-    console.log('Playing intro for chapter:', chapterData.number);
-    
-    // Get intro audio file for this chapter
-    const introAudioPath = getChapterIntroAudio(chapterData.number);
-    
-    if (!introAudioPath) {
-        console.log(`No intro audio found for chapter ${chapterData.number}`);
-        showIntroNotification(chapterData.title, '📖', 'Ang kabanata ay handa na.');
-        
-        // Check if we can play main audio
-        setTimeout(() => {
-            attemptToPlayEndAudio(endAudio);
-        }, 1000);
-        return;
-    }
-    
-    console.log('Intro audio path:', introAudioPath);
-    
-    // Check if user has interacted
-    const canAutoplay = window.audioAutoplay?.canAutoplay();
-    console.log('Can autoplay?', canAutoplay);
-    
-    if (!canAutoplay) {
-        console.log('Cannot autoplay - no user interaction');
-        
-        // For direct URL navigation, show different message
-        if (!document.referrer) {
-            showIntroNotification(chapterData.title, '🌐', 'Maligayang pagdating! Pindutin ang play button upang simulan.');
-        } else {
-            showIntroNotification(chapterData.title, '📖', 'Pindutin ang play button upang pakinggan.');
-        }
-        
-        // Try to unlock audio
-        window.audioAutoplay?.unlockWithSilentAudio();
-        
-        // Don't play anything, just show the notification
-        return;
-    }
-    
-    // User has interacted, proceed with intro
-    console.log('User has interacted, playing intro');
-    
-    // Create and play intro audio
-    const introAudio = new Audio(introAudioPath);
-    introAudio.volume = 0.7;
-    
-    // Add loaded handler
-    introAudio.addEventListener('loadeddata', function() {
-        console.log('Intro audio loaded successfully');
-    });
-    
-    // Add error handler
-    introAudio.addEventListener('error', function(e) {
-        console.warn('Intro audio loading error:', e);
-        console.warn('Error details:', e.target.error);
-        
-        showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang intro audio.');
-        
-        // Try to play main audio anyway
-        setTimeout(() => {
-            attemptToPlayEndAudio(endAudio);
-        }, 500);
-    });
-    
-    // When intro ends, play the main chapter audio
-    introAudio.addEventListener('ended', function() {
-        console.log('Intro audio ended, now playing main chapter audio');
-        
-        // Hide floating button
-        const floatingBtn = document.getElementById('floatingAudioBtn');
-        if (floatingBtn) {
-            floatingBtn.style.display = 'none';
-        }
-        
-        // Auto-play the main chapter audio
-        attemptToPlayEndAudio(endAudio);
-    });
-    
-    // Try to play intro
-    const playPromise = introAudio.play();
-    
-    if (playPromise !== undefined) {
-        playPromise
-            .then(() => {
-                console.log(`Playing intro audio for chapter ${chapterData.number}`);
-                showIntroNotification(chapterData.title, '🔊', 'Pinapakinggan ang intro...');
-            })
-            .catch(error => {
-                console.warn('Intro audio play failed:', error);
-                
-                // Check error type
-                if (error.name === 'NotAllowedError') {
-                    showIntroNotification(chapterData.title, '🔇', 'Pindutin ang play button upang pakinggan.');
-                } else {
-                    showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang audio.');
-                }
-                
-                // Try to play main audio as fallback
-                setTimeout(() => {
-                    attemptToPlayEndAudio(endAudio);
-                }, 1000);
-            });
+    // Show floating button if it was hidden
+    const floatingBtn = document.getElementById('floatingAudioBtn');
+    if (floatingBtn && floatingBtn.style.display === 'none') {
+        floatingBtn.style.display = 'flex';
+        console.log('Floating button restored after cleanup');
     }
 }
 
@@ -593,8 +698,6 @@ function saveAudioState() {
 function clearAudioState() {
     localStorage.removeItem('chapterAudioState');
 }
-
-
 
 let currentNotification = null;
 let notificationTimeout = null;
@@ -787,6 +890,20 @@ style.textContent = `
         }
     }
     
+    .floating-audio-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: scale(0.95);
+        animation: none;
+    }
+    
+    .floating-audio-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+        background: linear-gradient(135deg, #666, #444);
+    }
+    
     @media (max-width: 768px) {
         .floating-audio-btn {
             width: 60px !important;
@@ -806,4 +923,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('Chapter audio script loaded with global error handling');
+console.log('Chapter audio script loaded with intro audio tracking and floating button fallback');

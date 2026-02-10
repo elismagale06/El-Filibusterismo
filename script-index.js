@@ -3,6 +3,8 @@
 // Global variables for audio management
 let currentAudio = null;
 let isAudioPlaying = false;
+let hasUserInteracted = false; // Track if user has interacted with page
+const audioCache = new Map(); // Cache loaded audio objects
 
 const characters = [
     {
@@ -290,11 +292,75 @@ document.addEventListener("DOMContentLoaded", function () {
         initializeCharacterSearch();
         initializeModal();
         initializeAudioControls();
+        preloadFirstAudios(); // Preload some audios to reduce delay
     }
 
     addCardAnimations();
     ensureSingleAudio();
+    
+    // Mark user interaction when they click anywhere
+    document.addEventListener('click', () => {
+        hasUserInteracted = true;
+    }, { once: true });
 });
+
+// Preload first few audio files to reduce initial delay
+function preloadFirstAudios() {
+    // Preload first 5 character audios
+    const audiosToPreload = characters.slice(0, 5);
+    
+    audiosToPreload.forEach(character => {
+        if (character.audio) {
+            const audio = new Audio();
+            audio.src = character.audio;
+            audio.preload = 'auto';
+            audio.load();
+            
+            // Store in cache
+            audioCache.set(character.audio, {
+                audio: audio,
+                loaded: false
+            });
+            
+            // Mark as loaded when ready
+            audio.addEventListener('canplaythrough', () => {
+                const cached = audioCache.get(character.audio);
+                if (cached) cached.loaded = true;
+            });
+            
+            // Handle errors
+            audio.addEventListener('error', () => {
+                console.warn('Failed to preload audio:', character.audio);
+            });
+        }
+    });
+}
+
+// Get audio from cache or create new
+function getCachedAudio(audioPath) {
+    // If audio is in cache, return it
+    if (audioCache.has(audioPath)) {
+        return audioCache.get(audioPath).audio.cloneNode();
+    }
+    
+    // Otherwise create new and cache it
+    const audio = new Audio(audioPath);
+    audio.preload = 'auto';
+    
+    // Store in cache
+    audioCache.set(audioPath, {
+        audio: audio,
+        loaded: false
+    });
+    
+    // Mark as loaded when ready
+    audio.addEventListener('canplaythrough', () => {
+        const cached = audioCache.get(audioPath);
+        if (cached) cached.loaded = true;
+    });
+    
+    return audio.cloneNode();
+}
 
 function initializeCharacterGrid() {
     const characterGrid = document.getElementById("characterGrid");
@@ -308,6 +374,26 @@ function initializeCharacterGrid() {
         characterCard.dataset.description = character.description;
         characterCard.dataset.image = character.image;
         characterCard.dataset.audio = character.audio || "";
+        
+        // Preload audio when hovering over card (improves UX)
+        characterCard.addEventListener('mouseenter', () => {
+            if (character.audio && !audioCache.has(character.audio)) {
+                const audio = new Audio();
+                audio.src = character.audio;
+                audio.preload = 'auto';
+                audio.load();
+                
+                audioCache.set(character.audio, {
+                    audio: audio,
+                    loaded: false
+                });
+                
+                audio.addEventListener('canplaythrough', () => {
+                    const cached = audioCache.get(character.audio);
+                    if (cached) cached.loaded = true;
+                });
+            }
+        });
         
         characterCard.innerHTML = `
             <div class="character-img">
@@ -414,15 +500,30 @@ function togglePlayPause() {
         playPauseBtn.classList.remove('playing');
         isAudioPlaying = false;
     } else {
-        currentAudio.play()
-            .then(() => {
-                playPauseBtn.classList.add('playing');
-                isAudioPlaying = true;
-            })
-            .catch(error => {
-                console.error('Error playing audio:', error);
-            });
+        // Ensure user has interacted before playing
+        if (!hasUserInteracted) {
+            hasUserInteracted = true;
+        }
+        
+        playAudioWithFallback(currentAudio, playPauseBtn);
     }
+}
+
+// Play audio with fallback for autoplay restrictions
+function playAudioWithFallback(audio, playButton) {
+    audio.play()
+        .then(() => {
+            playButton.classList.add('playing');
+            isAudioPlaying = true;
+        })
+        .catch(error => {
+            console.error('Error playing audio:', error);
+            // If autoplay is blocked, show a message or handle gracefully
+            if (error.name === 'NotAllowedError') {
+                console.log('Autoplay was prevented. User needs to interact first.');
+                // You could show a message to the user here
+            }
+        });
 }
 
 // Stop audio completely
@@ -465,7 +566,6 @@ function showCharacterModal(name, description, image, audioPath) {
     
     // Stop any currently playing audio
     stopAudio();
-    currentAudio = null;
     
     modalName.textContent = name;
     modalDescription.textContent = description;
@@ -512,18 +612,29 @@ function setupCharacterAudio(audioPath) {
         playPauseBtn.classList.remove('playing');
     }
     
-    // Create and configure audio
-    currentAudio = new Audio(audioPath);
-    currentAudio.preload = 'auto';
+    // Get or create audio
+    currentAudio = getCachedAudio(audioPath);
     currentAudio.volume = document.getElementById('volumeSlider')?.value || 0.7;
     
     // Set up event listeners
-    currentAudio.addEventListener('loadedmetadata', () => {
+    const onLoaded = () => {
         updateAudioTimeDisplay();
         if (audioControls) {
             audioControls.style.opacity = '1';
         }
-    });
+        
+        // Auto-play only if user has already interacted
+        if (hasUserInteracted) {
+            playAudioWithFallback(currentAudio, playPauseBtn);
+        }
+    };
+    
+    // Check if already loaded
+    if (currentAudio.readyState >= 3) { // HAVE_FUTURE_DATA or more
+        setTimeout(onLoaded, 0);
+    } else {
+        currentAudio.addEventListener('loadedmetadata', onLoaded);
+    }
     
     currentAudio.addEventListener('timeupdate', updateAudioTimeDisplay);
     
@@ -548,12 +659,6 @@ function setupCharacterAudio(audioPath) {
         if (audioControls) {
             audioControls.style.opacity = '1';
         }
-    });
-    
-    // Auto-play when modal opens (will be subject to browser autoplay policies)
-    currentAudio.play().catch(error => {
-        console.log('Autoplay prevented or audio error:', error);
-        // User can still click play button manually
     });
 }
 
