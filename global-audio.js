@@ -64,11 +64,14 @@ class AudioAutoplayManager {
             this.hasUserInteracted = true;
             console.log('User interaction detected - autoplay enabled');
             
-            // Save to localStorage
+            // Save to localStorage with extended timeout
             localStorage.setItem('userHasInteracted', 'true');
             localStorage.setItem('interactionTimestamp', Date.now().toString());
             
-            // Dispatch event so other scripts know
+            // Save session cookie for refresh detection
+            document.cookie = "userInteracted=true; path=/; max-age=3600"; // 1 hour
+            
+            // Dispatch event
             window.dispatchEvent(new CustomEvent('userInteracted'));
         }
     }
@@ -104,17 +107,23 @@ class AudioAutoplayManager {
     }
 
     checkStoredInteraction() {
+        // Check cookie first (for immediate refresh detection)
+        const cookieInteracted = document.cookie.includes('userInteracted=true');
+        if (cookieInteracted) {
+            this.hasUserInteracted = true;
+            console.log('Found user interaction in cookie');
+        }
+        
+        // Check localStorage
         const stored = localStorage.getItem('userHasInteracted');
         const timestamp = localStorage.getItem('interactionTimestamp');
         
         if (stored === 'true' && timestamp) {
-            // Check if interaction was within last 24 hours
             const hoursSince = (Date.now() - parseInt(timestamp)) / (1000 * 60 * 60);
             if (hoursSince < 24) {
                 this.hasUserInteracted = true;
                 console.log('Found recent user interaction in localStorage');
             } else {
-                // Clear old interaction
                 localStorage.removeItem('userHasInteracted');
                 localStorage.removeItem('interactionTimestamp');
             }
