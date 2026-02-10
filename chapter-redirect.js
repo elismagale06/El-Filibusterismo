@@ -1,77 +1,102 @@
-// chapter-redirect.js
+// chapter-redirect.js - Add this to EVERY chapter page
 (function() {
     'use strict';
     
-    const REDIRECT_DELAY_MS = 100; // 0.1 second delay
-    const NAVIGATION_TIMEOUT = 30000; // 30 seconds
-    
-    function shouldRedirect() {
-        // Get current URL parameters
+    // Check if we should redirect
+    function checkAccessAndRedirect() {
+        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const navParam = urlParams.get('nav');
+        const urlToken = urlParams.get('token');
         
-        // If nav=direct is in URL, this is a valid navigation
-        if (navParam === 'direct') {
-            return false;
-        }
+        // Get referrer information
+        const referrer = document.referrer || '';
         
-        // Check sessionStorage for recent navigation
-        const navData = sessionStorage.getItem('lastClickedChapter');
-        if (navData) {
-            try {
-                const data = JSON.parse(navData);
-                const now = Date.now();
-                
-                // Check if navigation data is fresh (within 30 seconds)
-                if (data.timestamp && (now - data.timestamp) < NAVIGATION_TIMEOUT) {
-                    // Check if this is the intended chapter
-                    const currentChapter = urlParams.get('chapter') || 
-                                         window.location.pathname.match(/chapter(\d+-\d+|\d+)\.html/)?.[1];
-                    
-                    if (currentChapter && data.number.includes(currentChapter)) {
-                        // Valid navigation - clear the flag
-                        sessionStorage.removeItem('lastClickedChapter');
-                        return false;
-                    }
-                } else {
-                    // Stale data - remove it
-                    sessionStorage.removeItem('lastClickedChapter');
-                }
-            } catch(e) {
-                sessionStorage.removeItem('lastClickedChapter');
+        // Try to get stored token
+        let storedTokenData = null;
+        try {
+            const storedData = sessionStorage.getItem('chapterAccessToken');
+            if (storedData) {
+                storedTokenData = JSON.parse(storedData);
             }
+        } catch (e) {
+            console.warn('Could not parse stored token data');
         }
         
-        // Check referrer - if coming from chapters.html, allow it
-        const referrer = document.referrer;
-        if (referrer && referrer.includes('chapters.html')) {
+        // Conditions for valid access:
+        const isValidAccess = 
+            // 1. Came directly from chapters.html
+            referrer.includes('chapters.html') ||
+            // 2. Has valid token in URL that matches stored token
+            (urlToken && storedTokenData && urlToken === storedTokenData.token) ||
+            // 3. Has valid token data that's not expired (less than 30 seconds old)
+            (storedTokenData && 
+             storedTokenData.timestamp && 
+             (Date.now() - storedTokenData.timestamp) < 30000);
+        
+        // If NOT valid access, redirect to index.html
+        if (!isValidAccess) {
+            console.log('Invalid chapter access. Redirecting to homepage.');
+            
+            // Optional: Show a brief message
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                text-align: center;
+                z-index: 9999;
+                font-family: Arial, sans-serif;
+            `;
+            message.innerHTML = `
+                <p style="margin: 0 0 10px 0; font-size: 16px;">
+                    Mangyaring pumili ng kabanata mula sa listahan.
+                </p>
+                <p style="margin: 0; font-size: 14px; opacity: 0.8;">
+                    Nagre-redirect sa homepage...
+                </p>
+            `;
+            document.body.appendChild(message);
+            
+            // Redirect after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+            
             return false;
         }
         
-        // No valid navigation detected - redirect
+        // If we have a valid access, clean up
+        console.log('Valid chapter access detected');
+        
+        // Clear the token from session storage
+        sessionStorage.removeItem('chapterAccessToken');
+        
+        // Remove token from URL without page reload
+        if (urlToken) {
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+        
         return true;
     }
     
-    // Execute on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        if (shouldRedirect()) {
-            console.log('Redirecting to index.html - invalid navigation detected');
-            
-            // Add a small delay for better UX
-            setTimeout(function() {
-                // Optionally store where they tried to go
-                sessionStorage.setItem('attemptedAccess', window.location.href);
-                
-                // Redirect to home
-                window.location.href = 'index.html';
-            }, REDIRECT_DELAY_MS);
-        }
-    });
+    // Run check when page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkAccessAndRedirect);
+    } else {
+        checkAccessAndRedirect();
+    }
     
-    // Also handle beforeunload to clear flags
-    window.addEventListener('beforeunload', function() {
-        // Keep the data if they might use back button
-        // Or clear it if you want to force fresh start
-        // sessionStorage.removeItem('lastClickedChapter');
+    // Also check on page show (for browser back/forward)
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            // Page was restored from cache, check access again
+            setTimeout(checkAccessAndRedirect, 100);
+        }
     });
 })();

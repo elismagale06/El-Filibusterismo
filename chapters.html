@@ -678,81 +678,144 @@ body {
 document.addEventListener('DOMContentLoaded', function() {
     const chapterLinks = document.querySelectorAll('.chapter-card');
     
-    // Clear old data on page load
-    const clearOldData = () => {
-        const stored = sessionStorage.getItem('lastClickedChapter');
-        if (stored) {
+    // Clear any old access tokens
+    const clearOldTokens = () => {
+        const storedToken = sessionStorage.getItem('chapterAccessToken');
+        if (storedToken) {
             try {
-                const data = JSON.parse(stored);
+                const tokenData = JSON.parse(storedToken);
                 const now = Date.now();
                 
-                // Clear if timestamp is older than 30 seconds
-                if (data.timestamp && (now - data.timestamp) > 30000) {
-                    sessionStorage.removeItem('lastClickedChapter');
+                // Clear if token is older than 30 seconds
+                if (tokenData.timestamp && (now - tokenData.timestamp) > 30000) {
+                    sessionStorage.removeItem('chapterAccessToken');
+                    localStorage.removeItem('chapterAccessToken');
                 }
             } catch (e) {
-                console.error('Error parsing stored chapter data:', e);
-                sessionStorage.removeItem('lastClickedChapter');
+                console.error('Error parsing stored token:', e);
+                sessionStorage.removeItem('chapterAccessToken');
+                localStorage.removeItem('chapterAccessToken');
             }
         }
     };
     
-    clearOldData();
-    
-    // Handle URL parameters if any
-    const urlParams = new URLSearchParams(window.location.search);
-    const returnParam = urlParams.get('return');
-    
-    if (returnParam === 'true') {
-        sessionStorage.removeItem('lastClickedChapter');
-    }
+    clearOldTokens();
     
     // Add event listeners to chapter links
     chapterLinks.forEach(link => {
-    if (link.hasAttribute('data-processed')) {
-        return;
-    }
-    
-    link.setAttribute('data-processed', 'true');
-    
-    link.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        const chapterNum = this.getAttribute('data-chapter-num');
-        const chapterTitle = this.querySelector('h3')?.textContent || 'Chapter';
-        const href = this.getAttribute('href');
-        
-        if (!href || !chapterNum) {
-            console.error('Missing href or data-chapter-num attribute');
-            window.location.href = href;
+        // Skip if already processed
+        if (link.hasAttribute('data-processed')) {
             return;
         }
         
-        // Store multiple flags for reliable detection
-        const navData = {
-            number: chapterNum,
-            title: chapterTitle,
-            href: href,
-            timestamp: Date.now(),
-            source: 'chapters-page'
-        };
+        link.setAttribute('data-processed', 'true');
         
-        // Save to multiple storage mechanisms for reliability
-        sessionStorage.setItem('lastClickedChapter', JSON.stringify(navData));
-        localStorage.setItem('lastChapterNav', JSON.stringify({
-            ...navData,
-            storedAt: Date.now()
-        }));
-        
-        // Also set a cookie for immediate refresh detection
-        document.cookie = `chapterNav=${chapterNum}; path=/; max-age=30`;
-        
-        console.log('Navigating to chapter:', chapterNum);
-        
-        // Navigate immediately
-        window.location.href = href;
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const chapterNum = this.getAttribute('data-chapter-num');
+            const chapterTitle = this.querySelector('h3')?.textContent || 'Chapter';
+            const href = this.getAttribute('href');
+            
+            if (!href || !chapterNum) {
+                console.error('Missing href or data-chapter-num attribute');
+                window.location.href = href;
+                return;
+            }
+            
+            // Generate unique access token
+            const accessToken = 'el_fili_' + Date.now() + '_' + 
+                Math.random().toString(36).substr(2, 12) + '_' + 
+                btoa(chapterNum).replace(/=/g, '');
+            
+            // Store token with metadata
+            const tokenData = {
+                token: accessToken,
+                chapter: chapterNum,
+                title: chapterTitle,
+                timestamp: Date.now(),
+                source: 'chapters_page'
+            };
+            
+            // Store in multiple places for reliability
+            sessionStorage.setItem('chapterAccessToken', JSON.stringify(tokenData));
+            localStorage.setItem('chapterAccessToken', JSON.stringify({
+                ...tokenData,
+                storedAt: Date.now()
+            }));
+            
+            // Set cookie as backup (expires in 30 seconds)
+            document.cookie = `chapterAccess=${accessToken}; path=/; max-age=30`;
+            
+            console.log('Navigating to chapter:', chapterNum, 'with token:', accessToken);
+            
+            // Add token to URL and navigate
+            const separator = href.includes('?') ? '&' : '?';
+            const newUrl = href + separator + 'token=' + encodeURIComponent(accessToken);
+            
+            // Brief delay to ensure storage is set
+            setTimeout(() => {
+                window.location.href = newUrl;
+            }, 50);
+        });
     });
-});
+    
+    // Handle search functionality
+    const chapterSearch = document.getElementById("chapterSearch");
+    if (chapterSearch) {
+        chapterSearch.addEventListener("input", filterChapters);
+        chapterSearch.addEventListener("keyup", filterChapters);
+    }
+    
+    // Handle back button - clear tokens
+    const backButton = document.querySelector('.back-button');
+    if (backButton && backButton.href.includes('index.html')) {
+        backButton.addEventListener('click', function() {
+            sessionStorage.removeItem('chapterAccessToken');
+            localStorage.removeItem('chapterAccessToken');
+        });
+    }
+    
+    // Helper function for search
+    function filterChapters() {
+        const el = document.getElementById("chapterSearch");
+        if (!el) return;
+        
+        const searchTerm = el.value.toLowerCase();
+        const chapterCards = document.querySelectorAll("#chapterGrid .chapter-card");
+        const noResults = document.getElementById("noChapterResults");
+        const searchTermSpan = document.getElementById("chapterSearchTerm");
+        
+        let visibleCount = 0;
+        let delay = 0;
+        
+        chapterCards.forEach((card) => {
+            const chapterTitle = card.querySelector("h3").textContent.toLowerCase();
+            const chapterDesc = card.querySelector("p").textContent.toLowerCase();
+            
+            if (searchTerm === "" || 
+                chapterTitle.includes(searchTerm) || 
+                chapterDesc.includes(searchTerm)) {
+                // Show card with animation
+                card.classList.remove("hidden");
+                card.style.animation = `fadeInCard 0.3s ease ${delay}s forwards`;
+                visibleCount++;
+                delay += 0.05;
+            } else {
+                // Hide card
+                card.classList.add("hidden");
+                card.style.animation = "none";
+            }
+        });
+        
+        // Show/hide no results message
+        if (visibleCount === 0 && searchTerm !== "") {
+            if (searchTermSpan) searchTermSpan.textContent = searchTerm;
+            if (noResults) noResults.classList.remove("hidden");
+        } else {
+            if (noResults) noResults.classList.add("hidden");
+        }
+    }
 });
 </script>
 </body>
