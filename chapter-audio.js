@@ -130,36 +130,36 @@ function checkAndPlayIntroAudio(endAudio) {
 function shouldPlayChapterIntro() {
     console.log('=== Checking if should play intro ===');
     
+    // Always check URL parameters first
     const urlParams = new URLSearchParams(window.location.search);
-    const playIntroParam = urlParams.get('playIntro');
     const navType = urlParams.get('nav');
     
-    // Priority 1: Direct URL parameter
+    // Priority 1: If URL has nav=direct parameter
     if (navType === 'direct') {
         console.log('✅ Direct navigation with parameter detected');
         return true;
     }
     
-    // Check for user interaction first
-    const hasInteraction = window.audioAutoplay?.canAutoplay() || false;
+    // Priority 2: Check if user has interacted (for all cases)
+    const hasInteraction = window.audioAutoplay?.getUserInteractionStatus() || false;
     
-    // Priority 2: Returning from other pages
-    const referrer = document.referrer;
-    if (referrer) {
-        try {
-            const referrerUrl = new URL(referrer);
-            if (referrerUrl.pathname.includes('talasalitaan') ||
-                referrerUrl.pathname.includes('activities') ||
-                referrerUrl.pathname.includes('quiz')) {
-                console.log('✅ Returning from related page');
-                return hasInteraction;
-            }
-        } catch (e) {
-            console.log('Error parsing referrer URL:', e);
+    // For direct URL access, we need to be more lenient
+    const isDirectAccess = !document.referrer || document.referrer === '';
+    
+    if (isDirectAccess) {
+        console.log('🌐 Direct URL access detected');
+        
+        // For direct access, check if we have any stored interaction
+        if (hasInteraction) {
+            console.log('✅ User has interacted before, allowing audio');
+            return true;
+        } else {
+            console.log('❌ No previous interaction for direct access');
+            return false;
         }
     }
     
-    // Priority 3: Recent chapter navigation
+    // Priority 3: Check session storage for recent navigation
     const storedData = sessionStorage.getItem('lastClickedChapter');
     if (storedData) {
         try {
@@ -178,14 +178,25 @@ function shouldPlayChapterIntro() {
         }
     }
     
-    // Priority 4: Direct URL navigation
-    if (!referrer || referrer === '') {
-        console.log('🌐 Direct URL navigation detected');
-        return hasInteraction;
+    // Priority 4: Check localStorage for last chapter nav
+    const lastNavData = localStorage.getItem('lastChapterNav');
+    if (lastNavData) {
+        try {
+            const data = JSON.parse(lastNavData);
+            const currentChapter = getCurrentChapterNumber();
+            
+            if (data.chapter === currentChapter || data.number === currentChapter) {
+                console.log('✅ Found matching chapter in localStorage');
+                return hasInteraction;
+            }
+        } catch (e) {
+            console.error('Error parsing localStorage data:', e);
+        }
     }
     
     console.log('❌ No conditions met for playing intro');
-    return false;
+    return false; 
+    
 }
 
 function attemptToPlayEndAudio(endAudio) {
