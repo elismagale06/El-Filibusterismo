@@ -101,38 +101,7 @@ body {
     <script src="chapter-intro-map.js"></script>
     <script src="chapter-audio.js"></script>
     <script src="script-chapters.js"></script>
-    <script>
-          // Add refresh detection
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if page was refreshed
-            if (performance.navigation.type === 1) {
-                console.log('Page was refreshed');
-                
-                // Show appropriate message
-                setTimeout(() => {
-                    const notification = document.createElement('div');
-                    notification.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: #fff3cd;
-                        border: 1px solid #ffeaa7;
-                        padding: 10px 15px;
-                        border-radius: 5px;
-                        z-index: 9999;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    `;
-                    notification.innerHTML = `
-                        <strong>🔄 Page Refreshed</strong><br>
-                        Click the audio player to play.
-                    `;
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => notification.remove(), 3000);
-                }, 500);
-            }
-        });
-    </script>
+    
    
 </body>
 </html>

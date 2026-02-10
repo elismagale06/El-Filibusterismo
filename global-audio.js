@@ -67,6 +67,21 @@ class AudioAutoplayManager {
         }, { once: true, passive: true });
     }
 
+
+    // Add this method to AudioAutoplayManager class
+getUserInteractionStatus() {
+    // Check multiple sources for interaction
+    const sources = {
+        cookie: document.cookie.includes('userInteracted=true'),
+        localStorage: localStorage.getItem('userHasInteracted') === 'true',
+        session: this.hasUserInteracted
+    };
+    
+    console.log('User interaction status:', sources);
+    
+    return sources.cookie || sources.localStorage || sources.session;
+}
+
     markAsInteracted() {
         if (!this.hasUserInteracted) {
             this.hasUserInteracted = true;
