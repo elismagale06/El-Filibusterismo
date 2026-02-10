@@ -130,7 +130,23 @@ function checkAndPlayIntroAudio(endAudio) {
 function shouldPlayChapterIntro() {
     console.log('=== Checking if should play intro ===');
     
-    // Always check URL parameters first
+    const referrer = document.referrer || '';
+    const isFromTalasalitaan = referrer.includes('talasalitaan');
+    
+    // ALWAYS allow audio if coming from talasalitaan and user has interacted
+    if (isFromTalasalitaan) {
+        console.log('✅ Coming from talasalitaan page - checking interaction');
+        const hasInteraction = window.audioAutoplay?.getUserInteractionStatus() || false;
+        if (hasInteraction) {
+            console.log('✅ User has interacted, allowing audio');
+            return true;
+        } else {
+            console.log('⚠️ From talasalitaan but no interaction yet');
+            return false;
+        }
+    }
+    
+    // Rest of your original logic...
     const urlParams = new URLSearchParams(window.location.search);
     const navType = urlParams.get('nav');
     
@@ -140,26 +156,17 @@ function shouldPlayChapterIntro() {
         return true;
     }
     
-    // Priority 2: Check if user has interacted (for all cases)
+    // Priority 2: Check if user has interacted
     const hasInteraction = window.audioAutoplay?.getUserInteractionStatus() || false;
     
-    // For direct URL access, we need to be more lenient
+    // Priority 3: For direct URL access
     const isDirectAccess = !document.referrer || document.referrer === '';
-    
     if (isDirectAccess) {
         console.log('🌐 Direct URL access detected');
-        
-        // For direct access, check if we have any stored interaction
-        if (hasInteraction) {
-            console.log('✅ User has interacted before, allowing audio');
-            return true;
-        } else {
-            console.log('❌ No previous interaction for direct access');
-            return false;
-        }
+        return hasInteraction; // Simplified
     }
     
-    // Priority 3: Check session storage for recent navigation
+    // Priority 4: Check session storage
     const storedData = sessionStorage.getItem('lastClickedChapter');
     if (storedData) {
         try {
@@ -178,7 +185,7 @@ function shouldPlayChapterIntro() {
         }
     }
     
-    // Priority 4: Check localStorage for last chapter nav
+    // Priority 5: Check localStorage
     const lastNavData = localStorage.getItem('lastChapterNav');
     if (lastNavData) {
         try {
@@ -196,7 +203,6 @@ function shouldPlayChapterIntro() {
     
     console.log('❌ No conditions met for playing intro');
     return false; 
-    
 }
 
 function attemptToPlayEndAudio(endAudio) {

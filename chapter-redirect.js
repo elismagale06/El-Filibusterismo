@@ -1,268 +1,135 @@
-// unified-chapter-control.js - Everything in one file
+// chapter-redirect.js - Add this to EVERY chapter page
 (function() {
     'use strict';
     
-    const ChapterControl = {
-        config: {
-            sessionTimeout: 120000,
-            tokenTimeout: 30000,
-            redirectUrl: 'index.html'
-        },
+    // Define valid referrer pages
+    const VALID_REFERRERS = [
+        'chapters.html',
+        'talasalitaan1-3.html',
+        'talasalitaan4.html',  // Add more if needed
+        'talasalitaan5-7.html',
+        'talasalitaan8-10.html',
+        'talasalitaan11.html',
+        'talasalitaan12-15.html',
+        'talasalitaan16-18.html',
+        'talasalitaan19.html',
+        'talasalitaan20-22.html',
+        'talasalitaan23.html',
+        'talasalitaan24-28.html',
+        'talasalitaan29.html',
+        'talasalitaan30-31.html',
+        'talasalitaan32.html',
+        'talasalitaan33-35.html',   
+        'talasalitaan36-37.html',
+        'talasalitaan38-39.html'
+    ];
+    
+    // Check if we should redirect
+    function checkAccessAndRedirect() {
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('token');
         
-        // Determine page type
-        getPageType: function() {
-            const path = window.location.pathname.toLowerCase();
-            
-            if (path.includes('chapters.html')) return 'chapters';
-            if (path.includes('talasalitaan')) return 'talasalitaan';
-            if (path.includes('chapter') && path.includes('.html') && 
-                !path.includes('chapters.html')) return 'chapter';
-            
-            return 'other';
-        },
+        // Get referrer information
+        const referrer = document.referrer || '';
         
-        // Main initialization
-        init: function() {
-            const pageType = this.getPageType();
-            
-            switch(pageType) {
-                case 'chapters':
-                    this.initChaptersPage();
-                    break;
-                case 'talasalitaan':
-                    this.initTalasalitaanPage();
-                    break;
-                case 'chapter':
-                    this.initChapterPage();
-                    break;
-                default:
-                    // Do nothing for other pages
-                    break;
+        // Try to get stored token
+        let storedTokenData = null;
+        try {
+            const storedData = sessionStorage.getItem('chapterAccessToken');
+            if (storedData) {
+                storedTokenData = JSON.parse(storedData);
             }
-        },
+        } catch (e) {
+            console.warn('Could not parse stored token data');
+        }
         
-        // Initialize chapters.html
-        initChaptersPage: function() {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.setupChapterLinks();
-                this.setupBackButton();
-            });
-        },
+        // Check if referrer is valid
+        let hasValidReferrer = false;
+        for (const validPage of VALID_REFERRERS) {
+            if (referrer.includes(validPage)) {
+                hasValidReferrer = true;
+                break;
+            }
+        }
         
-        // Initialize talasalitaan pages
-        initTalasalitaanPage: function() {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.setTalasalitaanMarker();
-                this.setupChapterLinksFromTalasalitaan();
-            });
-        },
+        // Conditions for valid access:
+        const isValidAccess = 
+            // 1. Came directly from any valid page (chapters or talasalitaan)
+            hasValidReferrer ||
+            // 2. Has valid token in URL that matches stored token
+            (urlToken && storedTokenData && urlToken === storedTokenData.token) ||
+            // 3. Has valid token data that's not expired (less than 30 seconds old)
+            (storedTokenData && 
+             storedTokenData.timestamp && 
+             (Date.now() - storedTokenData.timestamp) < 30000);
         
-        // Initialize chapter pages (access control)
-        initChapterPage: function() {
-            document.addEventListener('DOMContentLoaded', () => {
-                if (this.checkChapterAccess()) {
-                    this.grantChapterAccess();
-                } else {
-                    this.redirectToIndex();
-                }
-            });
-        },
-        
-        // Check access for chapter pages
-        checkChapterAccess: function() {
-            const urlParams = new URLSearchParams(window.location.search);
+        // If NOT valid access, redirect to index.html
+        if (!isValidAccess) {
+            console.log('Invalid chapter access. Redirecting to homepage.');
+            console.log('Referrer was:', referrer);
             
-            // Check URL parameters
-            if (urlParams.get('nav') === 'direct') return true;
+            // Optional: Show a brief message
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                text-align: center;
+                z-index: 9999;
+                font-family: Arial, sans-serif;
+            `;
+            message.innerHTML = `
+                <p style="margin: 0 0 10px 0; font-size: 16px;">
+                    Mangyaring pumili ng kabanata mula sa listahan.
+                </p>
+                <p style="margin: 0; font-size: 14px; opacity: 0.8;">
+                    Nagre-redirect sa homepage...
+                </p>
+            `;
+            document.body.appendChild(message);
             
-            // Check token
-            const token = urlParams.get('token');
-            if (token && this.validateToken(token)) return true;
-            
-            // Check referrer
-            if (this.hasValidReferrer()) return true;
-            
-            // Check session
-            if (this.hasRecentAccess()) return true;
-            
-            // Check talasalitaan marker
-            if (this.fromTalasalitaan()) return true;
+            // Redirect after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
             
             return false;
-        },
-        
-        // Validate token
-        validateToken: function(token) {
-            try {
-                const stored = sessionStorage.getItem('chapterAccessToken') || 
-                              localStorage.getItem('chapterAccessToken');
-                if (!stored) return false;
-                
-                const data = JSON.parse(stored);
-                const now = Date.now();
-                
-                return data.token === token && 
-                       data.timestamp && 
-                       (now - data.timestamp) < this.config.tokenTimeout;
-            } catch (e) {
-                return false;
-            }
-        },
-        
-        // Check referrer
-        hasValidReferrer: function() {
-            const referrer = document.referrer.toLowerCase();
-            if (!referrer) return false;
-            
-            return referrer.includes('chapters.html') || 
-                   referrer.includes('talasalitaan') ||
-                   referrer.includes('chapter');
-        },
-        
-        // Check recent access
-        hasRecentAccess: function() {
-            const time = sessionStorage.getItem('chapterAccessTime');
-            if (!time) return false;
-            
-            return (Date.now() - parseInt(time)) < this.config.sessionTimeout;
-        },
-        
-        // Check talasalitaan marker
-        fromTalasalitaan: function() {
-            const marker = sessionStorage.getItem('fromTalasalitaan');
-            const time = sessionStorage.getItem('talasalitaanNavTime');
-            
-            if (!marker || !time) return false;
-            
-            return (Date.now() - parseInt(time)) < 30000;
-        },
-        
-        // Grant access to chapter
-        grantChapterAccess: function() {
-            sessionStorage.setItem('chapterAccessTime', Date.now().toString());
-            this.cleanUrl();
-            this.clearTalasalitaanMarker();
-        },
-        
-        // Redirect to index
-        redirectToIndex: function() {
-            this.cleanStorage();
-            window.location.href = this.config.redirectUrl;
-        },
-        
-        // Setup chapter links in chapters.html
-        setupChapterLinks: function() {
-            const links = document.querySelectorAll('.chapter-card[href*="chapter"]');
-            
-            links.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    
-                    const href = link.getAttribute('href');
-                    const chapterNum = link.getAttribute('data-chapter-num');
-                    
-                    if (!href || !chapterNum) {
-                        window.location.href = href;
-                        return;
-                    }
-                    
-                    // Generate token
-                    const token = 'token_' + Date.now() + '_' + 
-                        Math.random().toString(36).substr(2, 9);
-                    
-                    const tokenData = {
-                        token: token,
-                        chapter: chapterNum,
-                        timestamp: Date.now()
-                    };
-                    
-                    sessionStorage.setItem('chapterAccessToken', JSON.stringify(tokenData));
-                    
-                    // Navigate with token
-                    const url = new URL(href, window.location.origin);
-                    url.searchParams.set('nav', 'direct');
-                    url.searchParams.set('token', token);
-                    
-                    setTimeout(() => {
-                        window.location.href = url.toString();
-                    }, 50);
-                });
-            });
-        },
-        
-        // Setup back button in chapters.html
-        setupBackButton: function() {
-            const backBtn = document.querySelector('.back-button[href*="index.html"]');
-            if (backBtn) {
-                backBtn.addEventListener('click', () => {
-                    this.cleanStorage();
-                });
-            }
-        },
-        
-        // Set talasalitaan marker
-        setTalasalitaanMarker: function() {
-            sessionStorage.setItem('fromTalasalitaan', 'true');
-            sessionStorage.setItem('talasalitaanNavTime', Date.now().toString());
-        },
-        
-        // Setup chapter links from talasalitaan
-        setupChapterLinksFromTalasalitaan: function() {
-            const links = document.querySelectorAll('a[href*="chapter"]');
-            
-            links.forEach(link => {
-                link.addEventListener('click', () => {
-                    // Update timestamp
-                    sessionStorage.setItem('talasalitaanNavTime', Date.now().toString());
-                });
-            });
-            
-            // Auto-clear after 30 seconds
-            setTimeout(() => {
-                this.clearTalasalitaanMarker();
-            }, 30000);
-        },
-        
-        // Clean URL parameters
-        cleanUrl: function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('token') || urlParams.has('nav')) {
-                const cleanParams = new URLSearchParams();
-                
-                for (const [key, value] of urlParams.entries()) {
-                    if (key !== 'token' && key !== 'nav') {
-                        cleanParams.set(key, value);
-                    }
-                }
-                
-                const newUrl = window.location.pathname + 
-                              (cleanParams.toString() ? '?' + cleanParams.toString() : '');
-                
-                window.history.replaceState({}, document.title, newUrl);
-            }
-        },
-        
-        // Clear storage
-        cleanStorage: function() {
-            ['chapterAccessToken', 'chapterAccessTime', 
-             'fromTalasalitaan', 'talasalitaanNavTime'].forEach(key => {
-                sessionStorage.removeItem(key);
-                localStorage.removeItem(key);
-            });
-        },
-        
-        // Clear talasalitaan marker
-        clearTalasalitaanMarker: function() {
-            sessionStorage.removeItem('fromTalasalitaan');
-            sessionStorage.removeItem('talasalitaanNavTime');
         }
-    };
-    
-    // Initialize on page load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => ChapterControl.init());
-    } else {
-        ChapterControl.init();
+        
+        // If we have a valid access, clean up
+        console.log('Valid chapter access detected');
+        console.log('Referrer:', referrer);
+        
+        // Clear the token from session storage
+        sessionStorage.removeItem('chapterAccessToken');
+        
+        // Remove token from URL without page reload
+        if (urlToken) {
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+        
+        return true;
     }
     
+    // Run check when page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkAccessAndRedirect);
+    } else {
+        checkAccessAndRedirect();
+    }
+    
+    // Also check on page show (for browser back/forward)
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            // Page was restored from cache, check access again
+            setTimeout(checkAccessAndRedirect, 100);
+        }
+    });
 })();
