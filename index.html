@@ -9,6 +9,27 @@
     <script src="chapter-audio.js"></script>
     <script src="chapter-intro-map.js"></script>
     <style>
+/* Simple background image solution */
+body {
+    background-image: url('images/indexbg.jfif');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+/* Optional: Add a parchment-like overlay for better text readability */
+.container {
+    background-color: rgba(255, 250, 245, 0.92);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(139, 69, 19, 0.3);
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 1200px;
+}
+
+
 /* Audio Controls Container */
 .audio-controls {
     background: linear-gradient(to bottom, #fff7e6, #f1dcc5);
@@ -248,7 +269,6 @@
 </div>
 
         <script src="script-index.js"></script>
-        <script src="rain.js"></script>
         <!-- Add this to your index.html HEAD section -->
         <script src="global-audio.js"></script>
     </div>

@@ -8,6 +8,27 @@
     <script src="global-audio.js"></script>
     <link rel="stylesheet" href="styles.css" />
 <style>
+
+/* Simple background image solution */
+body {
+    background-image: url('images/chaptersbg.jfif');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+/* Optional: Add a parchment-like overlay for better text readability */
+.container {
+    background-color: rgba(255, 250, 245, 0.92);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(139, 69, 19, 0.3);
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 1200px;
+}
+
 /* CHAPTER CARD STYLES - MATCHING CHARACTER GALLERY */
 .chapter-grid {
     display: grid;
@@ -101,9 +122,6 @@
     margin: 5px 0;
     flex-shrink: 0;
 }
-
-
-
 
 /* Make frame-inner fill the parent */
 .chapter-image .frame-inner {
@@ -653,7 +671,6 @@
         </div>
     </div>
     <script src="script-chapters.js"></script>
-    <script src="rain.js"></script>
     <!-- In chapters.html, replace the entire <script> section at the bottom -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {

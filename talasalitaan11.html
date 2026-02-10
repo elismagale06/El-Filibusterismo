@@ -12,6 +12,27 @@
 
     <!-- MOBILE-RESPONSIVE STYLING FOR CHAPTER CONTENT -->
     <style>
+
+      /* Simple background image solution */
+body {
+    background-image: url('images/chaptersbg.jfif');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+/* Optional: Add a parchment-like overlay for better text readability */
+.container {
+    background-color: rgba(255, 250, 245, 0.92);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(139, 69, 19, 0.3);
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 1200px;
+}
+
       @media (max-width: 768px) {
         .chapter-content {
           font-size: 1.05em;
@@ -62,15 +83,15 @@
         <div class="ornament">❦</div>
 
         <div class="chapter-content">
-          <p><strong>Gabinete</strong> - tauhan sa pamahalaan</p>
+          <p><strong>Gabinete</strong> - kalipunan ng mga kagawad ng pamahalaan</p>
           <p><strong>Inilalaan</strong> - pagbibigay ng oras</p>
           <p><strong>Lingid</strong> - lihim, sikreto</p>
-          <p><strong>Nilait</strong> - pagsasabu ng negatibo o paninira</p>
+          <p><strong>Nilait</strong> - pagsasabi ng masasakit o mapanirang salita</p>
           <p><strong>Mangaso</strong> - manghuli</p>
           <p><strong>Prayle</strong> - pari</p>
           <p><strong>Rehas</strong> - kulungan</p>
           <p><strong>Talakayin</strong> - pagtuturo ng isang lesksyon</p>
-          <p><strong>Tresilyo</strong> - signal gamit ang braha</p>
+          <p><strong>Tresilyo</strong> - isang uri ng laro ng baraha</p>
         </div>
 
         <div class="ornament">❦</div>

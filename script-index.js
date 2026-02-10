@@ -192,7 +192,7 @@ const characters = [
         audio: "audio/Sinang.mp3"
     },
     {
-        name: "Don Timoteo Palaez",
+        name: "Don Timoteo Pelaez",
         description: "Isang mayamang Pilipino na sunud-sunuran sa mga Kastila; larawan ng bulag na pagsunod sa kolonyal na kapangyarihan.",
         image: "images/Don Timoteo Pelaez.png",
         audio: "audio/Don Timoteo Palaez.mp3"
