@@ -673,12 +673,13 @@ body {
     </div>
     <script src="global-audio.js"></script>
     <script src="script-chapters.js"></script>
+    <script src="chapter-redirect.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const chapterLinks = document.querySelectorAll('.chapter-card');
 
-    document.cookie = "chapter_access=true; path=/; max-age=300"; // 5 minutes
+    
     
     // Clear any old access tokens
     const clearOldTokens = () => {
