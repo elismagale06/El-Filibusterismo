@@ -18,6 +18,7 @@ class AudioAutoplayManager {
     _initialize() {
         // Listen for ANY user interaction on the site
         this.setupInteractionListeners();
+        this.handleDirectNavigation();
         
         // Check localStorage for previous interaction
         this.checkStoredInteraction();
@@ -105,6 +106,28 @@ class AudioAutoplayManager {
             }
         }, 10000);
     }
+
+    handleDirectNavigation() {
+    // Check if this looks like a direct URL navigation
+    if (!document.referrer || document.referrer === '') {
+        console.log('Direct URL navigation detected');
+        
+        // Check if we have interaction in localStorage
+        const hasInteracted = localStorage.getItem('userHasInteracted') === 'true';
+        
+        if (hasInteracted) {
+            // User has interacted before, allow autoplay
+            this.hasUserInteracted = true;
+            console.log('User has previous interaction, enabling autoplay');
+        } else {
+            // First visit via direct URL
+            console.log('First visit via direct URL, will require interaction');
+            
+            // Set a flag to show welcome message
+            this.isFirstDirectVisit = true;
+        }
+    }
+}
 
     checkStoredInteraction() {
         // Check cookie first (for immediate refresh detection)

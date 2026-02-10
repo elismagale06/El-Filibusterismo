@@ -12,10 +12,16 @@ document.addEventListener("DOMContentLoaded", function () {
             this.alt = 'Image not available';
         };
     });
-    const page = document.body.dataset.page;
     
-    // Initialize based on page type
+    const page = document.body.dataset.page;
+
+    // Move ALL page-specific logic inside DOMContentLoaded
     if (page === "chapters") {
+        // Make sure trackChapterClicks is defined before calling it
+        // Either define it here or make sure it's available in scope
+        if (typeof trackChapterClicks === 'function') {
+            trackChapterClicks();
+        }
         initializeChapterSearch();
     }
     
@@ -30,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ensureSingleAudio();
 });
 
+
 function initializeChapterSearch() {
     const chapterSearch = document.getElementById("chapterSearch");
     if (!chapterSearch) return;
@@ -38,6 +45,37 @@ function initializeChapterSearch() {
     chapterSearch.addEventListener("keyup", filterChapters);
     filterChapters(); // Initial filter on load
 }
+
+// In script-chapters.js, add this function
+function trackChapterClicks() {
+    const chapterCards = document.querySelectorAll('.chapter-card a');
+    
+    chapterCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Get chapter number from the card
+            const cardElement = this.closest('.chapter-card');
+            if (cardElement) {
+                const chapterText = cardElement.querySelector('h3')?.textContent || '';
+                const chapterMatch = chapterText.match(/(\d+(?:[–\-]?\d*)?)/);
+                
+                if (chapterMatch) {
+                    const chapter = chapterMatch[1];
+                    
+                    // Store in sessionStorage
+                    const clickData = {
+                        chapter: chapter,
+                        timestamp: Date.now(),
+                        url: this.href
+                    };
+                    
+                    sessionStorage.setItem('lastChapterClick', JSON.stringify(clickData));
+                    console.log(`Tracked click for chapter ${chapter}`);
+                }
+            }
+        });
+    });
+}
+
 
 // Add this function to handle chapter images
 function handleChapterImages() {

@@ -92,51 +92,78 @@ function checkAndPlayIntroAudio(endAudio) {
 }
 
 function shouldPlayChapterIntro() {
+    console.log('=== Checking if should play intro ===');
+    
     const urlParams = new URLSearchParams(window.location.search);
     const playIntroParam = urlParams.get('playIntro');
+    const navType = urlParams.get('nav');
+
+    if (navType === 'direct') {
+        console.log('✅ Direct navigation with parameter detected');
+        return true;
+    }
+        
+    console.log('URL playIntro parameter:', playIntroParam);
     
-    console.log('Checking if should play intro:');
-    console.log('- URL playIntro parameter:', playIntroParam);
-    
-    // Check for refresh scenario
-    const isRefresh = performance.navigation.type === performance.navigation.TYPE_RELOAD || 
-                     performance.getEntriesByType("navigation")[0]?.type === "reload";
-    
-    // Method 1: Check if URL has playIntro parameter
+    // Method 1: Direct URL parameter (highest priority)
     if (playIntroParam === 'true') {
-        console.log('Method 1: URL parameter says play intro');
+        console.log('✅ Method 1: URL parameter says play intro');
         return true;
     }
     
-    // Method 2: Check if this is a page refresh
-    if (isRefresh) {
-        console.log('Page refresh detected');
+    // Check for direct URL navigation (no referrer)
+    const referrer = document.referrer;
+    console.log('Referrer:', referrer);
+    
+    // Method 2: Direct URL navigation (user typed URL or clicked bookmark)
+    if (!referrer || referrer === '') {
+        console.log('🌐 Direct URL navigation detected');
         
-        // Check if we have audio state in localStorage
-        const audioState = localStorage.getItem('chapterAudioState');
-        if (audioState) {
-            try {
-                const state = JSON.parse(audioState);
-                const currentChapter = getCurrentChapterNumber();
-                
-                // Check if we're on the same chapter and recently played
-                if (state.chapter === currentChapter && 
-                    (Date.now() - state.timestamp) < 300000) { // 5 minutes
-                    console.log('Method 2: Recent audio state found for refresh');
-                    return true;
-                }
-            } catch (e) {
-                console.error('Error parsing audio state:', e);
-            }
+        // Check if user has interacted before (from localStorage)
+        if (window.audioAutoplay?.canAutoplay()) {
+            console.log('✅ Method 2: User has interacted before, can autoplay');
+            return true;
+        } else {
+            console.log('⚠️ Method 2: No previous interaction, will not autoplay');
+            return false;
         }
-        
-        // For refresh, don't try to autoplay without user interaction
-        return false;
     }
     
-    // Method 3: Check sessionStorage for recent navigation
+    // Method 3: Check if coming from chapters list page
+    try {
+        const referrerUrl = new URL(referrer);
+        const currentUrl = new URL(window.location);
+        
+        // Check if coming from chapters.html
+        if (referrerUrl.pathname.includes('chapters.html') || 
+            referrerUrl.pathname.includes('chapters') ||
+            referrerUrl.pathname.endsWith('/') ||
+            referrerUrl.pathname === '/') {
+            console.log('✅ Method 3: Coming from chapters page or home');
+            
+            // Check if we have a valid chapter card click
+            const chapterClick = sessionStorage.getItem('lastChapterClick');
+            if (chapterClick) {
+                const clickData = JSON.parse(chapterClick);
+                const currentChapter = getCurrentChapterNumber();
+                
+                if (clickData.chapter === currentChapter) {
+                    console.log('✅ Valid chapter navigation detected');
+                    return true;
+                }
+            }
+            
+            // Even without session storage, if coming from chapters page, play intro
+            console.log('✅ Coming from chapters page, playing intro');
+            return true;
+        }
+    } catch (e) {
+        console.log('Error parsing referrer URL:', e);
+    }
+    
+    // Method 4: Check sessionStorage for recent navigation
     const storedData = sessionStorage.getItem('lastClickedChapter');
-    console.log('- Session storage data:', storedData);
+    console.log('Session storage data:', storedData);
     
     if (storedData) {
         try {
@@ -148,7 +175,7 @@ function shouldPlayChapterIntro() {
                 const currentChapter = getCurrentChapterNumber();
                 
                 if (currentChapter && data.number === currentChapter) {
-                    console.log('Method 3: Recent chapter navigation detected');
+                    console.log('✅ Method 4: Recent chapter navigation detected');
                     return true;
                 }
             }
@@ -157,24 +184,23 @@ function shouldPlayChapterIntro() {
         }
     }
     
-    // Method 4: Check referrer
-    const referrer = document.referrer;
-    console.log('- Referrer:', referrer);
-    
+    // Method 5: Check for return from other pages
     if (referrer) {
         try {
             const referrerUrl = new URL(referrer);
-            const currentUrl = new URL(window.location);
             
-            if (referrerUrl.pathname.includes('talasalitaan') && 
-                currentUrl.pathname.includes('chapter')) {
-                console.log('Method 4: Returning from talasalitaan page');
+            if (referrerUrl.pathname.includes('talasalitaan')) {
+                console.log('✅ Method 5: Returning from talasalitaan');
                 return true;
             }
             
-            if (referrerUrl.pathname.includes('activities') && 
-                currentUrl.pathname.includes('chapter')) {
-                console.log('Method 4: Returning from activities page');
+            if (referrerUrl.pathname.includes('activities')) {
+                console.log('✅ Method 5: Returning from activities');
+                return true;
+            }
+            
+            if (referrerUrl.pathname.includes('quiz')) {
+                console.log('✅ Method 5: Returning from quiz');
                 return true;
             }
         } catch (e) {
@@ -182,11 +208,9 @@ function shouldPlayChapterIntro() {
         }
     }
     
-    console.log('No conditions met for playing intro');
+    console.log('❌ No conditions met for playing intro');
     return false;
 }
-
-
 
 
 function cleanupUrlPreservingState() {
@@ -222,9 +246,9 @@ function cleanupUrlPreservingState() {
 }
 
 function getCurrentChapterNumber() {
-    // Try multiple ways to get current chapter number
+    console.log('=== Getting current chapter number ===');
     
-    // 1. Check URL parameters
+    // 1. Check URL parameters first
     const urlParams = new URLSearchParams(window.location.search);
     const urlChapter = urlParams.get('chapter');
     if (urlChapter) {
@@ -232,48 +256,46 @@ function getCurrentChapterNumber() {
         return urlChapter;
     }
     
-    // 2. Extract from page title - UPDATED REGEX
+    // 2. Try to extract from filename (most reliable for direct URLs)
+    const pathname = window.location.pathname;
+    console.log('Pathname:', pathname);
+    
+    // Match patterns like: chapter1-3.html, chapter4.html, etc.
+    const filenameMatch = pathname.match(/chapter(\d+(?:[–\-]?\d*)?)\.html$/i);
+    if (filenameMatch) {
+        const chapter = filenameMatch[1].replace(/–/g, '-');
+        console.log('Got chapter from filename:', chapter);
+        return chapter;
+    }
+    
+    // 3. Try alternative patterns
+    const altMatch = pathname.match(/(\d+(?:[–\-]?\d*)?)\.html$/);
+    if (altMatch) {
+        const chapter = altMatch[1].replace(/–/g, '-');
+        console.log('Got chapter from alt pattern:', chapter);
+        return chapter;
+    }
+    
+    // 4. Extract from page title
     const pageTitle = document.querySelector('h1')?.textContent || '';
     console.log('Page title:', pageTitle);
     
-    // UPDATED: Match numbers with either en dash (–), hyphen (-), OR "at"
-    const chapterMatch = pageTitle.match(/Kabanata\s+(\d+)(?:\s*(?:[–\-]|at)\s*(\d+))?/i);
-    if (chapterMatch) {
-        // If we have two numbers (like "30 at 31"), combine them with hyphen
-        if (chapterMatch[2]) {
-            const combined = `${chapterMatch[1]}-${chapterMatch[2]}`;
-            console.log('Got chapter from page title match (combined):', combined);
-            return combined;
-        }
-        // If only one number
-        console.log('Got chapter from page title match:', chapterMatch[1]);
-        return chapterMatch[1];
+    const titleMatch = pageTitle.match(/Kabanata\s+(\d+(?:\s*(?:[–\-]|at)\s*\d+)?)/i);
+    if (titleMatch) {
+        let chapter = titleMatch[1];
+        // Convert "1 at 3" to "1-3"
+        chapter = chapter.replace(/\s+at\s+/g, '-').replace(/\s+/g, '');
+        console.log('Got chapter from title:', chapter);
+        return chapter;
     }
     
-    // 3. Try to match just numbers in title
-    const numberMatch = pageTitle.match(/(\d+)(?:\s*(?:[–\-]|at)\s*(\d+))?/);
+    // 5. Check for number in title
+    const numberMatch = pageTitle.match(/(\d+(?:\s*(?:[–\-]|at)\s*\d+)?)/);
     if (numberMatch) {
-        if (numberMatch[2]) {
-            const combined = `${numberMatch[1]}-${numberMatch[2]}`;
-            console.log('Got chapter from number match (combined):', combined);
-            return combined;
-        }
-        console.log('Got chapter from number match:', numberMatch[1]);
-        return numberMatch[1];
-    }
-    
-    // 4. Try to extract from URL path
-    const pathMatch = window.location.pathname.match(/chapter(\d+[–\-]?\d*)/i);
-    if (pathMatch) {
-        console.log('Got chapter from path match:', pathMatch[1]);
-        return pathMatch[1].replace(/–/g, '-');
-    }
-    
-    // 5. Check for chapter in the URL without "chapter" prefix
-    const altPathMatch = window.location.pathname.match(/(\d+[–\-]?\d*)\.html$/);
-    if (altPathMatch) {
-        console.log('Got chapter from alt path match:', altPathMatch[1]);
-        return altPathMatch[1].replace(/–/g, '-');
+        let chapter = numberMatch[1];
+        chapter = chapter.replace(/\s+at\s+/g, '-').replace(/\s+/g, '');
+        console.log('Got chapter from number match:', chapter);
+        return chapter;
     }
     
     console.log('Could not determine chapter number');
@@ -414,9 +436,7 @@ function playChapterIntroAudio(endAudio) {
         console.log(`No intro audio found for chapter ${chapterData.number}`);
         showIntroNotification(chapterData.title, '📖', 'Ang kabanata ay handa na.');
         
-        // Save state for refresh detection
-        saveAudioState();
-        
+        // Check if we can play main audio
         setTimeout(() => {
             attemptToPlayEndAudio(endAudio);
         }, 1000);
@@ -426,34 +446,49 @@ function playChapterIntroAudio(endAudio) {
     console.log('Intro audio path:', introAudioPath);
     
     // Check if user has interacted
-    if (!window.audioAutoplay?.canAutoplay()) {
-        console.log('Cannot autoplay intro - no user interaction');
+    const canAutoplay = window.audioAutoplay?.canAutoplay();
+    console.log('Can autoplay?', canAutoplay);
+    
+    if (!canAutoplay) {
+        console.log('Cannot autoplay - no user interaction');
         
-        // Check if this is a refresh
-        const isRefresh = performance.navigation.type === performance.navigation.TYPE_RELOAD;
-        if (isRefresh) {
-            showIntroNotification(chapterData.title, '🔄', 'Refresh detected. Pindutin ang play button upang pakinggan.');
+        // For direct URL navigation, show different message
+        if (!document.referrer) {
+            showIntroNotification(chapterData.title, '🌐', 'Maligayang pagdating! Pindutin ang play button upang simulan.');
         } else {
             showIntroNotification(chapterData.title, '📖', 'Pindutin ang play button upang pakinggan.');
         }
         
         // Try to unlock audio
         window.audioAutoplay?.unlockWithSilentAudio();
+        
+        // Don't play anything, just show the notification
         return;
     }
+    
+    // User has interacted, proceed with intro
+    console.log('User has interacted, playing intro');
     
     // Create and play intro audio
     const introAudio = new Audio(introAudioPath);
     introAudio.volume = 0.7;
     
-    // Save state
-    saveAudioState();
+    // Add loaded handler
+    introAudio.addEventListener('loadeddata', function() {
+        console.log('Intro audio loaded successfully');
+    });
     
     // Add error handler
     introAudio.addEventListener('error', function(e) {
         console.error('Intro audio loading error:', e);
+        console.error('Error details:', e.target.error);
+        
         showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang intro audio.');
-        clearAudioState();
+        
+        // Try to play main audio anyway
+        setTimeout(() => {
+            attemptToPlayEndAudio(endAudio);
+        }, 500);
     });
     
     // When intro ends, play the main chapter audio
@@ -481,12 +516,18 @@ function playChapterIntroAudio(endAudio) {
             })
             .catch(error => {
                 console.error('Intro audio play failed:', error);
-                showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang audio.');
-                clearAudioState();
                 
+                // Check error type
                 if (error.name === 'NotAllowedError') {
-                    console.log('Autoplay not allowed. Need user interaction.');
+                    showIntroNotification(chapterData.title, '🔇', 'Pindutin ang play button upang pakinggan.');
+                } else {
+                    showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang audio.');
                 }
+                
+                // Try to play main audio as fallback
+                setTimeout(() => {
+                    attemptToPlayEndAudio(endAudio);
+                }, 1000);
             });
     }
 }
