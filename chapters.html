@@ -709,43 +709,50 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add event listeners to chapter links
     chapterLinks.forEach(link => {
-        if (link.hasAttribute('data-processed')) {
+    if (link.hasAttribute('data-processed')) {
+        return;
+    }
+    
+    link.setAttribute('data-processed', 'true');
+    
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const chapterNum = this.getAttribute('data-chapter-num');
+        const chapterTitle = this.querySelector('h3')?.textContent || 'Chapter';
+        const href = this.getAttribute('href');
+        
+        if (!href || !chapterNum) {
+            console.error('Missing href or data-chapter-num attribute');
+            window.location.href = href;
             return;
         }
         
-        link.setAttribute('data-processed', 'true');
+        // Store multiple flags for reliable detection
+        const navData = {
+            number: chapterNum,
+            title: chapterTitle,
+            href: href,
+            timestamp: Date.now(),
+            source: 'chapters-page'
+        };
         
-        link.addEventListener('click', function(e) {
-            // Prevent default navigation
-            e.preventDefault();
-            
-            // Get chapter data
-            const chapterNum = this.getAttribute('data-chapter-num');
-            const chapterTitle = this.querySelector('h3')?.textContent || 'Chapter';
-            const href = this.getAttribute('href');
-            
-            if (!href || !chapterNum) {
-                console.error('Missing href or data-chapter-num attribute');
-                window.location.href = href;
-                return;
-            }
-            
-            // Store the chapter data in sessionStorage
-            sessionStorage.setItem('lastClickedChapter', JSON.stringify({
-                number: chapterNum,
-                title: chapterTitle,
-                href: href,
-                timestamp: Date.now()
-            }));
-            
-            console.log('Navigating to chapter:', chapterNum);
-            console.log('Stored in sessionStorage');
-            
-            // Navigate to the chapter page
-            // Note: The href already contains the URL parameters
-            window.location.href = href;
-        });
+        // Save to multiple storage mechanisms for reliability
+        sessionStorage.setItem('lastClickedChapter', JSON.stringify(navData));
+        localStorage.setItem('lastChapterNav', JSON.stringify({
+            ...navData,
+            storedAt: Date.now()
+        }));
+        
+        // Also set a cookie for immediate refresh detection
+        document.cookie = `chapterNav=${chapterNum}; path=/; max-age=30`;
+        
+        console.log('Navigating to chapter:', chapterNum);
+        
+        // Navigate immediately
+        window.location.href = href;
     });
+});
 });
 </script>
 </body>

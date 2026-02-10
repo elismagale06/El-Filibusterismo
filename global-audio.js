@@ -22,6 +22,13 @@ class AudioAutoplayManager {
         
         // Check localStorage for previous interaction
         this.checkStoredInteraction();
+
+                // Add to global-audio.js
+        window.addEventListener('beforeunload', function() {
+            // Clear all notifications before leaving
+            const notifications = document.querySelectorAll('.intro-notification');
+            notifications.forEach(notification => notification.remove());
+        });
         
         // Setup beforeunload to save state
         window.addEventListener('beforeunload', () => {

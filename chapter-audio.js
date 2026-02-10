@@ -1,4 +1,40 @@
 // chapter-audio.js - Manages audio for chapter pages (with intro-to-main auto-play)
+
+// ===========================================
+// GLOBAL AUDIO ERROR HANDLER
+// ===========================================
+// Place this at the VERY TOP to catch early audio errors
+window.addEventListener('error', function(e) {
+    // Check if the error is from an audio element
+    if (e.target && e.target.tagName === 'AUDIO') {
+        console.warn('[Audio Error Handler] Suppressed audio error:', {
+            message: e.message,
+            src: e.target.src || e.target.currentSrc,
+            errorCode: e.target.error ? e.target.error.code : 'unknown'
+        });
+        
+        // Prevent the error from bubbling up and showing browser errors
+        e.preventDefault();
+        e.stopPropagation();
+        return true;
+    }
+}, true); // Use capture phase to catch errors early
+
+// Also handle unhandled promise rejections for audio play() calls
+window.addEventListener('unhandledrejection', function(e) {
+    const reason = e.reason;
+    if (reason && 
+        (reason.name === 'NotAllowedError' || 
+         reason.name === 'NotSupportedError' ||
+         (reason.message && reason.message.includes('play')))) {
+        console.warn('[Audio Error Handler] Audio play promise rejected:', reason.message);
+        e.preventDefault();
+    }
+});
+
+// ===========================================
+// MAIN CHAPTER AUDIO LOGIC
+// ===========================================
 document.addEventListener('DOMContentLoaded', function() {
     const page = document.body.dataset.page;
     
@@ -97,86 +133,44 @@ function shouldPlayChapterIntro() {
     const urlParams = new URLSearchParams(window.location.search);
     const playIntroParam = urlParams.get('playIntro');
     const navType = urlParams.get('nav');
-
+    
+    // Priority 1: Direct URL parameter
     if (navType === 'direct') {
         console.log('✅ Direct navigation with parameter detected');
         return true;
     }
-        
-    console.log('URL playIntro parameter:', playIntroParam);
     
-    // Method 1: Direct URL parameter (highest priority)
-    if (playIntroParam === 'true') {
-        console.log('✅ Method 1: URL parameter says play intro');
-        return true;
-    }
+    // Check for user interaction first
+    const hasInteraction = window.audioAutoplay?.canAutoplay() || false;
     
-    // Check for direct URL navigation (no referrer)
+    // Priority 2: Returning from other pages
     const referrer = document.referrer;
-    console.log('Referrer:', referrer);
-    
-    // Method 2: Direct URL navigation (user typed URL or clicked bookmark)
-    if (!referrer || referrer === '') {
-        console.log('🌐 Direct URL navigation detected');
-        
-        // Check if user has interacted before (from localStorage)
-        if (window.audioAutoplay?.canAutoplay()) {
-            console.log('✅ Method 2: User has interacted before, can autoplay');
-            return true;
-        } else {
-            console.log('⚠️ Method 2: No previous interaction, will not autoplay');
-            return false;
-        }
-    }
-    
-    // Method 3: Check if coming from chapters list page
-    try {
-        const referrerUrl = new URL(referrer);
-        const currentUrl = new URL(window.location);
-        
-        // Check if coming from chapters.html
-        if (referrerUrl.pathname.includes('chapters.html') || 
-            referrerUrl.pathname.includes('chapters') ||
-            referrerUrl.pathname.endsWith('/') ||
-            referrerUrl.pathname === '/') {
-            console.log('✅ Method 3: Coming from chapters page or home');
-            
-            // Check if we have a valid chapter card click
-            const chapterClick = sessionStorage.getItem('lastChapterClick');
-            if (chapterClick) {
-                const clickData = JSON.parse(chapterClick);
-                const currentChapter = getCurrentChapterNumber();
-                
-                if (clickData.chapter === currentChapter) {
-                    console.log('✅ Valid chapter navigation detected');
-                    return true;
-                }
+    if (referrer) {
+        try {
+            const referrerUrl = new URL(referrer);
+            if (referrerUrl.pathname.includes('talasalitaan') ||
+                referrerUrl.pathname.includes('activities') ||
+                referrerUrl.pathname.includes('quiz')) {
+                console.log('✅ Returning from related page');
+                return hasInteraction;
             }
-            
-            // Even without session storage, if coming from chapters page, play intro
-            console.log('✅ Coming from chapters page, playing intro');
-            return true;
+        } catch (e) {
+            console.log('Error parsing referrer URL:', e);
         }
-    } catch (e) {
-        console.log('Error parsing referrer URL:', e);
     }
     
-    // Method 4: Check sessionStorage for recent navigation
+    // Priority 3: Recent chapter navigation
     const storedData = sessionStorage.getItem('lastClickedChapter');
-    console.log('Session storage data:', storedData);
-    
     if (storedData) {
         try {
             const data = JSON.parse(storedData);
             const now = Date.now();
             
-            // Play intro if chapter was clicked within last 30 seconds
             if (data.timestamp && (now - data.timestamp) <= 30000) {
                 const currentChapter = getCurrentChapterNumber();
-                
                 if (currentChapter && data.number === currentChapter) {
-                    console.log('✅ Method 4: Recent chapter navigation detected');
-                    return true;
+                    console.log('✅ Recent chapter navigation detected');
+                    return hasInteraction;
                 }
             }
         } catch (e) {
@@ -184,34 +178,71 @@ function shouldPlayChapterIntro() {
         }
     }
     
-    // Method 5: Check for return from other pages
-    if (referrer) {
-        try {
-            const referrerUrl = new URL(referrer);
-            
-            if (referrerUrl.pathname.includes('talasalitaan')) {
-                console.log('✅ Method 5: Returning from talasalitaan');
-                return true;
-            }
-            
-            if (referrerUrl.pathname.includes('activities')) {
-                console.log('✅ Method 5: Returning from activities');
-                return true;
-            }
-            
-            if (referrerUrl.pathname.includes('quiz')) {
-                console.log('✅ Method 5: Returning from quiz');
-                return true;
-            }
-        } catch (e) {
-            console.log('Error parsing referrer URL:', e);
-        }
+    // Priority 4: Direct URL navigation
+    if (!referrer || referrer === '') {
+        console.log('🌐 Direct URL navigation detected');
+        return hasInteraction;
     }
     
     console.log('❌ No conditions met for playing intro');
     return false;
 }
 
+function attemptToPlayEndAudio(endAudio) {
+    if (!endAudio) {
+        console.error('No end audio element found');
+        return;
+    }
+    
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    console.log(`Attempting to play main chapter audio (Mobile: ${isMobile})`);
+    
+    // Mobile devices need explicit user interaction
+    if (isMobile && !window.audioAutoplay?.canAutoplay()) {
+        console.log('Mobile: Waiting for user interaction');
+        showIntroNotification('Kabanata', '📱', 'Pindutin ang play button upang simulan.');
+        return;
+    }
+    
+    // Check if user has interacted
+    if (!window.audioAutoplay?.canAutoplay()) {
+        console.log('Cannot autoplay - no user interaction');
+        showIntroNotification('Kabanata', '▶', 'Pindutin ang play button upang simulan.');
+        return;
+    }
+    
+    // Set volume
+    endAudio.volume = 0.8;
+    
+    // Try to play
+    const playPromise = endAudio.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Main chapter audio playing automatically');
+                
+                // Hide floating button
+                const floatingBtn = document.getElementById('floatingAudioBtn');
+                if (floatingBtn) {
+                    floatingBtn.style.display = 'none';
+                }
+                
+                showIntroNotification('Kabanata', '🔊', 'Pinapakinggan ang kabanata...');
+            })
+            .catch(error => {
+                console.error('Main audio autoplay failed:', error);
+                
+                // Fallback for mobile
+                if (isMobile) {
+                    showIntroNotification('Kabanata', '📱', 'Pindutin ang play button sa ibaba.');
+                } else {
+                    showIntroNotification('Kabanata', '▶', 'Pindutin ang play button sa ibaba.');
+                }
+            });
+    }
+}
 
 function cleanupUrlPreservingState() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -480,8 +511,8 @@ function playChapterIntroAudio(endAudio) {
     
     // Add error handler
     introAudio.addEventListener('error', function(e) {
-        console.error('Intro audio loading error:', e);
-        console.error('Error details:', e.target.error);
+        console.warn('Intro audio loading error:', e);
+        console.warn('Error details:', e.target.error);
         
         showIntroNotification(chapterData.title, '❌', 'Hindi ma-play ang intro audio.');
         
@@ -515,7 +546,7 @@ function playChapterIntroAudio(endAudio) {
                 showIntroNotification(chapterData.title, '🔊', 'Pinapakinggan ang intro...');
             })
             .catch(error => {
-                console.error('Intro audio play failed:', error);
+                console.warn('Intro audio play failed:', error);
                 
                 // Check error type
                 if (error.name === 'NotAllowedError') {
@@ -532,8 +563,6 @@ function playChapterIntroAudio(endAudio) {
     }
 }
 
-
-
 function saveAudioState() {
     const chapterData = getChapterData();
     const state = {
@@ -548,79 +577,25 @@ function clearAudioState() {
     localStorage.removeItem('chapterAudioState');
 }
 
-// Update the attemptToPlayEndAudio function:
-function attemptToPlayEndAudio(endAudio) {
-    if (!endAudio) {
-        console.error('No end audio element found');
-        return;
-    }
-    
-    console.log('Attempting to play main chapter audio');
-    
-    // Save state before attempting to play
-    saveAudioState();
-    
-    // Check if user has interacted
-    if (!window.audioAutoplay?.canAutoplay()) {
-        console.log('Cannot autoplay main audio - no user interaction');
-        
-        // Show notification that user needs to click to play
-        showIntroNotification('Kabanata', '▶', 'Pindutin ang play button upang simulan.');
-        return;
-    }
-    
-    // Set volume
-    endAudio.volume = 0.8;
-    
-    // Add error handler
-    endAudio.addEventListener('error', function(e) {
-        console.error('Main audio error:', e);
-        showIntroNotification('Kabanata', '❌', 'Hindi ma-play ang audio.');
-        clearAudioState();
-    });
-    
-    // Add ended handler to update state
-    endAudio.addEventListener('ended', function() {
-        console.log('Main audio ended');
-        clearAudioState();
-    });
-    
-    // Try to play
-    const playPromise = endAudio.play();
-    
-    if (playPromise !== undefined) {
-        playPromise
-            .then(() => {
-                console.log('Main chapter audio playing automatically');
-                
-                // Update floating button if it exists
-                const floatingBtn = document.getElementById('floatingAudioBtn');
-                if (floatingBtn) {
-                    updateButtonState(floatingBtn, endAudio);
-                }
-                
-                // Show notification that audio is playing
-                showIntroNotification('Kabanata', '🔊', 'Pinapakinggan ang kabanata...');
-            })
-            .catch(error => {
-                console.error('Main audio autoplay failed:', error);
-                clearAudioState();
-                
-                // Fallback: Show notification to play manually
-                showIntroNotification('Kabanata', '▶', 'Pindutin ang play button sa ibaba.');
-            });
-    }
-}
 
-// SINGLE NOTIFICATION FUNCTION - Replaces all other notification functions
+
+let currentNotification = null;
+let notificationTimeout = null;
+
 function showIntroNotification(title, icon = '📖', message = '') {
-    // Remove existing notification if any
-    const existing = document.querySelector('.intro-notification');
-    if (existing) existing.remove();
+    // Clear any existing notification
+    if (currentNotification) {
+        currentNotification.remove();
+        currentNotification = null;
+    }
+    
+    if (notificationTimeout) {
+        clearTimeout(notificationTimeout);
+        notificationTimeout = null;
+    }
     
     const notification = document.createElement('div');
     notification.className = 'intro-notification';
-    
     notification.innerHTML = `
         <div class="intro-notification-content">
             <div class="intro-notification-header">
@@ -632,12 +607,18 @@ function showIntroNotification(title, icon = '📖', message = '') {
     `;
     
     document.body.appendChild(notification);
+    currentNotification = notification;
     
-    // Auto-remove after 3 seconds (shorter for better UX)
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-20px)';
-        setTimeout(() => notification.remove(), 500);
+    // Auto-remove after appropriate time
+    notificationTimeout = setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                if (notification.parentNode) notification.remove();
+                currentNotification = null;
+            }, 300);
+        }
     }, 3000);
 }
 
@@ -808,4 +789,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('Simplified Chapter audio script loaded with intro-to-main auto-play');
+console.log('Chapter audio script loaded with global error handling');
